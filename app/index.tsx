@@ -1,12 +1,18 @@
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useAppTheme } from "@/stores/app-theme-context";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme } = useAppTheme();
+  const { colors } = theme;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
+    <View style={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}>
+      <Text style={[styles.title, { color: colors.text }]}>Home</Text>
 
       {/* Flow 1 (bottom sheet) */}
       <Button
