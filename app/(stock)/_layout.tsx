@@ -10,7 +10,7 @@ export default function StockLayout() {
       }}
     >
       <Stack.Screen name="all-products-page" />
-      <Stack.Screen name="step2" />
+      {/* <Stack.Screen name="step2" /> */}
       {/* more steps if you need them */}
     </Stack>
   );
