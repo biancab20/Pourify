@@ -1,5 +1,6 @@
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { Text } from "@/components/text";
 
 export default function HomeScreen() {
   const router = useRouter();
