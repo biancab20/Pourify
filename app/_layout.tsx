@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { useFonts } from "expo-font";
+import { Text } from "@/components/text"; 
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -16,7 +17,7 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Roobert: require("../assets/fonts/RoobertCollectionVF-TRIAL.ttf"),
   });
-  
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>

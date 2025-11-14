@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { Text } from "@/components/text";
 
 export default function ScanFlowLayout() {
   return (
