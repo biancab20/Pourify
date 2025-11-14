@@ -1,6 +1,7 @@
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "@/stores/app-theme-context";
+import { Text } from "@/components/text";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,5 +32,5 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 24, fontWeight: "600", marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: "600", marginBottom: 16, color: "white" },
 });
