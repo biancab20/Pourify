@@ -18,8 +18,15 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(scan-flow)"
+          options={{ animation: "slide_from_bottom" }}
+        />
+        <Stack.Screen
+          name="(stock)"
+          options={{ animation: "slide_from_right", gestureEnabled: true }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </AppThemeProvider>
