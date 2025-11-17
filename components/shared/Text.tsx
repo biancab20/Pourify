@@ -41,4 +41,7 @@ export function Text({
       {children}
     </RNText>
   );
+
+
+
 }

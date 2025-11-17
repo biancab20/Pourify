@@ -14,9 +14,10 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.text }]}>Home</Text>
-      {/* <Text variant="gradient" gradientName="paloma" style={{ fontWeight: 700 }}>
+      <Text variant="gradient" gradientName="paloma" style={ {  fontFamily: "Roobert-Heavy", fontSize: 32 }}
+ >
         Banana Daiquiri!
-      </Text> */}
+      </Text>
       {/* <Text>Hello normal text!</Text>
       <Text style={{ fontSize: 24, fontWeight: "600" }}>Large normal text</Text> */}
       {/* <Text
@@ -52,7 +53,8 @@ const styles = StyleSheet.create({
 
   title: { 
   fontSize: 24, 
-  fontFamily: "Roobert-Bold", 
+  // fontFamily: "Roobert-Heavy", 
+  fontWeight: "700",
   marginBottom: 16, 
   color: "white" 
 },
