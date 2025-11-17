@@ -12,8 +12,14 @@ export const unstable_settings = {
 export default function RootLayout() {
 
   const [fontsLoaded] = useFonts({
-    Roobert: require("../assets/fonts/RoobertCollectionVF-TRIAL.ttf"),
-  });
+  "Roobert-Medium": require("../assets/fonts/Roobert-Medium.otf"),
+  "Roobert-Bold": require("../assets/fonts/Roobert-Bold.otf"),
+  "Roobert-BoldItalic": require("../assets/fonts/Roobert-BoldItalic.otf"),
+  "Roobert-Light": require("../assets/fonts/Roobert-Light.otf"),
+  "Roobert-LightItalic": require("../assets/fonts/Roobert-LightItalic.otf"),
+  "Roobert-Heavy": require("../assets/fonts/Roobert-Heavy.otf"),
+  "Roobert-HeavyItalic": require("../assets/fonts/Roobert-HeavyItalic.otf"),
+});
 
   return (
     <AppThemeProvider>

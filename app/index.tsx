@@ -2,6 +2,7 @@ import { View, Button, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Text } from "@/components/text";
+import InformationCard from "@/components/ui/InformationCard";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -26,11 +27,19 @@ export default function HomeScreen() {
         title="Start Second flow"
         onPress={() => router.push("/(stock)/all-products-page")}
       />
+
+      <InformationCard />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 24, fontWeight: "600", marginBottom: 16, color: "white" },
+  title: { 
+  fontSize: 24, 
+  fontFamily: "Roobert-Bold", 
+  marginBottom: 16, 
+  color: "white" 
+},
+
 });
