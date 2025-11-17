@@ -1,35 +1,28 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-
-
+import { View, StyleSheet, useWindowDimensions } from "react-native";
+import PieChartStatic from "./PieChartStatic"; 
+import { Text } from "@/components/shared/Text";
 
 export default function InformationCard() {
+  const { width } = useWindowDimensions();
+  const cardWidth = (width - 16 * 3) / 2; // container padding + gap
+  const circleSize = cardWidth - 26; // match container padding
+
   return (
-    <View style={styles.container}>
-      
+    <View style={[styles.container, { width: cardWidth }]}>
+      {/* Title */}
       <Text style={styles.title}>Main Bar</Text>
 
-      <View style={styles.circleWrapper}>
-        <View style={styles.backgroundCircle} />
-        <View style={styles.progressCircle} />
+      {/* Static Pie Chart */}
+      <PieChartStatic size={circleSize} />
 
-        <View style={styles.centerContent}>
-          <Text style={styles.labelText}>Poured % of Goal</Text>
-          <Text style={styles.largeNumber}>10%</Text>
-
-          <Text style={[styles.labelText, { marginTop: 8 }]}>
-            Actual vs POS
-          </Text>
-          <Text style={styles.largeNumber}>-40%</Text>
-          <Text style={styles.labelText}>-40mL</Text>
-        </View>
-      </View>
-
+      {/* Product Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Bacardi</Text>
         <Text style={styles.cardSubtitle}>Most popular product</Text>
       </View>
 
+      {/* Pours Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>3</Text>
         <Text style={styles.cardSubtitle}>#Pours</Text>
@@ -40,69 +33,27 @@ export default function InformationCard() {
 
 const styles = StyleSheet.create({
   container: {
-    width: 200,
-    padding: 20,
+    paddingHorizontal: 13,
+    paddingVertical: 14,
     backgroundColor: "#000814",
     borderRadius: 20,
     alignItems: "center",
+    marginBottom: 16,
   },
 
   title: {
     color: "white",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    marginBottom: 25,
-  },
-
-  circleWrapper: {
-    width: 150,
-    height: 150,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 25,
-  },
-
-  backgroundCircle: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 12,
-    borderColor: "#240000", 
-  },
-
-  progressCircle: {
-    position: "absolute",
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 12,
-    borderColor: "transparent",
-    borderTopColor: "#ff4d4d", 
-    transform: [{ rotate: "20deg" }],
-  },
-
-  centerContent: {
-    alignItems: "center",
-  },
-
-  labelText: {
-    color: "#cccccc",
-    fontSize: 12,
-  },
-
-  largeNumber: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "700",
+    marginBottom: 12,
   },
 
   card: {
     width: "100%",
     backgroundColor: "#00204d",
     borderRadius: 14,
-    paddingVertical: 14,
-    marginTop: 15,
+    paddingVertical: 10,
+    marginTop: 12,
     alignItems: "center",
   },
 
@@ -114,6 +65,6 @@ const styles = StyleSheet.create({
 
   cardSubtitle: {
     color: "#dddddd",
-    fontSize: 14,
+    fontSize: 10,
   },
 });
