@@ -2,6 +2,7 @@ import React from "react";
 import { View, StyleSheet, useWindowDimensions } from "react-native";
 import PieChartStatic from "./PieChartStatic"; 
 import { Text } from "@/components/shared/Text";
+import InfoCard from "./InfoBox"; // import reusable card
 
 export default function InformationCard() {
   const { width } = useWindowDimensions();
@@ -16,17 +17,9 @@ export default function InformationCard() {
       {/* Static Pie Chart */}
       <PieChartStatic size={circleSize} />
 
-      {/* Product Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Bacardi</Text>
-        <Text style={styles.cardSubtitle}>Most popular product</Text>
-      </View>
-
-      {/* Pours Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>3</Text>
-        <Text style={styles.cardSubtitle}>#Pours</Text>
-      </View>
+      {/* Dynamic Info Cards */}
+      <InfoCard title="Bacardi" subtitle="Most popular product" />
+      <InfoCard title={3} subtitle="#Pours" />
     </View>
   );
 }
@@ -40,31 +33,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-
   title: {
     color: "white",
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 12,
-  },
-
-  card: {
-    width: "100%",
-    backgroundColor: "#00204d",
-    borderRadius: 14,
-    paddingVertical: 10,
-    marginTop: 12,
-    alignItems: "center",
-  },
-
-  cardTitle: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-
-  cardSubtitle: {
-    color: "#dddddd",
-    fontSize: 10,
   },
 });
