@@ -14,23 +14,23 @@ type ColorTokens = {
   // core semantic colors used in components
   //add anything that can change with theme
 
-//   primary: string;
-//   accent: string;
+  //   primary: string;
+  //   accent: string;
 
   background: string;
-//   backgroundAlt: string;
-//   surface: string;
+  //   backgroundAlt: string;
+  //   surface: string;
 
   text: string;
-//   textMuted: string;
-//   onPrimary: string;
-//   onSurface: string;
+  //   textMuted: string;
+  //   onPrimary: string;
+  //   onSurface: string;
 
-//   border: string;
+  //   border: string;
 
-//   success: string;
-//   danger: string;
-//   warning: string;
+  //   success: string;
+  //   danger: string;
+  //   warning: string;
 };
 
 // 👇 brand palette (your raw colors)
@@ -61,8 +61,8 @@ export type BrandPalette = {
 
 export type AppTheme = {
   mode: "light" | "dark"; // resolved mode
-  colors: ColorTokens;    // semantic tokens
-  palette: BrandPalette;  // raw brand colors
+  colors: ColorTokens; // semantic tokens
+  palette: BrandPalette; // raw brand colors
   isDark: boolean;
 };
 
@@ -98,10 +98,10 @@ const PALETTE: BrandPalette = {
     end: { x: 1, y: 0.5 },
   },
   bananaDaiquiri: {
-  colors: ["#D9E734", "#00C264"],
-  start: { x: 0.5, y: 0 },
-  end: { x: 0.5, y: 1 }, // vertical gradient (top → bottom)
-},
+    colors: ["#D9E734", "#00C264"],
+    start: { x: 0.5, y: 0 },
+    end: { x: 0.5, y: 1 }, // vertical gradient (top → bottom)
+  },
 };
 
 // You can still define generic status colors or reuse from palette
@@ -113,32 +113,30 @@ const PALETTE: BrandPalette = {
 
 // light mode → background = beige
 const lightColors: ColorTokens = {
-//   primary: PALETTE.blue,      // pick what feels like your main brand
-//   accent: PALETTE.yellow,
+  //   primary: PALETTE.blue,      // pick what feels like your main brand
+  //   accent: PALETTE.yellow,
 
-  background: PALETTE.beige,  // ✅ as you requested
-//   backgroundAlt: "#FFFFFF",
-//   surface: "#FFFFFF",
+  background: PALETTE.beige, // ✅ as you requested
+  //   backgroundAlt: "#FFFFFF",
+  //   surface: "#FFFFFF",
 
   text: "#101320",
-//   textMuted: "#6B7280",
-//   onPrimary: "#031836",       // dark blue text on blue-ish buttons
-//   onSurface: "#101320",
+  //   textMuted: "#6B7280",
+  //   onPrimary: "#031836",       // dark blue text on blue-ish buttons
+  //   onSurface: "#101320",
 
-//   border: "#D4D4D4",
+  //   border: "#D4D4D4",
 
-//   success: SUCCESS,
-//   danger: DANGER,
-//   warning: WARNING,
+  //   success: SUCCESS,
+  //   danger: DANGER,
+  //   warning: WARNING,
 };
 
 // dark mode → background = dark blue
 const darkColors: ColorTokens = {
-
-  background: PALETTE.darkBlue,   // ✅ as you requested
+  background: PALETTE.darkBlue, // ✅ as you requested
 
   text: "#F9FAFB",
-
 };
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {
@@ -146,11 +144,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("system");
 
   const resolvedMode: "light" | "dark" =
-    mode === "system"
-      ? systemScheme === "dark"
-        ? "dark"
-        : "light"
-      : mode;
+    mode === "system" ? (systemScheme === "dark" ? "dark" : "light") : mode;
 
   const theme: AppTheme = useMemo(
     () => ({
@@ -167,8 +161,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
       theme,
       mode,
       setMode,
-      toggleMode: () =>
-        setMode(prev => (prev === "dark" ? "light" : "dark")),
+      toggleMode: () => setMode((prev) => (prev === "dark" ? "light" : "dark")),
     }),
     [theme, mode]
   );

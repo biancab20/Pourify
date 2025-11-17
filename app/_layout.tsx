@@ -3,7 +3,6 @@ import { AppThemeProvider } from "@/stores/app-theme-context";
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from "expo-font";
-import { Text } from "@/components/text"; 
 
 export const unstable_settings = {
   anchor: '(tabs)',

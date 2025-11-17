@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { Text } from "@/components/text";
+import { Text } from "@/components/shared/Text";
 export default function AllProducts() {
   const router = useRouter();
 
