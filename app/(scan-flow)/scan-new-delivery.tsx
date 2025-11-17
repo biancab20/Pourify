@@ -5,7 +5,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Text } from "@/components/text";
+import { Text } from "@/components/shared/Text";
 
 export default function ScanNewDelivery() {
   const router = useRouter();
