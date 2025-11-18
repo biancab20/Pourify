@@ -29,7 +29,7 @@ export default function AllProducts() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "600", marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: "600", marginBottom: 24, color: "#001b3a" },
   button: {
     paddingHorizontal: 24,
     paddingVertical: 12,

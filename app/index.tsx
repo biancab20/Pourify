@@ -114,7 +114,7 @@ export default function HomeScreen() {
             end={{ x: 1, y: 0.5 }}
             style={{
               paddingVertical: 14,
-              borderRadius: 12,
+              borderRadius: 24,
               alignItems: "center",
               justifyContent: "center",
             }}
@@ -122,8 +122,8 @@ export default function HomeScreen() {
         <Text
           style={{
             color: "white",
-            fontWeight: "600",
-            fontSize: 16,
+            fontWeight: "700",
+            fontSize: 18,
           }}
         >
           View stock
