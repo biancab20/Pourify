@@ -6,6 +6,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, Text as RNText } from "react-native";
 import PieChartStatic from "@/components/ui/PieChartStatic";
 import InfoCard from "@/components/ui/InfoBox";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -98,6 +99,41 @@ export default function HomeScreen() {
           <InformationCard />
         </View>
       </View>
+
+      {/* View Stock Section*/}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Stock</Text>
+
+         <Pressable
+            onPress={() => router.push("/(stock)/all-products-page")}
+            style={styles.stockButton}
+          >
+          <LinearGradient
+            colors={["#FF77E0", "#F54D41"]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{
+              paddingVertical: 14,
+              borderRadius: 12,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+        <Text
+          style={{
+            color: "white",
+            fontWeight: "600",
+            fontSize: 16,
+          }}
+        >
+          View stock
+        </Text>
+      </LinearGradient>
+    </Pressable>
+        
+      </View>
+
+     
     </ScrollView>
   );
 }
@@ -217,5 +253,13 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     marginTop: 0, // spacing controlled by sectionTitle
+  },
+
+  stockButton: {
+    width: "100%",
+    marginBottom: 60,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: "center",
   },
 });
