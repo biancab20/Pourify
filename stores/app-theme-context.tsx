@@ -48,6 +48,8 @@ export type BrandPalette = {
   darkPurple: string;
   darkGreen: string;
   darkBlue: string;
+  white: string;
+  black: string;
 
   // NEW: gradient
   paloma: {
@@ -93,6 +95,8 @@ const PALETTE: BrandPalette = {
   darkPurple: "#370732",
   darkGreen: "#2C6253",
   darkBlue: "#031836",
+  white: "#FFFFFF",
+  black: "#000000",
 
   // NEW: gradient
   paloma: {

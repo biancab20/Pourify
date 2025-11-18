@@ -20,7 +20,7 @@ export default function InformationCardStatic() {
       }
     ]}>
       {/* Title */}
-      <Text style={[styles.title, { color: theme.colors.text }]}>Main Bar</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>To Be Dynamic</Text>
 
       {/* Static Pie Chart */}
       <PieChartStatic size={circleSize} />
