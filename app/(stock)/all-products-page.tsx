@@ -1,41 +1,62 @@
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
+import SearchBar from "@/components/ui/SearchBar";
+
 export default function AllProducts() {
   const router = useRouter();
 
+  const handleSearch = (searchText: string) => {
+    console.log("Searching for:", searchText);
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
+      <SearchBar 
+        onSearch={handleSearch}
+        placeholder="Search products..."
+        initialValue=""
+      />
+
       <Text style={styles.title}>Second flow – Step 1</Text>
 
-      {/* Go to next step in this flow */}
       <Pressable
         style={styles.button}
-       // onPress={() => router.push("/(stock)/step2")}
+        onPress={() => router.push("/(stock)/product-detail-page")}
       >
-        <Text style={styles.buttonText}>Next</Text>
+        <Text style={styles.buttonText}>Some Product Here</Text>
       </Pressable>
 
-      {/* Back to home (you also have the swipe gesture) */}
       <Pressable
         style={[styles.button, styles.secondary]}
         onPress={() => router.back()}
       >
         <Text style={styles.secondaryText}>Back to Home</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 22, fontWeight: "600", marginBottom: 24, color: "#001b3a" },
+  container: { 
+    flex: 1,
+    paddingTop: 20,
+  },
+  title: { 
+    fontSize: 22, 
+    fontWeight: "600", 
+    marginBottom: 24, 
+    color: "#001b3a",
+    marginTop: 20,
+    textAlign: "center",
+  },
   button: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 999,
     backgroundColor: "#001b3a",
     marginTop: 12,
+    alignSelf: "center",
   },
   buttonText: { color: "white", fontWeight: "600" },
   secondary: {

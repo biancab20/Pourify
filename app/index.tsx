@@ -1,17 +1,18 @@
 import { Text } from "@/components/shared/Text";
-import InformationCard from "@/components/ui/InformationCard";
+import InformationCard from "@/components/staticComponents/InformationCardStatic";
+import PieChartStatic from "@/components/staticComponents/PieChartStatic";
+import WideCardStatic from "@/components/staticComponents/WideCardStatic"; // Import the new component
+import InfoCard from "@/components/ui/InfoBox";
 import { useAppTheme } from "@/stores/app-theme-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, Text as RNText } from "react-native";
-import PieChartStatic from "@/components/ui/PieChartStatic";
-import InfoCard from "@/components/ui/InfoBox";
-import { LinearGradient } from "expo-linear-gradient";
+import { Pressable, Text as RNText, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { colors } = theme;
+  const { colors, palette } = theme; // Also get palette from theme
   const { width } = useWindowDimensions();
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -20,8 +21,8 @@ export default function HomeScreen() {
     day: "numeric",
   });
 
-  const cardWidth = width - 32; // full width minus horizontal padding
-  const circleSize = 150; // pie chart size
+  const cardWidth = width - 32;
+  const circleSize = 150;
 
   return (
     <ScrollView
@@ -52,47 +53,47 @@ export default function HomeScreen() {
         Hachi bar
       </Text>
 
-      {/* Wide Card with Pie Chart and Stats */}
-      <View style={styles.wideCardBackground}>
+      {/* Wide Card with Pie Chart and Stats - USING WideCardStatic */}
+      <WideCardStatic>
         <View style={[styles.wideCard, { width: cardWidth }]}>
           <PieChartStatic size={circleSize} />
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <RNText style={styles.statLabel}>Goal</RNText>
-              <RNText style={[styles.statValue, { color: "#00D7CA" }]}>1,00 L</RNText>
+              <RNText style={[styles.statLabel, { color: colors.text }]}>Goal</RNText>
+              <RNText style={[styles.statValue, { color: palette.blue }]}>1,00 L</RNText>
             </View>
             <View style={styles.statItem}>
-              <RNText style={styles.statLabel}>Total Poured</RNText>
-              <RNText style={[styles.statValue, { color: "#FE3734" }]}>1,00 L</RNText>
+              <RNText style={[styles.statLabel, { color: colors.text }]}>Total Poured</RNText>
+              <RNText style={[styles.statValue, { color: palette.red }]}>1,00 L</RNText>
             </View>
           </View>
         </View>
 
-        <Text style={styles.infoBox}>
+        <Text style={[styles.infoBox, { color: colors.text }]}>
           Transactions from your POS will appear once they are paid
         </Text>
-      </View>
+      </WideCardStatic>
 
-      {/* Most Popular Drink Section */}
+      {/* Most Popular Drink Section - USING WideCardStatic */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Most Popular Drink</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Most Popular Drink</Text>
 
-        <View style={styles.wideCardBackground}>
-          <Text style={styles.popularDrinkTitle}>Bacardi</Text>
+        <WideCardStatic>
+          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>Bacardi</Text>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.text }]} />
 
           <View style={styles.row}>
             <InfoCard title="0.06 L" subtitle="Total Poured" style={{ width: '45%', marginRight: 10 }} />
             <InfoCard title={3} subtitle="#Pours" style={{ width: '45%' }} />
           </View>
-        </View>
+        </WideCardStatic>
       </View>
 
       {/* Poured Today Section */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Poured today in your bars</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
 
         <View style={styles.cardsRow}>
           <InformationCard />
@@ -102,7 +103,7 @@ export default function HomeScreen() {
 
       {/* View Stock Section*/}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Stock</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
 
          <Pressable
             onPress={() => router.push("/(stock)/all-products-page")}
@@ -130,10 +131,8 @@ export default function HomeScreen() {
         </Text>
       </LinearGradient>
     </Pressable>
-        
-      </View>
-
-     
+      </View>  
+      
     </ScrollView>
   );
 }
@@ -187,12 +186,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  wideCardBackground: {
-    backgroundColor: "#000814",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-  },
+  // REMOVE the old wideCardBackground style since we're using the component now
+  // wideCardBackground: {
+  //   backgroundColor: "#000814",
+  //   borderRadius: 20,
+  //   padding: 16,
+  //   marginBottom: 16,
+  // },
 
   statsContainer: {
     flex: 1,
@@ -205,54 +205,51 @@ const styles = StyleSheet.create({
   },
 
   statLabel: {
-    color: "#ECECDF",
-    fontSize: 18,
+    fontSize: 18, // Remove hardcoded color
     fontWeight: "700",
   },
 
   statValue: {
-    color: "white",
-    fontSize: 20,
+    fontSize: 20, // Remove hardcoded color
     fontWeight: "700",
   },
 
   sectionTitle: {
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 15, // consistent spacing below title
+    marginBottom: 15,
   },
 
   popularDrinkTitle: {
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '700',
-    marginTop: 0, // no extra margin; spacing controlled by sectionTitle
+    marginTop: 0,
     marginBottom: 0,
   },
 
   cardsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 0, // spacing handled by sectionTitle
+    marginTop: 0,
   },
 
   infoBox: {
     marginBottom: 8,
-    color: "#ECECDF",
-    fontSize: 10,
+    fontSize: 10, // Remove hardcoded color
     textAlign: "center",
     fontWeight: "500",
   },
 
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "white",
     marginVertical: 13,
+    // Remove hardcoded backgroundColor
   },
 
   row: {
     flexDirection: 'row',
-    marginTop: 0, // spacing controlled by sectionTitle
+    marginTop: 0,
   },
 
   stockButton: {

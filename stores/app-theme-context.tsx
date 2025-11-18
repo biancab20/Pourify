@@ -31,6 +31,9 @@ type ColorTokens = {
   //   success: string;
   //   danger: string;
   //   warning: string;
+
+  cardBackground: string;
+  cardText: string;
 };
 
 // 👇 brand palette (your raw colors)
@@ -130,6 +133,8 @@ const lightColors: ColorTokens = {
   //   success: SUCCESS,
   //   danger: DANGER,
   //   warning: WARNING,
+  cardBackground: "#FFFFFF",
+  cardText: "#101320",
 };
 
 // dark mode → background = dark blue
@@ -137,6 +142,8 @@ const darkColors: ColorTokens = {
   background: PALETTE.darkBlue, // ✅ as you requested
 
   text: "#F9FAFB",
+  cardBackground: "#000000",
+  cardText: "#F9FAFB",
 };
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {

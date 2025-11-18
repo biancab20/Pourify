@@ -1,21 +1,28 @@
-// Create a dummy pie chart that will be used throughout the app that only mocks data
-
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Text } from "@/components/shared/Text";
+import { useAppTheme } from "@/stores/app-theme-context";
 
 interface PieChartStaticProps {
-  size: number;// dynamic size to fit container
+  size: number; // dynamic size to fit container
 }
 
 export default function PieChartStatic({ size }: PieChartStaticProps) {
+  const { theme } = useAppTheme();
+  const { colors } = theme;
+
   return (
     <View style={[styles.circleWrapper, { width: size, height: size }]}>
       {/* Background Circle */}
       <View
         style={[
           styles.backgroundCircle,
-          { width: size, height: size, borderRadius: size / 2 },
+          { 
+            width: size, 
+            height: size, 
+            borderRadius: size / 2,
+            borderColor: theme.isDark ? "#240000" : "#E5E5E5" // Adjust border color for light mode
+          },
         ]}
       />
 
@@ -23,23 +30,28 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
       <View
         style={[
           styles.progressCircle,
-          { width: size, height: size, borderRadius: size / 2 },
+          { 
+            width: size, 
+            height: size, 
+            borderRadius: size / 2,
+            borderTopColor: theme.palette.red // Use theme red color
+          },
         ]}
       />
 
       {/* Center Content */}
       <View style={styles.centerContent}>
-        <Text style={[styles.labelText, { marginBottom: -7 }]}>
+        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
           Poured % of Goal
         </Text>
-        <Text style={styles.largeNumber}>10%</Text>
+        <Text style={[styles.largeNumber, { color: colors.text }]}>10%</Text>
 
-        <Text style={[styles.labelText, { marginBottom: -7 }]}>
+        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
           Actual vs POS
         </Text>
-        <Text style={[styles.largeNumber, { marginBottom: -7 }]}>-40%</Text>
+        <Text style={[styles.largeNumber, { marginBottom: -7, color: colors.text }]}>-40%</Text>
 
-        <Text style={styles.largeNumber}>-40mL</Text>
+        <Text style={[styles.largeNumber, { color: colors.text }]}>-40mL</Text>
       </View>
     </View>
   );
@@ -54,14 +66,12 @@ const styles = StyleSheet.create({
   backgroundCircle: {
     position: "absolute",
     borderWidth: 12,
-    borderColor: "#240000",
   },
 
   progressCircle: {
     position: "absolute",
     borderWidth: 12,
     borderColor: "transparent",
-    borderTopColor: "#ff4d4d",
     transform: [{ rotate: "20deg" }],
   },
 
@@ -70,12 +80,10 @@ const styles = StyleSheet.create({
   },
 
   labelText: {
-    color: "#cccccc",
     fontSize: 10,
   },
 
   largeNumber: {
-    color: "white",
     fontSize: 18,
     fontWeight: "700",
   },
