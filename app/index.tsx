@@ -101,6 +101,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      <Pressable
+            style={styles.iconButton}
+            onPress={() => router.push("/bar-detail-page")}
+          >
+            <Text style={{ color: colors.text, fontSize: 18 }}>Trial Bar Details</Text>
+          </Pressable>
+
       {/* View Stock Section*/}
       <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
