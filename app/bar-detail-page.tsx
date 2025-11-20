@@ -19,33 +19,6 @@ export default function BarDetailPage() {
 
         <GraphChartStatic />
 
-        {/* Wide Box here */}
-
-        <WideCardStatic style={styles.card}>
-      {/* First Row */}
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={[styles.label, { color: colors.text }]}>Total Poured</Text>
-          <Text style={[styles.value, { color: colors.text }]}>0.01</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={[styles.label, { color: colors.text }]}>Total POS</Text>
-          <Text style={[styles.value, { color: colors.text }]}>1.27</Text>
-        </View>
-      </View>
-
-      {/* Second Row */}
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={[styles.label, { color: colors.text }]}>POS vs Total</Text>
-          <Text style={[styles.value, { color: colors.text }]}>-</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={[styles.label, { color: colors.text }]}>Number of Pours</Text>
-          <Text style={[styles.value, { color: colors.text }]}>-</Text>
-        </View>
-      </View>
-    </WideCardStatic>
 
       {/* Back Button */}
       <Pressable
