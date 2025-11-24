@@ -1,9 +1,9 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import Svg, { Rect, Line, Text as SvgText } from "react-native-svg";
-import { useAppTheme } from "@/stores/app-theme-context";
-import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import { Text } from "@/components/shared/Text";
+import WideCardStatic from "@/components/staticComponents/WideCardStatic";
+import { useAppTheme } from "@/stores/app-theme-context";
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import Svg, { Line, Rect, Text as SvgText } from "react-native-svg";
 
 export default function GraphChartStatic() {
   const { theme } = useAppTheme();
@@ -30,9 +30,7 @@ export default function GraphChartStatic() {
 
   return (
     <View>
-      {/* ===================== */}
-      {/* Chart Container */}
-      {/* ===================== */}
+      
       <View style={[styles.chartContainer, { backgroundColor: theme.colors.cardBackground }]}>
         <Svg height={chartHeight} width={chartWidth}>
           {/* Bottom X-axis line */}
@@ -74,7 +72,6 @@ export default function GraphChartStatic() {
             </SvgText>
           ))}
 
-          {/* Y-axis unit */}
           <SvgText
             x="30"
             y={yPositions[yPositions.length - 1] - 12}
@@ -86,7 +83,6 @@ export default function GraphChartStatic() {
             mL
           </SvgText>
 
-          {/* Bars */}
           {bars.map((value, i) => {
             const scaled = (value / maxY) * (chartHeight - 60);
             return (
@@ -102,7 +98,6 @@ export default function GraphChartStatic() {
             );
           })}
 
-          {/* X-axis labels */}
           {labels.map((label, i) => (
             <SvgText
               key={i}
@@ -118,9 +113,6 @@ export default function GraphChartStatic() {
         </Svg>
       </View>
 
-      {/* ===================== */}
-      {/* Wide Card Container */}
-      {/* ===================== */}
       <WideCardStatic style={styles.card}>
         {/* First Row */}
         <View style={styles.row}>

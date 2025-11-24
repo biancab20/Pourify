@@ -5,6 +5,7 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import GraphChartStatic from "@/components/staticComponents/GraphChartStatic";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
+import Calendar from "@/components/ui/Calendar";
 
 export default function BarDetailPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function BarDetailPage() {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[styles.title, { color: colors.text }]}>Singular bar</Text>
       
-
+        <Calendar />
         <GraphChartStatic />
 
 
@@ -35,7 +36,7 @@ export default function BarDetailPage() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingTop: 40,
   },
   title: { 
