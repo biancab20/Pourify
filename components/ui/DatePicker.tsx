@@ -9,8 +9,8 @@ dayjs.extend(isoWeek);
 
 type Mode = "Day" | "Week" | "Month" | "Year";
 
-export default function Calendar() {
-  const { theme } = useAppTheme(); // <- use the theme
+export default function DatePicker() {
+  const { theme } = useAppTheme(); 
   const [mode, setMode] = useState<Mode>("Week");
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
 
