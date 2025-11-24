@@ -4,7 +4,7 @@ import InfoCard from "@/components/ui/InfoBox";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import CircularChart from "@/components/ui/CircularChart"; 
 import DatePicker, { Mode } from "@/components/ui/DatePicker";
@@ -16,6 +16,7 @@ export default function ProductDetails() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
+  const params = useLocalSearchParams();
 
   const [mode, setMode] = useState<Mode>("Week");
   const [currentDate, setCurrentDate] = useState(dayjs());
@@ -27,7 +28,18 @@ export default function ProductDetails() {
   };
 
   const bars = dummyData.bars.items;
-  const products = dummyData.products.items;
+
+  // Get the product data from navigation params and ensure they are strings
+  const productName = Array.isArray(params.productName) ? params.productName[0] : params.productName || "Product";
+  const productVolume = Array.isArray(params.productVolume) ? params.productVolume[0] : params.productVolume || "0";
+  const productType = Array.isArray(params.productType) ? params.productType[0] : params.productType || "";
+  const totalVolume = Array.isArray(params.totalVolume) ? params.totalVolume[0] : params.totalVolume || "0";
+  const bottleCount = Array.isArray(params.bottleCount) ? params.bottleCount[0] : params.bottleCount || "0";
+
+  // Parse numeric values
+  const parsedProductVolume = parseFloat(productVolume);
+  const parsedTotalVolume = parseFloat(totalVolume);
+  const parsedBottleCount = parseInt(bottleCount);
 
   return (
     <ScrollView 
@@ -35,7 +47,7 @@ export default function ProductDetails() {
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock 1</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>{productName}</Text>
 
         <DatePicker 
           mode={mode}
@@ -48,14 +60,15 @@ export default function ProductDetails() {
         </View>
 
         <WideCardStatic>
-          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{products[0]?.name}</Text>
+          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{productName}</Text>
 
           <View style={[styles.divider, { backgroundColor: colors.text }]} />
 
           <View style={styles.row}>
-            <InfoCard title={`${products[0]?.volume} L`} subtitle="#Litres" style={{ width: '45%', marginRight: 10 }} />
-            <InfoCard title={3} subtitle="#Bottles" style={{ width: '45%' }} />
+            <InfoCard title={`${parsedTotalVolume} L`} subtitle="#Litres" style={{ width: '45%', marginRight: 10 }} />
+            <InfoCard title={parsedBottleCount} subtitle="#Bottles" style={{ width: '45%' }} />
           </View>
+      
         </WideCardStatic>
       </View>
 
@@ -64,7 +77,7 @@ export default function ProductDetails() {
 
         <View style={styles.cardsRow}>
           {bars.map((bar: Bar) => (
-              <InformationCard barName={bar.name} />
+            <InformationCard key={bar.barId} barName={bar.name} />
           ))}
         </View>
       </View>
@@ -136,7 +149,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    marginTop: 0,
+    marginTop: 10,
   },
   stockButton: {
     width: "100%",

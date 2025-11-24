@@ -15,18 +15,52 @@ export default function BarDetailPage() {
   const { barId, barName } = params;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.scrollContent}
+    >
       <Text style={[styles.title, { color: colors.text }]}>{barName || "Singular bar"}</Text>
       
       <DatePickerStatic />
       <GraphChartStatic />
 
-      <Pressable
-        style={[styles.button, styles.secondary, { borderColor: palette.darkBlue }]}
-        onPress={() => router.back()}
-      >
-        <Text style={[styles.secondaryText, { color: palette.darkBlue }]}>Back to Home</Text>
-      </Pressable>
+      {/* Add some spacing and additional content */}
+      <View style={styles.spacer} />
+      
+      <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
+      
+               <Pressable
+                  onPress={() => router.push({
+    pathname: "/(stock)/all-products-page",
+    params: { barId: barId, barName: barName }
+  })}
+                  style={styles.stockButton}
+                >
+                <LinearGradient
+                  colors={["#FF77E0", "#F54D41"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={{
+                    paddingVertical: 14,
+                    borderRadius: 24,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+              <Text
+                style={{
+                  color: "white",
+                  fontWeight: "700",
+                  fontSize: 18,
+                }}
+              >
+                View stock
+              </Text>
+            </LinearGradient>
+          </Pressable>
+            </View>  
+
     </ScrollView>
   );
 }
@@ -34,8 +68,21 @@ export default function BarDetailPage() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
+  },
+   sectionTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 15,
+  },
+  sectionContainer: {
+    marginTop: 24,
+  },
+
+  scrollContent: {
     paddingHorizontal: 10,
     paddingTop: 40,
+    paddingBottom: 60,
+    minHeight: 800, // Force minimum height to enable scrolling
   },
   title: { 
     fontSize: 22, 
@@ -47,6 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 24,
     lineHeight: 22,
+    textAlign: "center",
   },
   adjustButton: {
     width: "100%",
@@ -72,7 +120,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   secondary: {
-    backgroundColor: "transparent",
+    backgroundColor: "green",
     borderWidth: 1,
   },
   secondaryText: { 
@@ -99,5 +147,15 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 18,
     fontWeight: "700",
+  },
+  spacer: {
+    height: 30,
+  },
+  stockButton: {
+    width: "100%",
+    marginBottom: 60,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: "center",
   },
 });

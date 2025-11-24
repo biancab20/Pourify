@@ -215,9 +215,12 @@ export const dummyData = {
     [
       new StockItem(5001, 1, 101, 150.0, "2025-11-13T09:30:00Z"),
       new StockItem(5002, 1, 102, 300.0, "2025-11-13T08:30:00Z"),
-      new StockItem(5003, 2, 103, 75.0, "2025-11-13T07:15:00Z")
+      new StockItem(5003, 2, 103, 75.0, "2025-11-13T07:15:00Z"),
+      new StockItem(5004, 2, 101, 100.0, "2025-11-13T10:30:00Z"),
+      new StockItem(5005, 3, 104, 35.0, "2025-11-13T06:45:00Z"),
+      new StockItem(5006, 1, 103, 25.0, "2025-11-13T11:20:00Z")
     ],
-    3
+    6
   ),
 
   // Updated stock
@@ -309,6 +312,96 @@ export const dummyData = {
       }
     )
   )
+};
+
+// Enhanced data with stock calculations
+const calculateProductStockTotals = () => {
+  const stockItems = dummyData.stocks.items;
+  const productStockMap = {};
+  
+  // Calculate total volume for each product across all bars
+  stockItems.forEach(stock => {
+    if (!productStockMap[stock.productId]) {
+      productStockMap[stock.productId] = {
+        totalVolume: 0
+      };
+    }
+    productStockMap[stock.productId].totalVolume += stock.volume;
+  });
+  
+  return productStockMap;
+};
+
+const productStockData = calculateProductStockTotals();
+
+// Enhanced products with stock information
+export const enhancedProducts = dummyData.products.items.map(product => {
+  const stockInfo = productStockData[product.productId];
+  const totalVolume = stockInfo ? stockInfo.totalVolume : 0;
+  const bottleCount = stockInfo ? Math.floor(totalVolume / product.volume) : 0;
+  
+  return {
+    ...product,
+    totalVolume,
+    bottleCount
+  };
+});
+
+// Enhanced dummy data with products that include stock information
+export const enhancedDummyData = {
+  ...dummyData,
+  products: {
+    ...dummyData.products,
+    items: enhancedProducts
+  }
+};
+
+// Helper function to get product with stock info by ID
+export const getProductWithStockInfo = (productId) => {
+  return enhancedProducts.find(product => product.productId === productId);
+};
+
+export const getTotalStockForAllBars = () => {
+  const stockItems = dummyData.stocks.items;
+  const productStockMap = {};
+  
+  stockItems.forEach(stock => {
+    if (!productStockMap[stock.productId]) {
+      productStockMap[stock.productId] = {
+        totalVolume: 0,
+        product: dummyData.products.items.find(p => p.productId === stock.productId)
+      };
+    }
+    productStockMap[stock.productId].totalVolume += stock.volume;
+  });
+  
+  return Object.values(productStockMap).map(stockInfo => ({
+    ...stockInfo.product,
+    totalVolume: stockInfo.totalVolume,
+    bottleCount: Math.floor(stockInfo.totalVolume / stockInfo.product.volume)
+  }));
+};
+
+// Get stock for specific bar (for bar detail page)
+export const getStockForBar = (barId) => {
+  const barStocks = dummyData.stocks.items.filter(stock => stock.storagePlaceId === barId);
+  const productStockMap = {};
+  
+  barStocks.forEach(stock => {
+    if (!productStockMap[stock.productId]) {
+      productStockMap[stock.productId] = {
+        totalVolume: 0,
+        product: dummyData.products.items.find(p => p.productId === stock.productId)
+      };
+    }
+    productStockMap[stock.productId].totalVolume += stock.volume;
+  });
+  
+  return Object.values(productStockMap).map(stockInfo => ({
+    ...stockInfo.product,
+    totalVolume: stockInfo.totalVolume,
+    bottleCount: Math.floor(stockInfo.totalVolume / stockInfo.product.volume)
+  }));
 };
 
 // Export individual classes and dummy data
