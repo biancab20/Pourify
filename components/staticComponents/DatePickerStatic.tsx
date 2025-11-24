@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import dayjs, { Dayjs } from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
@@ -7,17 +7,12 @@ import { useAppTheme } from "@/stores/app-theme-context";
 
 dayjs.extend(isoWeek);
 
-export type Mode = "Day" | "Week" | "Month" | "Year";
+type Mode = "Day" | "Week" | "Month" | "Year";
 
-interface DatePickerProps {
-  mode: Mode;
-  setMode: (mode: Mode) => void;
-  currentDate: Dayjs;
-  setCurrentDate: (date: Dayjs) => void;
-}
-
-export default function DatePicker({ mode, setMode, currentDate, setCurrentDate }: DatePickerProps) {
+export default function DatePicker() {
   const { theme } = useAppTheme(); 
+  const [mode, setMode] = useState<Mode>("Week");
+  const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
 
   const changePeriod = (direction: -1 | 1) => {
     const units: Record<Mode, dayjs.ManipulateType> = {
@@ -100,6 +95,7 @@ export default function DatePicker({ mode, setMode, currentDate, setCurrentDate 
           <Text style={[styles.arrow, { color: theme.colors.text }]}>→</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }
@@ -109,15 +105,21 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingBottom: 8,
   },
+
   modeRow: {
     flexDirection: "row",
     borderRadius: 24,
     overflow: "hidden",
   },
+
   modeButton: {
     paddingVertical: 4,
     backgroundColor: "transparent",
     textAlign: "center",
+  },
+
+  modeButtonActive: {
+    backgroundColor: "#ff66ff",
   },
   navContainer: {
     flexDirection: "row",
@@ -134,4 +136,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
+ 
 });

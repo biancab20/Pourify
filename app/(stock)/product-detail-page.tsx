@@ -6,11 +6,26 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import CircularChart from "@/components/ui/CircularChart"; 
+import DatePicker, { Mode } from "@/components/ui/DatePicker"; // Import Mode type
+import { useState } from "react";
+import dayjs from "dayjs";
 
 export default function ProductDetails() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
+
+  // State for date picker
+  const [mode, setMode] = useState<Mode>("Week");
+  const [currentDate, setCurrentDate] = useState(dayjs());
+
+  // Chart data matching your screenshot
+  const chartData = {
+    ordered: 42, // Total ordered
+    poured: 30,  // Amount poured
+    sold: 28.56  // Amount sold (matches your 28,56)
+  };
 
   return (
     <ScrollView 
@@ -18,7 +33,18 @@ export default function ProductDetails() {
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock 1</Text>
+
+        {/* Circular Chart inserted here */}
+        <DatePicker 
+          mode={mode}
+          setMode={setMode}
+          currentDate={currentDate}
+          setCurrentDate={setCurrentDate}
+        />
+        <View style={styles.chartWrapper}>
+          <CircularChart data={chartData} mode={mode} />
+        </View>
 
         <WideCardStatic>
           <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>To Be Dynamic</Text>
@@ -49,16 +75,16 @@ export default function ProductDetails() {
           style={styles.stockButton}
         >
           <LinearGradient
-                      colors={["#FF77E0", "#F54D41"]}
-                      start={{ x: 0, y: 0.5 }}
-                      end={{ x: 1, y: 0.5 }}
-                      style={{
-                        paddingVertical: 14,
-                        borderRadius: 24,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
+            colors={["#FF77E0", "#F54D41"]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={{
+              paddingVertical: 14,
+              borderRadius: 24,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Text
               style={{
                 color: "white",
@@ -114,5 +140,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     alignSelf: "center",
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });
