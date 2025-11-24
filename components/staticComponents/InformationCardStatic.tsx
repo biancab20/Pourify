@@ -5,10 +5,14 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import InfoCard from "../ui/InfoBox";
 import PieChartStatic from "./PieChartStatic";
 
-export default function InformationCardStatic() {
+interface InformationCardStaticProps {
+  barName: string;
+}
+
+export default function InformationCardStatic({ barName }: InformationCardStaticProps) {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
-  const cardWidth = (width - 16 * 3) / 2;
+  const cardWidth = (width - 16 * 2 - 10) / 2;
   const circleSize = cardWidth - 26;
 
   return (
@@ -19,13 +23,10 @@ export default function InformationCardStatic() {
         backgroundColor: theme.isDark ? "#000000" : "#FFFFFF"
       }
     ]}>
-      {/* Title */}
-      <Text style={[styles.title, { color: theme.colors.text }]}>To Be Dynamic</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]}>{barName}</Text>
 
-      {/* Static Pie Chart */}
       <PieChartStatic size={circleSize} />
 
-      {/* Dynamic Info Cards */}
       <InfoCard title="Bacardi" subtitle="Most popular product" />
       <InfoCard title={3} subtitle="#Pours" />
     </View>

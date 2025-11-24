@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,22 +11,20 @@ export default function BarDetailPage() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
-
+  const params = useLocalSearchParams();
+  const { barId, barName } = params;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Singular bar</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{barName || "Singular bar"}</Text>
       
-        <DatePickerStatic />
-        <GraphChartStatic />
+      <DatePickerStatic />
+      <GraphChartStatic />
 
-
-      {/* Back Button */}
       <Pressable
         style={[styles.button, styles.secondary, { borderColor: palette.darkBlue }]}
         onPress={() => router.back()}
       >
-
         <Text style={[styles.secondaryText, { color: palette.darkBlue }]}>Back to Home</Text>
       </Pressable>
     </ScrollView>
@@ -81,8 +79,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
-
-    card: {
+  card: {
     marginVertical: 20,
   },
   row: {

@@ -1,18 +1,19 @@
 import { Text } from "@/components/shared/Text";
 import InformationCard from "@/components/staticComponents/InformationCardStatic";
 import PieChartStatic from "@/components/staticComponents/PieChartStatic";
-import WideCardStatic from "@/components/staticComponents/WideCardStatic"; // Import the new component
+import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import InfoCard from "@/components/ui/InfoBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text as RNText, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { dummyData, Bar } from "@/types/DummyData";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { colors, palette } = theme; // Also get palette from theme
+  const { colors, palette } = theme;
   const { width } = useWindowDimensions();
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -24,12 +25,13 @@ export default function HomeScreen() {
   const cardWidth = width - 32;
   const circleSize = 150;
 
+  const bars = dummyData.bars.items;
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
-      {/* Top Navigation Bar */}
       <View style={styles.topBar}>
         <Text style={[styles.dateText, { color: colors.text }]}>{today}</Text>
         <View style={styles.iconButtons}>
@@ -48,12 +50,10 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Page Title */}
       <Text variant="gradient" gradientName="paloma" style={styles.title}>
         Hachi bar
       </Text>
 
-      {/* Wide Card with Pie Chart and Stats - USING WideCardStatic */}
       <WideCardStatic>
         <View style={[styles.wideCard, { width: cardWidth }]}>
           <PieChartStatic size={circleSize} />
@@ -75,7 +75,6 @@ export default function HomeScreen() {
         </Text>
       </WideCardStatic>
 
-      {/* Most Popular Drink Section - USING WideCardStatic */}
       <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Most Popular Drink</Text>
 
@@ -91,24 +90,25 @@ export default function HomeScreen() {
         </WideCardStatic>
       </View>
 
-      {/* Poured Today Section */}
       <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
+  <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
 
-        <View style={styles.cardsRow}>
-          <InformationCard />
-          <InformationCard />
-        </View>
-      </View>
+  <View style={styles.cardsRow}>
+    {bars.map((bar: Bar) => (
+      <Pressable 
+        key={bar.barId}
+        onPress={() => router.push({
+          pathname: "/bar-detail-page",
+          params: { barId: bar.barId, barName: bar.name }
+        })}
+      >
+        <InformationCard barName={bar.name} />
+      </Pressable>
+    ))}
+  </View>
+</View>
 
-      <Pressable
-            style={styles.iconButton}
-            onPress={() => router.push("/bar-detail-page")}
-          >
-            <Text style={{ color: colors.text, fontSize: 18 }}>Trial Bar Details</Text>
-          </Pressable>
 
-      {/* View Stock Section*/}
       <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
 
@@ -193,14 +193,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  // REMOVE the old wideCardBackground style since we're using the component now
-  // wideCardBackground: {
-  //   backgroundColor: "#000814",
-  //   borderRadius: 20,
-  //   padding: 16,
-  //   marginBottom: 16,
-  // },
-
   statsContainer: {
     flex: 1,
     justifyContent: "center",
@@ -212,12 +204,12 @@ const styles = StyleSheet.create({
   },
 
   statLabel: {
-    fontSize: 18, // Remove hardcoded color
+    fontSize: 18,
     fontWeight: "700",
   },
 
   statValue: {
-    fontSize: 20, // Remove hardcoded color
+    fontSize: 20,
     fontWeight: "700",
   },
 
@@ -237,13 +229,15 @@ const styles = StyleSheet.create({
 
   cardsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     marginTop: 0,
+    gap: 10,
   },
 
   infoBox: {
     marginBottom: 8,
-    fontSize: 10, // Remove hardcoded color
+    fontSize: 10,
     textAlign: "center",
     fontWeight: "500",
   },
@@ -251,7 +245,6 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     marginVertical: 13,
-    // Remove hardcoded backgroundColor
   },
 
   row: {

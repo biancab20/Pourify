@@ -7,25 +7,27 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import CircularChart from "@/components/ui/CircularChart"; 
-import DatePicker, { Mode } from "@/components/ui/DatePicker"; // Import Mode type
+import DatePicker, { Mode } from "@/components/ui/DatePicker";
 import { useState } from "react";
 import dayjs from "dayjs";
+import { dummyData, Bar } from "@/types/DummyData";
 
 export default function ProductDetails() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
 
-  // State for date picker
   const [mode, setMode] = useState<Mode>("Week");
   const [currentDate, setCurrentDate] = useState(dayjs());
 
-  // Chart data matching your screenshot
   const chartData = {
-    ordered: 42, // Total ordered
-    poured: 30,  // Amount poured
-    sold: 28.56  // Amount sold (matches your 28,56)
+    ordered: 42,
+    poured: 30,
+    sold: 28.56
   };
+
+  const bars = dummyData.bars.items;
+  const products = dummyData.products.items;
 
   return (
     <ScrollView 
@@ -35,7 +37,6 @@ export default function ProductDetails() {
       <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock 1</Text>
 
-        {/* Circular Chart inserted here */}
         <DatePicker 
           mode={mode}
           setMode={setMode}
@@ -47,12 +48,12 @@ export default function ProductDetails() {
         </View>
 
         <WideCardStatic>
-          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>To Be Dynamic</Text>
+          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{products[0]?.name}</Text>
 
           <View style={[styles.divider, { backgroundColor: colors.text }]} />
 
           <View style={styles.row}>
-            <InfoCard title="0.06 L" subtitle="#Litres" style={{ width: '45%', marginRight: 10 }} />
+            <InfoCard title={`${products[0]?.volume} L`} subtitle="#Litres" style={{ width: '45%', marginRight: 10 }} />
             <InfoCard title={3} subtitle="#Bottles" style={{ width: '45%' }} />
           </View>
         </WideCardStatic>
@@ -62,8 +63,9 @@ export default function ProductDetails() {
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
 
         <View style={styles.cardsRow}>
-          <InformationCard />
-          <InformationCard />
+          {bars.map((bar: Bar) => (
+              <InformationCard barName={bar.name} />
+          ))}
         </View>
       </View>
 
@@ -123,8 +125,10 @@ const styles = StyleSheet.create({
   },
   cardsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     marginTop: 0,
+    gap: 10,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
