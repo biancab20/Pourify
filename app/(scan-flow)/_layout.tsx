@@ -10,6 +10,7 @@ export default function ScanFlowLayout() {
       }}
     >
       <Stack.Screen name="scan-new-delivery" />
+      <Stack.Screen name="picture-overview" />
       {/* <Stack.Screen name="step2" /> */}
       {/* more steps if needed */}
     </Stack>

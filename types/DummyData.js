@@ -1,4 +1,4 @@
-// models/DummyData.js
+// types/DummyData.js
 
 // First, define all your model classes
 export class User {
@@ -403,6 +403,7 @@ export const getStockForBar = (barId) => {
     bottleCount: Math.floor(stockInfo.totalVolume / stockInfo.product.volume)
   }));
 };
+
 
 // Export individual classes and dummy data
 export default dummyData;

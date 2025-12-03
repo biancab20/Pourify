@@ -35,11 +35,16 @@ export default function ProductDetails() {
   const productType = Array.isArray(params.productType) ? params.productType[0] : params.productType || "";
   const totalVolume = Array.isArray(params.totalVolume) ? params.totalVolume[0] : params.totalVolume || "0";
   const bottleCount = Array.isArray(params.bottleCount) ? params.bottleCount[0] : params.bottleCount || "0";
+  const barName = Array.isArray(params.barName) ? params.barName[0] : params.barName || "";
+  const barId = Array.isArray(params.barId) ? params.barId[0] : params.barId || "";
 
   // Parse numeric values
   const parsedProductVolume = parseFloat(productVolume);
   const parsedTotalVolume = parseFloat(totalVolume);
   const parsedBottleCount = parseInt(bottleCount);
+
+  // Check if we're viewing General Stock or a specific bar
+  const isGeneralStock = !barName || barName === "General Stock";
 
   return (
     <ScrollView 
@@ -59,21 +64,32 @@ export default function ProductDetails() {
           <CircularChart data={chartData} mode={mode} />
         </View>
 
-        <WideCardStatic>
-          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{productName}</Text>
+        {/* Only show WideCardStatic section for specific bars, not General Stock */}
+        {!isGeneralStock && (
+          <WideCardStatic>
+            <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{barName}</Text>
 
-          <View style={[styles.divider, { backgroundColor: colors.text }]} />
+            <View style={[styles.divider, { backgroundColor: colors.text }]} />
 
-          <View style={styles.row}>
-            <InfoCard title={`${parsedTotalVolume} L`} subtitle="#Litres" style={{ width: '45%', marginRight: 10 }} />
-            <InfoCard title={parsedBottleCount} subtitle="#Bottles" style={{ width: '45%' }} />
-          </View>
-      
-        </WideCardStatic>
+            <View style={styles.row}>
+              <InfoCard 
+                title={`${parsedTotalVolume} L`} 
+                subtitle="#Litres" 
+                style={{ width: '45%', marginRight: 10 }} 
+              />
+              <InfoCard 
+                title={parsedBottleCount.toString()} 
+                subtitle="#Bottles" 
+                style={{ width: '45%' }} 
+              />
+            </View>
+          </WideCardStatic>
+        )}
       </View>
 
+      {/* Always show "Poured today in your bars" section - for both General Stock and specific bars */}
       <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Available in other bars</Text>
 
         <View style={styles.cardsRow}>
           {bars.map((bar: Bar) => (
@@ -82,36 +98,49 @@ export default function ProductDetails() {
         </View>
       </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Modify Stock</Text>
+      {/* Only show "Modify Stock" section for specific bars, not General Stock */}
+      {!isGeneralStock && (
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Modify Stock</Text>
 
-        <Pressable
-          onPress={() => router.push("/(stock)/edit-stock")}
-          style={styles.stockButton}
-        >
-          <LinearGradient
-            colors={["#FF77E0", "#F54D41"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{
-              paddingVertical: 14,
-              borderRadius: 24,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+          <Pressable
+            onPress={() => router.push({
+              pathname: "/(stock)/edit-stock",
+              params: {
+                productId: params.productId as string,
+                productName: productName,
+                productVolume: productVolume,
+                barId: barId,
+                barName: barName,
+                currentStock: parsedBottleCount.toString()
+              }
+            })}
+            style={styles.stockButton}
           >
-            <Text
+            <LinearGradient
+              colors={["#FF77E0", "#F54D41"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
               style={{
-                color: "white",
-                fontWeight: "700",
-                fontSize: 18,
+                paddingVertical: 14,
+                borderRadius: 24,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Adjust Stock
-            </Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
+              <Text
+                style={{
+                  color: "white",
+                  fontWeight: "700",
+                  fontSize: 18,
+                }}
+              >
+                Adjust Stock
+              </Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      )}
     </ScrollView>
   );
 }
