@@ -1,16 +1,15 @@
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { View, StyleSheet,  ScrollView } from "react-native";
+import {  useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
-import { LinearGradient } from "expo-linear-gradient";
 import GraphChartStatic from "@/components/staticComponents/GraphChartStatic";
-import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import DatePickerStatic from "@/components/staticComponents/DatePickerStatic";
+import GradientButton from "@/components/ui/GradientButton";
 
 export default function BarDetailPage() {
-  const router = useRouter();
+
   const { theme } = useAppTheme();
-  const { colors, palette } = theme;
+  const { colors} = theme;
   const params = useLocalSearchParams();
   const { barId, barName } = params;
 
@@ -24,43 +23,16 @@ export default function BarDetailPage() {
       <DatePickerStatic />
       <GraphChartStatic />
 
-      {/* Add some spacing and additional content */}
       <View style={styles.spacer} />
       
       <View style={styles.sectionContainer}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
-      
-               <Pressable
-                  onPress={() => router.push({
-    pathname: "/(stock)/all-products-page",
-    params: { barId: barId, barName: barName }
-  })}
-                  style={styles.stockButton}
-                >
-                <LinearGradient
-                  colors={["#FF77E0", "#F54D41"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={{
-                    paddingVertical: 14,
-                    borderRadius: 24,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-              <Text
-                style={{
-                  color: "white",
-                  fontWeight: "700",
-                  fontSize: 18,
-                }}
-              >
-                View stock
-              </Text>
-            </LinearGradient>
-          </Pressable>
+                <GradientButton
+                  destination="/(stock)/all-products-page"
+                  params={{ barId, barName }}
+                  buttonText="View stock"
+                />
             </View>  
-
     </ScrollView>
   );
 }
@@ -82,7 +54,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 40,
     paddingBottom: 60,
-    minHeight: 800, // Force minimum height to enable scrolling
+    minHeight: 800, 
   },
   title: { 
     fontSize: 22, 

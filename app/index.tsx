@@ -4,11 +4,11 @@ import PieChartStatic from "@/components/staticComponents/PieChartStatic";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import InfoCard from "@/components/ui/InfoBox";
 import { useAppTheme } from "@/stores/app-theme-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, Text as RNText, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
 import { dummyData, Bar } from "@/types/DummyData";
+import GradientButton from "@/components/ui/GradientButton";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -111,33 +111,10 @@ export default function HomeScreen() {
 
       <View style={styles.sectionContainer}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
-
-         <Pressable
-            onPress={() => router.push("/(stock)/all-products-page")}
-            style={styles.stockButton}
-          >
-          <LinearGradient
-            colors={["#FF77E0", "#F54D41"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{
-              paddingVertical: 14,
-              borderRadius: 24,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-        <Text
-          style={{
-            color: "white",
-            fontWeight: "700",
-            fontSize: 18,
-          }}
-        >
-          View stock
-        </Text>
-      </LinearGradient>
-    </Pressable>
+          <GradientButton
+            destination="/(stock)/all-products-page"
+            buttonText="View stock"
+          />
       </View>  
       
     </ScrollView>

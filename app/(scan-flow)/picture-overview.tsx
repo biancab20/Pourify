@@ -7,8 +7,10 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Text } from "@/components/shared/Text";
+import GradientButton from "@/components/ui/GradientButton"; 
+import SecondaryButton from "@/components/ui/SecondaryButton"; 
 
 export default function PictureOverview() {
   const router = useRouter();
@@ -17,12 +19,20 @@ export default function PictureOverview() {
     params.photos ? JSON.parse(params.photos as string) : []
   );
 
+  useEffect(() => {
+    if (params.photos) {
+      setPhotos(JSON.parse(params.photos as string));
+    }
+  }, [params.photos]);
+
   const addMorePhotos = () => {
-    router.back(); // Go back to camera screen
+    router.push({
+      pathname: "/(scan-flow)/scan-new-delivery",
+      params: { existingPhotos: JSON.stringify(photos) },
+    });
   };
 
   const confirmPhotos = () => {
-    // Here you would typically upload photos to your server
     console.log("Photos to process:", photos);
     Alert.alert(
       "Success",
@@ -30,7 +40,7 @@ export default function PictureOverview() {
       [
         {
           text: "OK",
-          onPress: () => router.replace("/(stock)/all-products-page"), // Or your next screen
+          onPress: () => router.replace("/(stock)/all-products-page"),
         }
       ]
     );
@@ -42,82 +52,50 @@ export default function PictureOverview() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </Pressable>
         <Text style={styles.headerTitle}>Delivery Note Photos</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Instruction */}
-      <View style={styles.instructionContainer}>
-        <Text style={styles.instructionText}>
-          Review your {photos.length} photo{photos.length !== 1 ? "s" : ""}. 
-          Tap on a photo to remove it.
-        </Text>
-        <Text style={styles.subInstructionText}>
-          Make sure all pages are clear and readable
-        </Text>
+        <Pressable onPress={() => router.back()}>
+          <Text style={styles.closeText}>✕</Text>
+        </Pressable>
       </View>
 
       {/* Photo Grid */}
       <ScrollView style={styles.photoContainer}>
         <View style={styles.photoGrid}>
           {photos.map((photo, index) => (
-            <Pressable
-              key={index}
-              onPress={() => removePhoto(index)}
-              style={styles.photoItem}
-            >
+            <View key={index} style={styles.photoItem}>
               <Image
                 source={{ uri: photo.uri }}
                 style={styles.photo}
               />
-              <View style={styles.photoOverlay}>
-                <Text style={styles.removeText}>Remove</Text>
-              </View>
+              <Pressable
+                style={styles.removeButton}
+                onPress={() => removePhoto(index)}
+              >
+                <Text style={styles.removeButtonText}>✕</Text>
+              </Pressable>
               <View style={styles.photoNumberBadge}>
                 <Text style={styles.photoNumberText}>Page {index + 1}</Text>
               </View>
-            </Pressable>
-          ))}
-          
-          {/* Add more button */}
-          <Pressable
-            style={[styles.photoItem, styles.addMoreButton]}
-            onPress={addMorePhotos}
-          >
-            <View style={styles.addMoreContent}>
-              <Text style={styles.addMoreIcon}>+</Text>
-              <Text style={styles.addMoreText}>Add More</Text>
             </View>
-          </Pressable>
+          ))}
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
       <View style={styles.buttonContainer}>
-        <Pressable
-          style={[styles.button, styles.secondaryButton]}
-          onPress={addMorePhotos}
-        >
-          <Text style={styles.secondaryButtonText}>Take More Photos</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.button, styles.primaryButton]}
+        
+        {/* Confirm Photos - Gradient Button */}
+        <GradientButton
           onPress={confirmPhotos}
+          buttonText={`Confirm ${photos.length} Photo${photos.length !== 1 ? "s" : ""}`}
           disabled={photos.length === 0}
-        >
-          <Text style={[
-            styles.primaryButtonText,
-            photos.length === 0 && styles.disabledButtonText
-          ]}>
-            Confirm {photos.length} Photo{photos.length !== 1 ? "s" : ""}
-          </Text>
-        </Pressable>
+        />
+        
+        {/* Take More Photos - Secondary Button */}
+        <SecondaryButton
+          onPress={addMorePhotos}
+          buttonText="Take More Photos"
+        />
       </View>
     </View>
   );
@@ -129,49 +107,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#001b3a",
   },
   header: {
-    paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    height: 56,
+    backgroundColor: "#001b3a",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.1)",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  backButtonText: {
-    color: "#D4FF3B",
-    fontSize: 28,
-    fontWeight: "300",
   },
   headerTitle: {
     color: "#D4FF3B",
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "600",
-    flex: 1,
-    textAlign: "center",
   },
-  placeholder: {
-    width: 40,
-  },
-  instructionContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
-  },
-  instructionText: {
+  closeText: {
     color: "white",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  subInstructionText: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 14,
+    fontSize: 24,
+    fontWeight: "300",
   },
   photoContainer: {
     flex: 1,
@@ -194,21 +147,23 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  photoOverlay: {
+  removeButton: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 59, 48, 0.8)",
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#ff3b30",
     justifyContent: "center",
     alignItems: "center",
-    opacity: 0,
+    borderWidth: 2,
+    borderColor: "#001b3a",
   },
-  removeText: {
+  removeButtonText: {
     color: "white",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "bold",
   },
   photoNumberBadge: {
     position: "absolute",
@@ -224,57 +179,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
-  addMoreButton: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  addMoreContent: {
-    alignItems: "center",
-  },
-  addMoreIcon: {
-    color: "#D4FF3B",
-    fontSize: 36,
-    fontWeight: "300",
-    marginBottom: 8,
-  },
-  addMoreText: {
-    color: "#D4FF3B",
-    fontSize: 14,
-    fontWeight: "500",
-  },
   buttonContainer: {
     padding: 16,
-    gap: 12,
+    gap: 12, // Adds spacing between buttons
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.1)",
-  },
-  button: {
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButton: {
-    backgroundColor: "#D4FF3B",
-  },
-  primaryButtonText: {
-    color: "#001b3a",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  secondaryButton: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-  },
-  secondaryButtonText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  disabledButtonText: {
-    color: "rgba(0,27,58,0.5)",
   },
 });

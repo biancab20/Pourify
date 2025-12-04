@@ -7,14 +7,15 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
-import { LinearGradient } from 'expo-linear-gradient';
+import GradientButton from "@/components/ui/GradientButton";
 
 export default function ScanNewDelivery() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [photos, setPhotos] = useState<{uri: string}[]>([]);
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -43,17 +44,25 @@ export default function ScanNewDelivery() {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const proceedToOverview = () => {
-    if (photos.length === 0) {
-      Alert.alert("No Photos", "Please take at least one photo before proceeding");
-      return;
-    }
-    
-    router.push({
-      pathname: "/(scan-flow)/picture-overview",
-      params: { photos: JSON.stringify(photos) },
-    });
-  };
+  useEffect(() => {
+  if (params.existingPhotos) {
+    const existing = JSON.parse(params.existingPhotos as string);
+    setPhotos(existing);
+  }
+}, [params.existingPhotos]);
+
+// Update proceedToOverview to pass current photos
+const proceedToOverview = () => {
+  if (photos.length === 0) {
+    Alert.alert("No Photos", "Please take at least one photo before proceeding");
+    return;
+  }
+  
+  router.push({
+    pathname: "/(scan-flow)/picture-overview",
+    params: { photos: JSON.stringify(photos) },
+  });
+};
 
   const toggleCameraType = () => {
     setCameraType(current => (current === "back" ? "front" : "back"));
@@ -149,33 +158,12 @@ export default function ScanNewDelivery() {
           </View>
         )}
 
-        {/* Action button */}
         <View style={styles.actionContainer}>
-          <Pressable
-            style={[
-              styles.actionButton,
-              photos.length === 0 && styles.disabledGradient,
-            ]}
+          <GradientButton
             onPress={proceedToOverview}
+            buttonText={`Review (${photos.length})`}
             disabled={photos.length === 0}
-          >
-            <LinearGradient
-              colors={["#FF77E0", "#F54D41"]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={[
-                styles.gradientButton,
-                photos.length === 0 && styles.disabledGradient,
-              ]}
-            >
-              <Text style={[
-                styles.nextButtonText,
-                photos.length === 0 && styles.disabledButtonText
-              ]}>
-                Review ({photos.length})
-              </Text>
-            </LinearGradient>
-          </Pressable>
+          />
         </View>
       </View>
     </View>
