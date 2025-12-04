@@ -36,6 +36,10 @@ export default function RootLayout() {
           name="bar-detail-page"
           options={{ animation: "slide_from_right", gestureEnabled: true }}
         />
+        <Stack.Screen
+          name="homepage"
+          options={{ animation: "slide_from_right", gestureEnabled: true }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </AppThemeProvider>

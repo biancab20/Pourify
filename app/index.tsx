@@ -1,239 +1,200 @@
+import React, { useState } from "react";
+import {View, TextInput, TouchableOpacity, Image, StyleSheet, } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/shared/Text";
-import InformationCard from "@/components/staticComponents/InformationCardStatic";
-import PieChartStatic from "@/components/staticComponents/PieChartStatic";
-import WideCardStatic from "@/components/staticComponents/WideCardStatic";
-import InfoCard from "@/components/ui/InfoBox";
-import { useAppTheme } from "@/stores/app-theme-context";
-import { useRouter } from "expo-router";
-import React from "react";
-import { Pressable, Text as RNText, ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
-import { dummyData, Bar } from "@/types/DummyData";
+import { useAppTheme } from "../stores/app-theme-context"; 
+import { Ionicons } from "@expo/vector-icons";
 import GradientButton from "@/components/ui/GradientButton";
 
-export default function HomeScreen() {
-  const router = useRouter();
+export default function LoginScreen() {
   const { theme } = useAppTheme();
-  const { colors, palette } = theme;
-  const { width } = useWindowDimensions();
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-
-  const cardWidth = width - 32;
-  const circleSize = 150;
-
-  const bars = dummyData.bars.items;
+  // Create themed styles
+  const themedStyles = {
+    input: {
+      ...styles.input,
+      color: theme.colors.cardText,
+    },
+    passwordInput: {
+      flex: 1,
+      marginBottom: 0,
+      paddingHorizontal: 14,
+      fontSize: 16,
+      color: theme.colors.cardText, 
+    },
+    passwordWrapper: {
+      ...styles.passwordWrapper,
+      borderColor: theme.colors.text || "#E6E6E6", 
+    },
+  };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingBottom: 40 }}
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.topBar}>
-        <Text style={[styles.dateText, { color: colors.text }]}>{today}</Text>
-        <View style={styles.iconButtons}>
-          <Pressable
-            style={styles.iconButton}
-            onPress={() => router.push("/(scan-flow)/scan-new-delivery")}
-          >
-            <Text style={{ color: colors.text, fontSize: 18 }}>📦</Text>
-          </Pressable>
-          <Pressable style={styles.iconButton}>
-            <Text style={{ color: colors.text, fontSize: 18 }}>🔔</Text>
-          </Pressable>
-          <Pressable style={styles.iconButton}>
-            <Text style={{ color: colors.text, fontSize: 18 }}>⚙️</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <Text variant="gradient" gradientName="paloma" style={styles.title}>
-        Hachi bar
-      </Text>
-
-      <WideCardStatic>
-        <View style={[styles.wideCard, { width: cardWidth }]}>
-          <PieChartStatic size={circleSize} />
-
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <RNText style={[styles.statLabel, { color: colors.text }]}>Goal</RNText>
-              <RNText style={[styles.statValue, { color: palette.blue }]}>1,00 L</RNText>
-            </View>
-            <View style={styles.statItem}>
-              <RNText style={[styles.statLabel, { color: colors.text }]}>Total Poured</RNText>
-              <RNText style={[styles.statValue, { color: palette.red }]}>1,00 L</RNText>
-            </View>
-          </View>
-        </View>
-
-        <Text style={[styles.infoBox, { color: colors.text }]}>
-          Transactions from your POS will appear once they are paid
-        </Text>
-      </WideCardStatic>
-
-      <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Most Popular Drink</Text>
-
-        <WideCardStatic>
-          <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>Bacardi</Text>
-
-          <View style={[styles.divider, { backgroundColor: colors.text }]} />
-
-          <View style={styles.row}>
-            <InfoCard title="0.06 L" subtitle="Total Poured" style={{ width: '45%', marginRight: 10 }} />
-            <InfoCard title={3} subtitle="#Pours" style={{ width: '45%' }} />
-          </View>
-        </WideCardStatic>
-      </View>
-
-      <View style={styles.sectionContainer}>
-  <Text style={[styles.sectionTitle, { color: colors.text }]}>Poured today in your bars</Text>
-
-  <View style={styles.cardsRow}>
-    {bars.map((bar: Bar) => (
-      <Pressable 
-        key={bar.barId}
-        onPress={() => router.push({
-          pathname: "/bar-detail-page",
-          params: { barId: bar.barId, barName: bar.name }
-        })}
-      >
-        <InformationCard barName={bar.name} />
-      </Pressable>
-    ))}
-  </View>
-</View>
-
-
-      <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
-          <GradientButton
-            destination="/(stock)/all-products-page"
-            buttonText="View stock"
+      <View style={styles.wrapper}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../assets/images/logo.png")} 
+            style={styles.logo}
+            resizeMode="contain"
           />
-      </View>  
-      
-    </ScrollView>
+
+          <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+            Every. Drop. Counts.
+          </Text>
+        </View>
+
+        {/* Card */}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.cardBackground,
+            },
+          ]}
+        >
+          {/* Email */}
+          <Text style={{color: theme.colors.cardText }}>
+            E-mail
+          </Text>
+          <TextInput
+            placeholder="hello@example.com"
+            placeholderTextColor="#b6b6b6"
+            style={themedStyles.input}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          {/* Password */}
+          <Text style={[styles.label, { color: theme.colors.cardText }]}>
+            Wachtwoord
+          </Text>
+          <View style={themedStyles.passwordWrapper}>
+            <TextInput
+              placeholder="•••••••"
+              placeholderTextColor="#b6b6b6"
+              secureTextEntry={!showPassword}
+              style={themedStyles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            <TouchableOpacity
+              onPress={() => setShowPassword((prev) => !prev)}
+              style={styles.eyeButton}
+            >
+              <Ionicons
+                name={showPassword ? "eye" : "eye-off"}
+                size={22}
+                color={theme.colors.text || "#777"} // Use theme icon color if available
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Gradient Button */}
+          <GradientButton
+            destination="/homepage"
+            buttonText="Login"
+          />
+
+          {/* Footer links */}
+          <TouchableOpacity>
+            <Text style={[styles.forgotPassword, { color: theme.colors.text || "#F54D41" }]}>
+              Wachtwoord vergeten?
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Text style={[styles.createAccount, { color: theme.colors.text || "#FF77E0" }]}>
+              Geen account? <Text style={{ fontWeight: "700" }}>Maak er nu een aan!</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+  },
+  wrapper: {
+    flex: 1,
+    justifyContent: "flex-start",
     paddingTop: 40,
-  },
-
-  sectionContainer: {
-    marginTop: 24,
-  },
-
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    width: "100%",
     alignItems: "center",
   },
-
-  dateText: {
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  logo: {
+    width: 300,
+    height: 200,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: -60,
+  },
+  card: {
+    width: "88%",
+    borderRadius: 22,
+    paddingVertical: 30,
+    paddingHorizontal: 22,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    borderRadius: 14,
+    paddingHorizontal: 14,
     fontSize: 16,
+    marginBottom: 18,
+  },
+  passwordWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+    borderRadius: 14,
+    height: 48,
+    paddingRight: 10,
+    marginBottom: 18,
+  },
+  eyeButton: {
+    paddingHorizontal: 4,
+  },
+  loginButton: {
+    paddingVertical: 14,
+    borderRadius: 999,
+    alignItems: "center",
+  },
+  forgotPassword: {
+    marginTop: 16,
+    textAlign: "center",
     fontWeight: "600",
   },
-
-  iconButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-
-  iconButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  title: {
-    fontSize: 42,
-    fontWeight: "700",
-    marginTop: 20,
-    marginBottom: 16,
-  },
-
-  wideCard: {
-    flexDirection: "row",
-    borderRadius: 20,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-
-  statsContainer: {
-    flex: 1,
-    justifyContent: "center",
-    marginLeft: 20,
-  },
-
-  statItem: {
-    marginBottom: 12,
-  },
-
-  statLabel: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-
-  statValue: {
-    fontSize: 20,
-    fontWeight: "700",
-  },
-
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 15,
-  },
-
-  popularDrinkTitle: {
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 0,
-    marginBottom: 0,
-  },
-
-  cardsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: 0,
-    gap: 10,
-  },
-
-  infoBox: {
-    marginBottom: 8,
-    fontSize: 10,
+  createAccount: {
+    marginTop: 10,
     textAlign: "center",
-    fontWeight: "500",
-  },
-
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginVertical: 13,
-  },
-
-  row: {
-    flexDirection: 'row',
-    marginTop: 0,
-  },
-
-  stockButton: {
-    width: "100%",
-    marginBottom: 60,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignSelf: "center",
+    fontWeight: "600",
   },
 });
