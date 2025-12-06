@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 16,
-    gap: 12, // Adds spacing between buttons
+    gap: 12, 
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.1)",
   },

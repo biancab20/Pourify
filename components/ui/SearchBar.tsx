@@ -28,7 +28,7 @@ const SearchBar: React.FC<SearchInputProps> = ({
     <View style={[
       styles.container, 
       { 
-        borderColor: palette.white, // Always white border
+        borderColor: palette.white, 
         backgroundColor: theme.isDark ? palette.black : palette.white
       }
     ]}>
@@ -74,24 +74,20 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 13,
-    borderWidth: 1,
-    width: '90%',
+    borderWidth: 0.5,
+    width: '100%',
     alignSelf: 'center',
-    marginTop: 20,
-    minHeight: 60,
   },
   input: {
     flex: 1,
-    height: 40,
     fontSize: 18,
-    paddingRight: 10,
-    paddingVertical: 0,
     textAlignVertical: 'center',
     includeFontPadding: false,
+    
   },
   clearButton: {
-    width: 30,
-    height: 30,
+    width: 20,
+    height: 20,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
