@@ -1,5 +1,6 @@
 import { View, StyleSheet,  ScrollView } from "react-native";
-import {  useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import GraphChartStatic from "@/components/staticComponents/GraphChartStatic";
@@ -14,34 +15,37 @@ export default function BarDetailPage() {
   const { barId, barName } = params;
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={styles.scrollContent}
-    >
-      <Text style={[styles.title, { color: colors.text }]}>{barName || "Singular bar"}</Text>
-      
-      <DatePickerStatic />
-      <GraphChartStatic />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text variant="gradient" gradientName="paloma" style={[styles.title, { color: colors.text }]}>{barName || "Singular bar"}</Text>
+        
+        <DatePickerStatic />
+        <GraphChartStatic />
 
-      <View style={styles.spacer} />
-      
-      <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
-                <GradientButton
-                  destination="/(stock)/all-products-page"
-                  params={{ barId, barName }}
-                  buttonText="View stock"
-                />
-            </View>  
-    </ScrollView>
+        <View style={styles.spacer} />
+        
+        <View style={styles.sectionContainer}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Stock</Text>
+          <GradientButton
+            destination="/(stock)/all-products-page"
+            params={{ barId, barName }}
+            buttonText="View stock"
+          />
+        </View>  
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
+    paddingVertical: 10,
   },
-   sectionTitle: {
+  sectionTitle: {
     fontSize: 24,
     fontWeight: "700",
     marginBottom: 15,
@@ -49,18 +53,16 @@ const styles = StyleSheet.create({
   sectionContainer: {
     marginTop: 24,
   },
-
   scrollContent: {
     paddingHorizontal: 10,
-    paddingTop: 40,
+    paddingTop: 0,
     paddingBottom: 60,
-    minHeight: 800, 
+    minHeight: 800,
   },
   title: { 
-    fontSize: 22, 
-    fontWeight: "600", 
-    marginBottom: 24,
-    textAlign: "center",
+    fontSize: 30, 
+    fontWeight: "700", 
+    marginBottom: 8,
   },
   infoText: {
     fontSize: 16,

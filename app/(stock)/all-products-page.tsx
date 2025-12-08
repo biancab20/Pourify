@@ -1,4 +1,5 @@
 import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/ui/SearchBar";
@@ -32,11 +33,9 @@ export default function AllProducts() {
 
   useEffect(() => {
     if (selectedBar.id) {
-      // Get stock for specific bar
       const barStock = getStockForBar(selectedBar.id);
       setProducts(barStock);
     } else {
-      // Get total stock for all bars
       const totalStock = getTotalStockForAllBars();
       setProducts(totalStock);
     }
@@ -64,9 +63,8 @@ export default function AllProducts() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
       <ScrollView style={styles.scrollView}>
-        {/* Dropdown Navigation Component */}
         <StockDropdownNavigation 
           bars={bars}
           selectedBar={selectedBar}
@@ -86,7 +84,8 @@ export default function AllProducts() {
             </Text>
           </View>
         )}
-        
+      
+
         <View style={styles.productsList}>
           {filteredProducts.map((product: ProductWithStock) => (
             <Pressable
@@ -115,7 +114,6 @@ export default function AllProducts() {
                 </Text>
               </View>
               
-              {/* Alcohol type displayed on the right in pink */}
               <View style={styles.alcoholTypeContainer}>
                 <Text style={[styles.alcoholTypeText, { color: theme.palette.pink }]}>
                   {product.type} {">"}
@@ -124,7 +122,6 @@ export default function AllProducts() {
             </Pressable>
           ))}
           
-          {/* Empty state when no products */}
           {filteredProducts.length === 0 && !searchQuery && (
             <View style={styles.emptyStateContainer}>
               <Text style={[styles.emptyStateText, { color: colors.text }]}>
@@ -139,7 +136,6 @@ export default function AllProducts() {
             </View>
           )}
           
-          {/* Show message when no results found from search */}
           {searchQuery && filteredProducts.length === 0 && (
             <View style={styles.noResultsContainer}>
               <Text style={[styles.noResultsText, { color: colors.text }]}>
@@ -148,24 +144,21 @@ export default function AllProducts() {
             </View>
           )}
         </View>
+
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1,
-  },
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 20,
+    paddingVertical: 5,
   },
   productsList: {
     marginTop: 20,
     gap: 12,
-    paddingBottom: 40,
   },
   productButton: {
     paddingHorizontal: 16,
