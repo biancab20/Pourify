@@ -7,22 +7,16 @@ import Svg, { Line, Rect, Text as SvgText } from "react-native-svg";
 
 export default function GraphChartStatic() {
   const { theme } = useAppTheme();
-
-  // Static chart values
   const bars = [110, 180, 230, 260, 240, 80];
   const labels = ["20:00", "21:00", "22:00", "23:00", "00:00", "04:00"];
-
   const chartHeight = 260;
   const chartWidth = 330;
   const barWidth = 22;
   const spacing = 40;
   const maxY = 300;
-
   const pinkColor = theme.palette.pink;
   const grayLineColor = "#CCCCCC";
   const grayLineOpacity = 0.4;
-
-  // Y-axis labels and positions (evenly spaced)
   const yLabels = [0, 100, 200];
   const yPositions = yLabels.map(
     (label, index) => chartHeight - 40 - (index * (chartHeight - 60)) / (yLabels.length - 1)
@@ -30,10 +24,9 @@ export default function GraphChartStatic() {
 
   return (
     <View>
-      
+
       <View style={[styles.chartContainer, { backgroundColor: theme.colors.cardBackground }]}>
         <Svg height={chartHeight} width={chartWidth}>
-          {/* Bottom X-axis line */}
           <Line
             x1="30"
             y1={chartHeight - 40}
@@ -44,7 +37,6 @@ export default function GraphChartStatic() {
             strokeWidth={2}
           />
 
-          {/* Gray progress lines for 100 and 200 */}
           {yPositions.slice(1).map((y, index) => (
             <Line
               key={index}
@@ -58,7 +50,6 @@ export default function GraphChartStatic() {
             />
           ))}
 
-          {/* Y-axis labels */}
           {yLabels.map((label, index) => (
             <SvgText
               key={index}
@@ -114,7 +105,6 @@ export default function GraphChartStatic() {
       </View>
 
       <WideCardStatic style={styles.card}>
-        {/* First Row */}
         <View style={styles.row}>
           <View style={styles.column}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Total Poured</Text>
@@ -126,7 +116,6 @@ export default function GraphChartStatic() {
           </View>
         </View>
 
-        {/* Second Row */}
         <View style={styles.row}>
           <View style={styles.column}>
             <Text style={[styles.label, { color: theme.colors.text }]}>POS vs Total</Text>

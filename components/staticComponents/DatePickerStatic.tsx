@@ -21,7 +21,6 @@ export default function DatePicker() {
       Month: "month",
       Year: "year",
     };
-
     setCurrentDate(currentDate.add(direction, units[mode]));
   };
 
@@ -42,7 +41,6 @@ export default function DatePicker() {
 
   return (
     <View style={[styles.container]}>
-      {/* Mode selector */}
       <View
         style={[
           styles.modeRow,
@@ -76,7 +74,6 @@ export default function DatePicker() {
         ))}
       </View>
 
-      {/* Navigation + Label */}
       <View
         style={[
           styles.navContainer,

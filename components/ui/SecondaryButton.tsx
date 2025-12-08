@@ -68,7 +68,7 @@ const SecondaryButton: React.FC<SecondaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     width: '100%',
-    height: 52, // Fixed height
+    height: 52, 
     borderRadius: 12,
   },
   gradientBorder: {

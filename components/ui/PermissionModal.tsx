@@ -30,21 +30,18 @@ export default function PermissionModal({
           backgroundColor: theme.colors.cardBackground,
         }]}>
           
-          {/* Header */}
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: theme.colors.cardText }]}>
               &quot;Pourify&quot; Would Like to Access the Camera
             </Text>
           </View>
           
-          {/* Body */}
           <View style={styles.modalBody}>
             <Text style={[styles.modalText, { color: theme.colors.cardText }]}>
               We need your camera to scan delivery notes
             </Text>
           </View>
           
-          {/* Buttons - Side by Side */}
           <View style={[styles.buttonsContainer, { borderTopColor: borderColor }]}>
             <Pressable 
               style={styles.button}

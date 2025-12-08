@@ -47,7 +47,6 @@ export default function DatePicker({ mode, setMode, currentDate, setCurrentDate 
 
   return (
     <View style={[styles.container]}>
-      {/* Mode selector */}
       <View
         style={[
           styles.modeRow,
@@ -81,7 +80,6 @@ export default function DatePicker({ mode, setMode, currentDate, setCurrentDate 
         ))}
       </View>
 
-      {/* Navigation + Label */}
       <View
         style={[
           styles.navContainer,

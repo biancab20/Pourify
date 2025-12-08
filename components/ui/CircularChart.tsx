@@ -4,7 +4,7 @@ import Svg, { Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Text } from '@/components/shared/Text';
 import ProgressBar from './ProgressBar';
 import { useAppTheme } from '@/stores/app-theme-context';
-import { Mode } from './DatePicker'; // Import the Mode type
+import { Mode } from './DatePicker';
 
 interface ChartData {
   ordered: number;
@@ -15,36 +15,28 @@ interface ChartData {
 interface CircularChartProps {
   data: ChartData;
   strokeWidth?: number;
-  mode: Mode; // Add mode prop
+  mode: Mode; 
 }
 
 const CircularChart: React.FC<CircularChartProps> = ({
   data,
   strokeWidth = 30,
-  mode // Destructure mode prop
+  mode 
 }) => {
   const { theme } = useAppTheme(); 
   const { ordered, poured, sold } = data;
   const { width: screenWidth } = useWindowDimensions();
 
-  // Use the same horizontal margin as the legend (16px on each side)
+  
   const horizontalMargin = 16;
   const chartContainerWidth = screenWidth - (horizontalMargin * 2);
-
-  // Calculate chart size based on the container width (same as legend)
-  const chartSize = Math.min(chartContainerWidth - 50, 300); // Subtract some padding for the chart container
-
-  // Calculate percentages
+  const chartSize = Math.min(chartContainerWidth - 50, 300); 
   const soldPercentage = (sold / ordered) * 100;
   const pouredPercentage = (poured / ordered) * 100;
-
-  // Radius + circumference
   const radius = (chartSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-
   const soldStrokeDasharray = `${(soldPercentage / 100) * circumference} ${circumference}`;
   const pouredStrokeDasharray = `${(pouredPercentage / 100) * circumference} ${circumference}`;
-
   const progressBarWidth = Math.min(200, screenWidth - 120);
 
   return (
@@ -54,26 +46,23 @@ const CircularChart: React.FC<CircularChartProps> = ({
           styles.chartContainer,
           { 
             backgroundColor: theme.colors.cardBackground,
-            width: chartContainerWidth, // Same width as legend container
+            width: chartContainerWidth, 
           }
         ]}
       >
         <Svg width={chartSize} height={chartSize} viewBox={`0 0 ${chartSize} ${chartSize}`}>
           <Defs>
-            {/* Sold gradient */}
             <LinearGradient id="soldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <Stop offset="0%" stopColor="#FF77E0" />
               <Stop offset="100%" stopColor="#F54D41" />
             </LinearGradient>
 
-            {/* Poured gradient */}
             <LinearGradient id="pouredGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <Stop offset="0%" stopColor="#D9E734" />
               <Stop offset="100%" stopColor="#00C264" />
             </LinearGradient>
           </Defs>
 
-          {/* Background circle */}
           <Circle
             cx={chartSize / 2}
             cy={chartSize / 2}
@@ -83,7 +72,6 @@ const CircularChart: React.FC<CircularChartProps> = ({
             fill="none"
           />
 
-          {/* Poured segment */}
           <G rotation="-90" origin={`${chartSize / 2}, ${chartSize / 2}`}>
             <Circle
               cx={chartSize / 2}
@@ -97,7 +85,6 @@ const CircularChart: React.FC<CircularChartProps> = ({
             />
           </G>
 
-          {/* Sold segment */}
           <G rotation="-90" origin={`${chartSize / 2}, ${chartSize / 2}`}>
             <Circle
               cx={chartSize / 2}
@@ -112,14 +99,13 @@ const CircularChart: React.FC<CircularChartProps> = ({
           </G>
         </Svg>
 
-        {/* Center text */}
         <View style={[styles.centerText, { top: chartSize / 2 - 30 }]}>
           <Text
             style={[
               styles.detailText
             ]}
           >
-            Sold this {mode.toLowerCase()} {/* Dynamic text based on mode */}
+            Sold this {mode.toLowerCase()} 
           </Text>
           <Text
             style={[

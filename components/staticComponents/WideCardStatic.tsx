@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text } from '@/components/shared/Text';
-import { useAppTheme } from '@/stores/app-theme-context'; // Updated import path
+import { useAppTheme } from '@/stores/app-theme-context'; 
 
 interface WideCardStaticProps {
   children: React.ReactNode;

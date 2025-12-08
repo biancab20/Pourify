@@ -5,22 +5,16 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
 interface PieChartStaticProps {
-  size: number; // dynamic size to fit container
+  size: number;
 }
 
 export default function PieChartStatic({ size }: PieChartStaticProps) {
   const { theme } = useAppTheme();
   const { colors } = theme;
-
-  // Static data for the chart
-  const pouredPercentage = 10; // 10% poured
+  const pouredPercentage = 10;
   const strokeWidth = 12;
-  
-  // Calculate radius and circumference
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  
-  // Calculate stroke dasharray for 10% progress
   const progressStrokeDasharray = `${(pouredPercentage / 100) * circumference} ${circumference}`;
 
   return (
@@ -34,7 +28,6 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
           </LinearGradient>
         </Defs>
 
-        {/* Background Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -44,7 +37,6 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
           fill="none"
         />
 
-        {/* Progress Circle - starts from top (0°) with rounded edges */}
         <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
           <Circle
             cx={size / 2}
@@ -59,7 +51,6 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
         </G>
       </Svg>
 
-      {/* Center Content */}
       <View style={styles.centerContent}>
         <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
           Poured % of Goal

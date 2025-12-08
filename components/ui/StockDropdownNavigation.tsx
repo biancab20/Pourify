@@ -30,7 +30,6 @@ export default function StockDropdownNavigation({
     setShowDropdown(false);
   };
 
-  // Create dropdown items safely
   const dropdownItems = [
     { id: null, name: "General Stock" },
     ...bars.map(bar => ({ id: bar.barId, name: bar.name }))
@@ -49,7 +48,6 @@ export default function StockDropdownNavigation({
         <Text style={styles.arrow}>▼</Text>
       </TouchableOpacity>
 
-      {/* Dropdown Modal */}
       <Modal
         visible={showDropdown}
         transparent={true}
