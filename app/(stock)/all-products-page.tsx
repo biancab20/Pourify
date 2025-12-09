@@ -109,9 +109,6 @@ export default function AllProducts() {
                 <Text style={[styles.productDetails, { color: theme.colors.cardText }]}>
                   {product.totalVolume}L Total • {product.bottleCount} Bottles
                 </Text>
-                <Text style={[styles.productSubDetails, { color: theme.colors.cardText }]}>
-                  {product.volume}L per unit
-                </Text>
               </View>
               
               <View style={styles.alcoholTypeContainer}>

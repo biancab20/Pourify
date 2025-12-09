@@ -16,7 +16,6 @@ export default function EditStock() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Edit Stock</Text>
 
       {/* Info Text */}
       <Text style={[styles.infoText, { color: colors.text }]}>
@@ -30,7 +29,6 @@ export default function EditStock() {
         initialValue=""
       />
 
-      {/* Adjust Button */}
       <Pressable
         onPress={() => console.log("Adjust stock")}
         style={styles.adjustButton}
@@ -50,13 +48,6 @@ export default function EditStock() {
         </LinearGradient>
       </Pressable>
 
-      {/* Back Button */}
-      <Pressable
-        style={[styles.button, styles.secondary, { borderColor: palette.darkBlue }]}
-        onPress={() => router.back()}
-      >
-        <Text style={[styles.secondaryText, { color: palette.darkBlue }]}>Back to Home</Text>
-      </Pressable>
     </ScrollView>
   );
 }
