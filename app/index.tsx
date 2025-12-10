@@ -201,11 +201,6 @@ const styles = StyleSheet.create({
   eyeButton: {
     paddingHorizontal: 4,
   },
-  loginButton: {
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: "center",
-  },
   forgotPassword: {
     marginTop: 16,
     textAlign: "center",

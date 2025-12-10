@@ -253,12 +253,4 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 0,
   },
-
-  stockButton: {
-    width: "100%",
-    marginBottom: 60,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignSelf: "center",
-  },
 });
