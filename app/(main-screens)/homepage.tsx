@@ -17,6 +17,7 @@ import {
 import { dummyData, Bar } from "@/types/DummyData";
 import GradientButton from "@/components/ui/GradientButton";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@/components/icons/Icon";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,9 +26,9 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
 
   const today = new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
+    weekday: "long",
     day: "numeric",
+    month: "short",
   });
 
   const cardWidth = width - 32;
@@ -36,25 +37,27 @@ export default function HomeScreen() {
   const bars = dummyData.bars.items;
 
   return (
-    <SafeAreaView style={{ flex: 1}} edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
+        {/* Top bar */}
         <View style={styles.topBar}>
           <Text style={[styles.dateText, { color: colors.text }]}>{today}</Text>
+
+          {/* Top bar icons */}
           <View style={styles.iconButtons}>
             <Pressable
-              style={styles.iconButton}
               onPress={() => router.push("/(scan-flow)/scan-new-delivery")}
             >
-              <Text style={{ color: colors.text, fontSize: 18 }}>📦</Text>
+              <Icon name="scan" size={35} color={colors.icon} />
             </Pressable>
-            <Pressable style={styles.iconButton}>
-              <Text style={{ color: colors.text, fontSize: 18 }}>🔔</Text>
+            <Pressable>
+              <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
-            <Pressable style={styles.iconButton}>
-              <Text style={{ color: colors.text, fontSize: 18 }}>⚙️</Text>
+            <Pressable>
+              <Icon name="moreActions" size={35} color={colors.icon} />
             </Pressable>
           </View>
         </View>
@@ -175,15 +178,7 @@ const styles = StyleSheet.create({
 
   iconButtons: {
     flexDirection: "row",
-    gap: 12,
-  },
-
-  iconButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    justifyContent: "center",
-    alignItems: "center",
+    gap: 10,
   },
 
   title: {

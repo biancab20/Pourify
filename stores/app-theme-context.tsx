@@ -11,29 +11,11 @@ import { useColorScheme } from "react-native";
 export type ThemeMode = "light" | "dark" | "system";
 
 type ColorTokens = {
-  // core semantic colors used in components
-  //add anything that can change with theme
-
-  //   primary: string;
-  //   accent: string;
-
   background: string;
-  //   backgroundAlt: string;
-  //   surface: string;
-
   text: string;
-  //   textMuted: string;
-  //   onPrimary: string;
-  //   onSurface: string;
-
-  //   border: string;
-
-  //   success: string;
-  //   danger: string;
-  //   warning: string;
-
   cardBackground: string;
   cardText: string;
+  icon: string;
 };
 
 // 👇 brand palette (your raw colors)
@@ -82,7 +64,7 @@ const AppThemeContext = createContext<AppThemeContextValue | undefined>(
   undefined
 );
 
-// ------- YOUR BRAND PALETTE -------
+// ------- BRAND PALETTE -------
 
 const PALETTE: BrandPalette = {
   beige: "#ECECDB",
@@ -118,36 +100,22 @@ const PALETTE: BrandPalette = {
 
 // ------- LIGHT & DARK TOKEN MAPPING -------
 
-// light mode → background = beige
+// light mode
 const lightColors: ColorTokens = {
-  //   primary: PALETTE.blue,      // pick what feels like your main brand
-  //   accent: PALETTE.yellow,
-
-  background: PALETTE.beige, // ✅ as you requested
-  //   backgroundAlt: "#FFFFFF",
-  //   surface: "#FFFFFF",
-
+  background: PALETTE.beige,
   text: "#101320",
-  //   textMuted: "#6B7280",
-  //   onPrimary: "#031836",       // dark blue text on blue-ish buttons
-  //   onSurface: "#101320",
-
-  //   border: "#D4D4D4",
-
-  //   success: SUCCESS,
-  //   danger: DANGER,
-  //   warning: WARNING,
-  cardBackground: "#FFFFFF",
+  cardBackground: PALETTE.white,
   cardText: "#101320",
+  icon: PALETTE.darkBlue,
 };
 
-// dark mode → background = dark blue
+// dark mode
 const darkColors: ColorTokens = {
   background: PALETTE.darkBlue, 
-
   text: "#F9FAFB",
-  cardBackground: "#000000",
+  cardBackground: PALETTE.black,
   cardText: "#F9FAFB",
+  icon: PALETTE.beige,
 };
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {

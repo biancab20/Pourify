@@ -1,5 +1,5 @@
 // components/Text.tsx
-import { Text as RNText, TextProps, StyleSheet } from "react-native";
+import { Text as RNText, TextProps } from "react-native";
 import { useAppTheme } from "@/stores/app-theme-context";
 import GradientText from "./GradientText";
 
@@ -7,7 +7,7 @@ type Variant = "normal" | "gradient";
 
 interface Props extends TextProps {
   variant?: Variant;
-  gradientName?: "paloma" | "bananaDaiquiri"; // extend as you add more
+  gradientName?: "paloma" | "bananaDaiquiri"; 
 }
 
 export function Text({
