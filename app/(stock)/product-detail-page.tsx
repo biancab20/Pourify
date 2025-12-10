@@ -16,7 +16,7 @@ import { dummyData, Bar } from "@/types/DummyData";
 export default function ProductDetails() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { colors, palette } = theme;
+  const { colors } = theme;
   const params = useLocalSearchParams();
 
   const [mode, setMode] = useState<Mode>("Week");
@@ -32,13 +32,13 @@ export default function ProductDetails() {
 
   const productName = Array.isArray(params.productName) ? params.productName[0] : params.productName || "Product";
   const productVolume = Array.isArray(params.productVolume) ? params.productVolume[0] : params.productVolume || "0";
-  const productType = Array.isArray(params.productType) ? params.productType[0] : params.productType || "";
+ // const productType = Array.isArray(params.productType) ? params.productType[0] : params.productType || "";
   const totalVolume = Array.isArray(params.totalVolume) ? params.totalVolume[0] : params.totalVolume || "0";
   const bottleCount = Array.isArray(params.bottleCount) ? params.bottleCount[0] : params.bottleCount || "0";
   const barName = Array.isArray(params.barName) ? params.barName[0] : params.barName || "";
   const barId = Array.isArray(params.barId) ? params.barId[0] : params.barId || "";
 
-  const parsedProductVolume = parseFloat(productVolume);
+  //const parsedProductVolume = parseFloat(productVolume);
   const parsedTotalVolume = parseFloat(totalVolume);
   const parsedBottleCount = parseInt(bottleCount);
 

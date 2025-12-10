@@ -15,7 +15,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { dummyData, Bar } from "@/types/DummyData";
-import GradientButton from "@/components/ui/GradientButton";
+import GradientButton from "@/components/shared/GradientButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
 
@@ -129,7 +129,7 @@ export default function HomeScreen() {
                 key={bar.barId}
                 onPress={() =>
                   router.push({
-                    pathname: "/bar-detail-page",
+                    pathname: "/bar-view",
                     params: { barId: bar.barId, barName: bar.name },
                   })
                 }
@@ -146,7 +146,7 @@ export default function HomeScreen() {
           </Text>
           <GradientButton
             destination="/(stock)/all-products-page"
-            buttonText="View stock"
+            text="View stock"
           />
         </View>
       </ScrollView>

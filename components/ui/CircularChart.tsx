@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
-import Svg, { Circle, G, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { Text } from '@/components/shared/Text';
-import ProgressBar from './ProgressBar';
-import { useAppTheme } from '@/stores/app-theme-context';
-import { Mode } from './DatePicker';
+import React from "react";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
+import Svg, { Circle, G, Defs, LinearGradient, Stop } from "react-native-svg";
+import { Text } from "@/components/shared/Text";
+import ProgressBar from "./ProgressBar";
+import { useAppTheme } from "@/stores/app-theme-context";
+import { Mode } from "./DatePicker";
 
 interface ChartData {
   ordered: number;
@@ -12,31 +12,37 @@ interface ChartData {
   sold: number;
 }
 
-interface CircularChartProps {
+export interface CircularChartProps {
   data: ChartData;
   strokeWidth?: number;
-  mode: Mode; 
+  mode: Mode;
 }
 
-const CircularChart: React.FC<CircularChartProps> = ({
+export default function CircularChart({
   data,
   strokeWidth = 30,
-  mode 
-}) => {
-  const { theme } = useAppTheme(); 
+  mode,
+}: CircularChartProps) {
+  const { theme } = useAppTheme();
   const { ordered, poured, sold } = data;
   const { width: screenWidth } = useWindowDimensions();
 
-  
   const horizontalMargin = 16;
-  const chartContainerWidth = screenWidth - (horizontalMargin * 2);
-  const chartSize = Math.min(chartContainerWidth - 50, 300); 
-  const soldPercentage = (sold / ordered) * 100;
-  const pouredPercentage = (poured / ordered) * 100;
+  const chartContainerWidth = screenWidth - horizontalMargin * 2;
+  const chartSize = Math.min(chartContainerWidth - 50, 300);
+
+  const safeOrdered = ordered || 1; // avoid division by 0
+  const soldPercentage = (sold / safeOrdered) * 100;
+  const pouredPercentage = (poured / safeOrdered) * 100;
+
   const radius = (chartSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const soldStrokeDasharray = `${(soldPercentage / 100) * circumference} ${circumference}`;
-  const pouredStrokeDasharray = `${(pouredPercentage / 100) * circumference} ${circumference}`;
+  const soldStrokeDasharray = `${
+    (soldPercentage / 100) * circumference
+  } ${circumference}`;
+  const pouredStrokeDasharray = `${
+    (pouredPercentage / 100) * circumference
+  } ${circumference}`;
   const progressBarWidth = Math.min(200, screenWidth - 120);
 
   return (
@@ -44,20 +50,30 @@ const CircularChart: React.FC<CircularChartProps> = ({
       <View
         style={[
           styles.chartContainer,
-          { 
+          {
             backgroundColor: theme.colors.cardBackground,
-            width: chartContainerWidth, 
-          }
+            width: chartContainerWidth,
+          },
         ]}
       >
-        <Svg width={chartSize} height={chartSize} viewBox={`0 0 ${chartSize} ${chartSize}`}>
+        <Svg
+          width={chartSize}
+          height={chartSize}
+          viewBox={`0 0 ${chartSize} ${chartSize}`}
+        >
           <Defs>
             <LinearGradient id="soldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <Stop offset="0%" stopColor="#FF77E0" />
               <Stop offset="100%" stopColor="#F54D41" />
             </LinearGradient>
 
-            <LinearGradient id="pouredGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <LinearGradient
+              id="pouredGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
               <Stop offset="0%" stopColor="#D9E734" />
               <Stop offset="100%" stopColor="#00C264" />
             </LinearGradient>
@@ -100,28 +116,21 @@ const CircularChart: React.FC<CircularChartProps> = ({
         </Svg>
 
         <View style={[styles.centerText, { top: chartSize / 2 - 30 }]}>
-          <Text
-            style={[
-              styles.detailText
-            ]}
-          >
-            Sold this {mode.toLowerCase()} 
+          <Text style={styles.detailText}>
+            Sold this {mode.toLowerCase()}
           </Text>
+
           <Text
             style={[
               styles.percentageText,
-              { color: theme.colors.text }
+              { color: theme.colors.text },
             ]}
           >
             {Math.round(soldPercentage)}%
           </Text>
 
-          <Text
-            style={[
-              styles.detailText
-            ]}
-          >
-            {sold.toFixed(2).replace('.', ',')} of {ordered}L
+          <Text style={styles.detailText}>
+            {sold.toFixed(2).replace(".", ",")} of {ordered}L
           </Text>
         </View>
       </View>
@@ -131,8 +140,8 @@ const CircularChart: React.FC<CircularChartProps> = ({
           styles.legend,
           {
             width: chartContainerWidth,
-            backgroundColor: theme.colors.cardBackground
-          }
+            backgroundColor: theme.colors.cardBackground,
+          },
         ]}
       >
         <ProgressBar
@@ -140,7 +149,7 @@ const CircularChart: React.FC<CircularChartProps> = ({
           value={ordered}
           percentage={100}
           width={progressBarWidth}
-          gradientColors={['#E0E0E0', '#E0E0E0']}
+          gradientColors={["#E0E0E0", "#E0E0E0"]}
           showBackground={false}
         />
 
@@ -149,7 +158,7 @@ const CircularChart: React.FC<CircularChartProps> = ({
           value={poured}
           percentage={pouredPercentage}
           width={progressBarWidth}
-          gradientColors={['#D9E734', '#00C264']}
+          gradientColors={["#D9E734", "#00C264"]}
         />
 
         <ProgressBar
@@ -157,45 +166,43 @@ const CircularChart: React.FC<CircularChartProps> = ({
           value={sold}
           percentage={soldPercentage}
           width={progressBarWidth}
-          gradientColors={['#FF77E0', '#F54D41']}
+          gradientColors={["#FF77E0", "#F54D41"]}
         />
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   chartContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
     padding: 25,
     borderRadius: 16,
   },
   centerText: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
   },
   percentageText: {
     fontSize: 64,
-    fontWeight: '400',
-    textAlign: 'center',
+    fontWeight: "400",
+    textAlign: "center",
     lineHeight: 64,
   },
   detailText: {
     fontSize: 18,
-    textAlign: 'center',
-    color: '#00C264',
+    textAlign: "center",
+    color: "#00C264",
   },
   legend: {
     padding: 16,
     borderRadius: 16,
   },
 });
-
-export default CircularChart;

@@ -1,17 +1,21 @@
-// components/GradientText.tsx
 import React from "react";
-import { Text as RNText, StyleSheet, TextStyle, StyleProp } from "react-native";
+import {
+  Text as RNText,
+  StyleSheet,
+  TextStyle,
+  StyleProp,
+} from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppTheme } from "@/stores/app-theme-context";
 
-type GradientName = "paloma" | "bananaDaiquiri"; // extend when needed
+export type GradientName = "paloma" | "bananaDaiquiri";
 
-type GradientTextProps = {
+export interface GradientTextProps {
   children: React.ReactNode;
   style?: StyleProp<TextStyle>;
   gradientName: GradientName;
-};
+}
 
 export default function GradientText({
   children,
@@ -30,7 +34,7 @@ export default function GradientText({
       }
     >
       <LinearGradient
-        colors={gradient.colors as [string, string]}
+        colors={gradient.colors}
         start={gradient.start}
         end={gradient.end}
       >

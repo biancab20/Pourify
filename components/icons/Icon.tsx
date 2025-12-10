@@ -1,33 +1,34 @@
+import React, { memo, useMemo } from "react";
 import { SvgXml } from "react-native-svg";
 import { ICONS, IconName } from "./icon-registry";
-import React from "react";
 
-type IconProps = {
+export interface IconProps {
   name: IconName;
-  size?: number;         // height & width
-  color?: string;        // overrides any fills in the XML
-};
+  size?: number;
+  color?: string;
+}
 
-function applyColor(xml: string, color?: string) {
+/**
+ * Replace all non-"none" fill values with the provided color.
+ * Keeps "fill=\"none\"" intact.
+ */
+function applyColor(xml: string, color?: string): string {
   if (!color) return xml;
   return xml.replace(/fill="(?!none)[^"]*"/g, `fill="${color}"`);
 }
 
-export const Icon: React.FC<IconProps> = React.memo(
-  ({ name, size = 24, color }) => {
-    const raw = ICONS[name];
-    if (__DEV__ && !raw) {
-      console.warn(`[Icon] Unknown icon name: "${name}"`);
-    }
-    const xml = React.useMemo(() => applyColor(raw, color), [raw, color]);
+function IconComponent({ name, size = 24, color }: IconProps) {
+  const raw = ICONS[name];
 
-    return (
-      <SvgXml
-        xml={xml}
-        width={size}
-        height={size}
-      />
-    );
+  const xml = useMemo(() => (raw ? applyColor(raw, color) : ""), [raw, color]);
+
+  if (__DEV__ && !raw) {
+    console.warn(`[Icon] Unknown icon name: "${name}"`);
+    return null;
   }
-);
+
+  return <SvgXml xml={xml} width={size} height={size} />;
+}
+
+export const Icon = memo(IconComponent);
 Icon.displayName = "Icon";

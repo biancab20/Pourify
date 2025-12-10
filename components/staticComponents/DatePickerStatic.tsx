@@ -40,7 +40,7 @@ export default function DatePicker() {
   };
 
   return (
-    <View style={[styles.container]}>
+    <View style={styles.container}>
       <View
         style={[
           styles.modeRow,
@@ -113,10 +113,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     backgroundColor: "transparent",
     textAlign: "center",
-  },
-
-  modeButtonActive: {
-    backgroundColor: "#ff66ff",
   },
   navContainer: {
     flexDirection: "row",

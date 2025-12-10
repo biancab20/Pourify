@@ -18,6 +18,12 @@ type ColorTokens = {
   icon: string;
 };
 
+type GradientDefinition = {
+  colors: [string, string]; // exactly 2 colors
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+};
+
 // 👇 brand palette (your raw colors)
 export type BrandPalette = {
   beige: string;
@@ -34,16 +40,8 @@ export type BrandPalette = {
   black: string;
 
   // NEW: gradient
-  paloma: {
-    colors: string[]; // gradient colors
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-  };
-  bananaDaiquiri: {
-    colors: string[];
-    start: { x: number; y: number };
-    end: { x: number; y: number };
-  };
+  paloma: GradientDefinition;
+  bananaDaiquiri: GradientDefinition;
 };
 
 export type AppTheme = {
@@ -88,8 +86,8 @@ const PALETTE: BrandPalette = {
   },
   bananaDaiquiri: {
     colors: ["#D9E734", "#00C264"],
-    start: { x: 0.5, y: 0 },
-    end: { x: 0.5, y: 1 }, // vertical gradient (top → bottom)
+    start: { x: 0, y: 1 },
+    end: { x: 1, y: 0.5 }, // vertical gradient (top → bottom)
   },
 };
 

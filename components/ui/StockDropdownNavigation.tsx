@@ -1,5 +1,5 @@
 import { Bar } from "@/types/DummyData";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,

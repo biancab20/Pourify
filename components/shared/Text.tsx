@@ -1,4 +1,3 @@
-// components/Text.tsx
 import { Text as RNText, TextProps } from "react-native";
 import { useAppTheme } from "@/stores/app-theme-context";
 import GradientText from "./GradientText";

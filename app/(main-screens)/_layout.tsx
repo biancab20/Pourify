@@ -8,7 +8,7 @@ export default function MainScreensLayout() {
       }}
     >
       <Stack.Screen name="homepage" options={{headerShown: false}}/>
-      <Stack.Screen name="bar-detail-page" options={{headerShown: true}} />
+      <Stack.Screen name="bar-view" options={{headerShown: true}} />
     </Stack>
   );
 }

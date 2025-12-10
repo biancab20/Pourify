@@ -11,19 +11,18 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useState, useRef, useEffect } from "react";
 import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
-import GradientButton from "@/components/ui/GradientButton";
-import { useAppTheme } from "../../stores/app-theme-context";
-import PermissionModal from "../../components/ui/PermissionModal"; // Import the modal
+import GradientButton from "@/components/shared/GradientButton";
+import { useAppTheme } from "@/stores/app-theme-context";
+import PermissionModal from "@/components/ui/PermissionModal"; // Import the modal
 
 export default function ScanNewDelivery() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
-  const [photos, setPhotos] = useState<{uri: string}[]>([]);
+  const [photos, setPhotos] = useState<{ uri: string }[]>([]);
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraType, setCameraType] = useState<CameraType>("back");
-  
 
   //DOnt forget to make this false after styling bs thingy
   const [showPermissionModal, setShowPermissionModal] = useState(true);
@@ -36,9 +35,8 @@ export default function ScanNewDelivery() {
           exif: true,
           skipProcessing: false,
         });
-        
-        setPhotos(prev => [...prev, photo]);
-        
+
+        setPhotos((prev) => [...prev, photo]);
       } catch (error) {
         console.error("Error taking picture:", error);
         Alert.alert("Error", "Failed to capture photo");
@@ -47,7 +45,7 @@ export default function ScanNewDelivery() {
   };
 
   const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -68,10 +66,13 @@ export default function ScanNewDelivery() {
 
   const proceedToOverview = () => {
     if (photos.length === 0) {
-      Alert.alert("No Photos", "Please take at least one photo before proceeding");
+      Alert.alert(
+        "No Photos",
+        "Please take at least one photo before proceeding"
+      );
       return;
     }
-    
+
     router.push({
       pathname: "/(scan-flow)/picture-overview",
       params: { photos: JSON.stringify(photos) },
@@ -79,22 +80,22 @@ export default function ScanNewDelivery() {
   };
 
   const toggleCameraType = () => {
-    setCameraType(current => (current === "back" ? "front" : "back"));
+    setCameraType((current) => (current === "back" ? "front" : "back"));
   };
 
   const handleAllowPermission = async () => {
     setShowPermissionModal(false);
     const result = await requestPermission();
-    
+
     if (!result.granted) {
       Alert.alert(
         "Permission Denied",
         "Camera access is required to scan delivery notes.",
         [
-          { 
-            text: "OK", 
-            onPress: () => router.back()
-          }
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
         ]
       );
     }
@@ -107,25 +108,64 @@ export default function ScanNewDelivery() {
 
   if (!permission) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.text }}>Checking camera permissions...</Text>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <Text style={{ color: theme.colors.text }}>
+          Checking camera permissions...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.overlay, { backgroundColor: theme.isDark ? theme.palette.black : theme.palette.beige }]}>
+    <View
+      style={[
+        styles.overlay,
+        {
+          backgroundColor: theme.isDark
+            ? theme.palette.black
+            : theme.palette.beige,
+        },
+      ]}
+    >
       <TouchableWithoutFeedback onPress={() => router.back()}>
         <View style={StyleSheet.absoluteFillObject} />
       </TouchableWithoutFeedback>
 
-      <View style={[styles.sheet, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.header, { backgroundColor: theme.colors.background, borderBottomColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige }]}>
-          <Text style={[styles.headerTitle, { color: theme.isDark ? theme.palette.yellow : theme.palette.darkBlue }]}>
+      <View
+        style={[styles.sheet, { backgroundColor: theme.colors.background }]}
+      >
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.background,
+              borderBottomColor: theme.isDark
+                ? theme.palette.darkBlue
+                : theme.palette.beige,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.headerTitle,
+              {
+                color: theme.isDark
+                  ? theme.palette.yellow
+                  : theme.palette.darkBlue,
+              },
+            ]}
+          >
             Scan delivery note
           </Text>
           <Pressable onPress={() => router.back()}>
-            <Text style={[styles.closeText, { color: theme.colors.text }]}>✕</Text>
+            <Text style={[styles.closeText, { color: theme.colors.text }]}>
+              ✕
+            </Text>
           </Pressable>
         </View>
 
@@ -138,25 +178,71 @@ export default function ScanNewDelivery() {
                 facing={cameraType}
                 enableTorch={false}
               />
-              
+
               <View style={styles.cameraOverlay}>
                 <View style={styles.cameraControls}>
-                  <Pressable onPress={toggleCameraType} style={[styles.cameraButton, { backgroundColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige }]}>
-                    <Text style={[styles.cameraButtonText, { color: theme.colors.text }]}>↻</Text>
+                  <Pressable
+                    onPress={toggleCameraType}
+                    style={[
+                      styles.cameraButton,
+                      {
+                        backgroundColor: theme.isDark
+                          ? theme.palette.darkBlue
+                          : theme.palette.beige,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.cameraButtonText,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      ↻
+                    </Text>
                   </Pressable>
                 </View>
-                
+
                 <View style={styles.captureContainer}>
-                  <Pressable style={[styles.captureButton, { backgroundColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige, borderColor: theme.isDark ? theme.palette.black : theme.palette.white }]} onPress={takePicture}>
-                    <View style={[styles.captureButtonInner, { backgroundColor: theme.colors.cardBackground }]} />
+                  <Pressable
+                    style={[
+                      styles.captureButton,
+                      {
+                        backgroundColor: theme.isDark
+                          ? theme.palette.darkBlue
+                          : theme.palette.beige,
+                        borderColor: theme.isDark
+                          ? theme.palette.black
+                          : theme.palette.white,
+                      },
+                    ]}
+                    onPress={takePicture}
+                  >
+                    <View
+                      style={[
+                        styles.captureButtonInner,
+                        { backgroundColor: theme.colors.cardBackground },
+                      ]}
+                    />
                   </Pressable>
                 </View>
               </View>
             </View>
 
             {photos.length > 0 && (
-              <View style={[styles.previewContainer, { borderTopColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige }]}>
-                <Text style={[styles.previewTitle, { color: theme.colors.text }]}>
+              <View
+                style={[
+                  styles.previewContainer,
+                  {
+                    borderTopColor: theme.isDark
+                      ? theme.palette.darkBlue
+                      : theme.palette.beige,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.previewTitle, { color: theme.colors.text }]}
+                >
                   Taken Photos ({photos.length})
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -167,7 +253,13 @@ export default function ScanNewDelivery() {
                         style={styles.previewImage}
                       />
                       <Pressable
-                        style={[styles.removeButton, { backgroundColor: theme.palette.red, borderColor: theme.colors.background }]}
+                        style={[
+                          styles.removeButton,
+                          {
+                            backgroundColor: theme.palette.red,
+                            borderColor: theme.colors.background,
+                          },
+                        ]}
                         onPress={() => removePhoto(index)}
                       >
                         <Text style={styles.removeButtonText}>✕</Text>
@@ -178,17 +270,37 @@ export default function ScanNewDelivery() {
               </View>
             )}
 
-            <View style={[styles.actionContainer, { borderTopColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige }]}>
+            <View
+              style={[
+                styles.actionContainer,
+                {
+                  borderTopColor: theme.isDark
+                    ? theme.palette.darkBlue
+                    : theme.palette.beige,
+                },
+              ]}
+            >
               <GradientButton
                 onPress={proceedToOverview}
-                buttonText={`Review (${photos.length})`}
+                text={`Review (${photos.length})`}
                 disabled={photos.length === 0}
               />
             </View>
           </>
         ) : (
-          <View style={[styles.cameraPlaceholder, { backgroundColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige }]}>
-            <Text style={[styles.placeholderText, { color: theme.colors.text }]}>
+          <View
+            style={[
+              styles.cameraPlaceholder,
+              {
+                backgroundColor: theme.isDark
+                  ? theme.palette.darkBlue
+                  : theme.palette.beige,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.placeholderText, { color: theme.colors.text }]}
+            >
               Waiting for camera permission...
             </Text>
           </View>

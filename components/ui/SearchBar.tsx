@@ -1,43 +1,46 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Pressable } from 'react-native'; 
-import { Text } from '@/components/shared/Text';
-import { useAppTheme } from '@/stores/app-theme-context';
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, Pressable } from "react-native";
+import { Text } from "@/components/shared/Text";
+import { useAppTheme } from "@/stores/app-theme-context";
 
-interface SearchInputProps {
+export interface SearchInputProps {
   onSearch: (text: string) => void;
   placeholder?: string;
   initialValue?: string;
 }
 
-const SearchBar: React.FC<SearchInputProps> = ({ 
-  onSearch, 
-  placeholder = "Search ...", 
+export default function SearchBar({
+  onSearch,
+  placeholder = "Search ...",
   initialValue = "",
-}) => {
+}: SearchInputProps) {
   const { theme } = useAppTheme();
-  const { colors, palette } = theme;
+  const { palette } = theme;
+
   const [searchText, setSearchText] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
 
   const handleClear = () => {
-    setSearchText('');
-    onSearch('');
+    setSearchText("");
+    onSearch("");
   };
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        borderColor: palette.white, 
-        backgroundColor: theme.isDark ? palette.black : palette.white
-      }
-    ]}>
+    <View
+      style={[
+        styles.container,
+        {
+          borderColor: palette.white,
+          backgroundColor: theme.isDark ? palette.black : palette.white,
+        },
+      ]}
+    >
       <TextInput
         style={[
           styles.input,
-          { 
+          {
             color: theme.isDark ? palette.white : palette.black,
-          }
+          },
         ]}
         placeholder={placeholder}
         placeholderTextColor={theme.isDark ? palette.beige : palette.darkBlue}
@@ -53,11 +56,11 @@ const SearchBar: React.FC<SearchInputProps> = ({
       />
 
       {searchText.length > 0 && (
-        <Pressable 
+        <Pressable
           style={[
-            styles.clearButton, 
-            { backgroundColor: palette.pink }
-          ]} 
+            styles.clearButton,
+            { backgroundColor: palette.pink },
+          ]}
           onPress={handleClear}
         >
           <Text style={styles.clearButtonText}>×</Text>
@@ -65,41 +68,38 @@ const SearchBar: React.FC<SearchInputProps> = ({
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 13,
     borderWidth: 0.5,
-    width: '100%',
-    alignSelf: 'center',
+    width: "100%",
+    alignSelf: "center",
   },
   input: {
     flex: 1,
     fontSize: 18,
-    textAlignVertical: 'center',
+    textAlignVertical: "center",
     includeFontPadding: false,
-    
   },
   clearButton: {
     width: 20,
     height: 20,
     borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 10,
   },
   clearButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: "500",
     lineHeight: 20,
-    textAlignVertical: 'center',
+    textAlignVertical: "center",
   },
 });
-
-export default SearchBar;

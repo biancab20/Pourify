@@ -9,13 +9,12 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useState, useEffect } from "react";
 import { Text } from "@/components/shared/Text";
-import GradientButton from "@/components/ui/GradientButton"; 
-import SecondaryButton from "@/components/ui/SecondaryButton"; 
+import GradientButton from "@/components/shared/GradientButton";
 
 export default function PictureOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [photos, setPhotos] = useState<{uri: string}[]>(
+  const [photos, setPhotos] = useState<{ uri: string }[]>(
     params.photos ? JSON.parse(params.photos as string) : []
   );
 
@@ -34,20 +33,16 @@ export default function PictureOverview() {
 
   const confirmPhotos = () => {
     console.log("Photos to process:", photos);
-    Alert.alert(
-      "Success",
-      `${photos.length} photos saved for processing`,
-      [
-        {
-          text: "OK",
-          onPress: () => router.replace("/(stock)/all-products-page"),
-        }
-      ]
-    );
+    Alert.alert("Success", `${photos.length} photos saved for processing`, [
+      {
+        text: "OK",
+        onPress: () => router.replace("/(stock)/all-products-page"),
+      },
+    ]);
   };
 
   const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -64,10 +59,7 @@ export default function PictureOverview() {
         <View style={styles.photoGrid}>
           {photos.map((photo, index) => (
             <View key={index} style={styles.photoItem}>
-              <Image
-                source={{ uri: photo.uri }}
-                style={styles.photo}
-              />
+              <Image source={{ uri: photo.uri }} style={styles.photo} />
               <Pressable
                 style={styles.removeButton}
                 onPress={() => removePhoto(index)}
@@ -83,18 +75,20 @@ export default function PictureOverview() {
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        
         {/* Confirm Photos - Gradient Button */}
         <GradientButton
           onPress={confirmPhotos}
-          buttonText={`Confirm ${photos.length} Photo${photos.length !== 1 ? "s" : ""}`}
+          text={`Confirm ${photos.length} Photo${
+            photos.length !== 1 ? "s" : ""
+          }`}
           disabled={photos.length === 0}
         />
-        
+
         {/* Take More Photos - Secondary Button */}
-        <SecondaryButton
+        <GradientButton
           onPress={addMorePhotos}
-          buttonText="Take More Photos"
+          text="Take More Photos"
+          variant="secondary"
         />
       </View>
     </View>
@@ -181,7 +175,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 16,
-    gap: 12, 
+    gap: 12,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.1)",
   },

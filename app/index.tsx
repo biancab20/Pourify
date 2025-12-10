@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "../stores/app-theme-context";
 import { Ionicons } from "@expo/vector-icons";
-import GradientButton from "@/components/ui/GradientButton";
+import GradientButton from "@/components/shared/GradientButton";
 import { router } from "expo-router";
 
 export default function LoginScreen() {
@@ -108,8 +108,13 @@ export default function LoginScreen() {
             onPress={() => {
               router.replace("/(main-screens)/homepage");
             }}
-           //destination="/(main-screens)/homepage"
-            buttonText="Login"
+            //destination="/(main-screens)/homepage"
+            text="Login"
+            //gradientName="bananaDaiquiri"
+
+           // variant="secondary"
+ // text="View details"
+ // gradientName="bananaDaiquiri"
           />
 
           {/* Footer links */}

@@ -5,9 +5,9 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import GraphChartStatic from "@/components/staticComponents/GraphChartStatic";
 import DatePickerStatic from "@/components/staticComponents/DatePickerStatic";
-import GradientButton from "@/components/ui/GradientButton";
+import GradientButton from "@/components/shared/GradientButton";
 
-export default function BarDetailPage() {
+export default function BarView() {
   const { theme } = useAppTheme();
   const { colors } = theme;
   const params = useLocalSearchParams();
@@ -42,7 +42,7 @@ export default function BarDetailPage() {
           <GradientButton
             destination="/(stock)/all-products-page"
             params={{ barId, barName }}
-            buttonText="View stock"
+            text="View stock"
           />
         </View>
       </ScrollView>

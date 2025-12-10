@@ -1,30 +1,31 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useAppTheme } from '@/stores/app-theme-context'; 
+import React from "react";
+import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { useAppTheme } from "@/stores/app-theme-context";
 
 interface WideCardStaticProps {
   children: React.ReactNode;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
-const WideCardStatic: React.FC<WideCardStaticProps> = ({ children, style }) => {
+export default function WideCardStatic({ children, style }: WideCardStaticProps) {
   const { theme } = useAppTheme();
 
   return (
-    <View 
+    <View
       style={[
-        styles.wideCardBackground, 
-        { 
+        styles.wideCardBackground,
+        {
           backgroundColor: theme.colors.cardBackground,
-          color: theme.colors.text,
+          // `color` does not apply to View — removed (correct)
+          //if the component dosn't render properly, before it was used: color: theme.colors.text
         },
-        style
+        style,
       ]}
     >
       {children}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   wideCardBackground: {
@@ -33,5 +34,3 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
-
-export default WideCardStatic;
