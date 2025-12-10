@@ -2,7 +2,7 @@ import "react-native-reanimated";
 import { AppThemeProvider } from "@/stores/app-theme-context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useFonts } from "expo-font";
+// import { useFonts } from "expo-font";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -37,12 +37,8 @@ export default function RootLayout() {
           options={{ animation: "slide_from_right", gestureEnabled: true }}
         />
         <Stack.Screen
-          name="bar-detail-page"
-          options={{ animation: "slide_from_right", gestureEnabled: true }}
-        />
-        <Stack.Screen
-          name="homepage"
-          options={{ animation: "slide_from_right", gestureEnabled: true }}
+          name="(tabs)"
+          options={{ title: "", headerShown: false }}
         />
       </Stack>
       <StatusBar style="auto" />
