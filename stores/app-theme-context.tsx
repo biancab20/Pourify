@@ -143,7 +143,7 @@ const lightColors: ColorTokens = {
 
 // dark mode → background = dark blue
 const darkColors: ColorTokens = {
-  background: PALETTE.darkBlue, // ✅ as you requested
+  background: PALETTE.darkBlue, 
 
   text: "#F9FAFB",
   cardBackground: "#000000",
