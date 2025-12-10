@@ -1,28 +1,32 @@
 import "react-native-reanimated";
 import { AppThemeProvider } from "@/stores/app-theme-context";
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 export default function RootLayout() {
-
-  const [fontsLoaded] = useFonts({
-  "Roobert-Medium": require("../assets/fonts/Roobert-Medium.otf"),
-  "Roobert-Bold": require("../assets/fonts/Roobert-Bold.otf"),
-  "Roobert-BoldItalic": require("../assets/fonts/Roobert-BoldItalic.otf"),
-  "Roobert-Light": require("../assets/fonts/Roobert-Light.otf"),
-  "Roobert-LightItalic": require("../assets/fonts/Roobert-LightItalic.otf"),
-  "Roobert-Heavy": require("../assets/fonts/Roobert-Heavy.otf"),
-  "Roobert-HeavyItalic": require("../assets/fonts/Roobert-HeavyItalic.otf"),
-});
+  //   const [fontsLoaded] = useFonts({
+  //   "Roobert-Medium": require("../assets/fonts/Roobert-Medium.otf"),
+  //   "Roobert-Bold": require("../assets/fonts/Roobert-Bold.otf"),
+  //   "Roobert-BoldItalic": require("../assets/fonts/Roobert-BoldItalic.otf"),
+  //   "Roobert-Light": require("../assets/fonts/Roobert-Light.otf"),
+  //   "Roobert-LightItalic": require("../assets/fonts/Roobert-LightItalic.otf"),
+  //   "Roobert-Heavy": require("../assets/fonts/Roobert-Heavy.otf"),
+  //   "Roobert-HeavyItalic": require("../assets/fonts/Roobert-HeavyItalic.otf"),
+  // });
 
   return (
     <AppThemeProvider>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerShadowVisible: false,
+          headerShown: false,
+        }}
+      >
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen
           name="(scan-flow)"
