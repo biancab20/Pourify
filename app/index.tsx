@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import {View, TextInput, TouchableOpacity, Image, StyleSheet, } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/shared/Text";
-import { useAppTheme } from "../stores/app-theme-context"; 
+import { useAppTheme } from "../stores/app-theme-context";
 import { Ionicons } from "@expo/vector-icons";
 import GradientButton from "@/components/ui/GradientButton";
+import { router } from "expo-router";
 
 export default function LoginScreen() {
   const { theme } = useAppTheme();
@@ -23,11 +30,11 @@ export default function LoginScreen() {
       marginBottom: 0,
       paddingHorizontal: 14,
       fontSize: 16,
-      color: theme.colors.cardText, 
+      color: theme.colors.cardText,
     },
     passwordWrapper: {
       ...styles.passwordWrapper,
-      borderColor: theme.colors.text || "#E6E6E6", 
+      borderColor: theme.colors.text || "#E6E6E6",
     },
   };
 
@@ -39,7 +46,7 @@ export default function LoginScreen() {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
-            source={require("../assets/images/logo.png")} 
+            source={require("../assets/images/logo.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -59,9 +66,7 @@ export default function LoginScreen() {
           ]}
         >
           {/* Email */}
-          <Text style={{color: theme.colors.cardText }}>
-            E-mail
-          </Text>
+          <Text style={{ color: theme.colors.cardText }}>E-mail</Text>
           <TextInput
             placeholder="hello@example.com"
             placeholderTextColor="#b6b6b6"
@@ -100,20 +105,34 @@ export default function LoginScreen() {
 
           {/* Gradient Button */}
           <GradientButton
-            destination="/homepage"
+            onPress={() => {
+              router.replace("/(main-screens)/homepage");
+            }}
+           //destination="/(main-screens)/homepage"
             buttonText="Login"
           />
 
           {/* Footer links */}
           <TouchableOpacity>
-            <Text style={[styles.forgotPassword, { color: theme.colors.text || "#F54D41" }]}>
+            <Text
+              style={[
+                styles.forgotPassword,
+                { color: theme.colors.text || "#F54D41" },
+              ]}
+            >
               Wachtwoord vergeten?
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity>
-            <Text style={[styles.createAccount, { color: theme.colors.text || "#FF77E0" }]}>
-              Geen account? <Text style={{ fontWeight: "700" }}>Maak er nu een aan!</Text>
+            <Text
+              style={[
+                styles.createAccount,
+                { color: theme.colors.text || "#FF77E0" },
+              ]}
+            >
+              Geen account?{" "}
+              <Text style={{ fontWeight: "700" }}>Maak er nu een aan!</Text>
             </Text>
           </TouchableOpacity>
         </View>

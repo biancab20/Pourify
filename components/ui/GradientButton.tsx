@@ -14,7 +14,7 @@ interface GradientButtonProps {
 const GradientButton: React.FC<GradientButtonProps> = ({ 
   destination, 
   params = {}, 
-  buttonText = "View stock",
+  buttonText = "Text",
   onPress,
   disabled = false
 }) => {

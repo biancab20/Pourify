@@ -4,10 +4,6 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 // import { useFonts } from "expo-font";
 
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
-
 export default function RootLayout() {
   //   const [fontsLoaded] = useFonts({
   //   "Roobert-Medium": require("../assets/fonts/Roobert-Medium.otf"),
@@ -37,8 +33,7 @@ export default function RootLayout() {
           options={{ animation: "slide_from_right", gestureEnabled: true }}
         />
         <Stack.Screen
-          name="(tabs)"
-          options={{ title: "", headerShown: false }}
+          name="(main-screens)"
         />
       </Stack>
       <StatusBar style="auto" />
