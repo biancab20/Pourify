@@ -1,4 +1,4 @@
-import { View, StyleSheet, Pressable, ScrollView } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
@@ -83,10 +83,7 @@ export default function AllProducts() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["bottom"]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={Platform.OS === "android" ? ["top", "bottom"] : ["top"]}>
       <ScrollView style={styles.scrollView}>
         <StockDropdownNavigation
           bars={bars}
@@ -119,7 +116,7 @@ export default function AllProducts() {
               ]}
               onPress={() =>
                 router.push({
-                  pathname: "/(stock)/product-detail-page",
+                  pathname: "/product-stock",
                   params: {
                     productId: product.productId.toString(),
                     productName: product.name,

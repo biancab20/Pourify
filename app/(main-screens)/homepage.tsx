@@ -146,7 +146,7 @@ export default function HomeScreen() {
             Stock
           </Text>
           <GradientButton
-            destination="/(stock)/all-products-page"
+            destination="/all-products-view"
             text="View stock"
           />
         </View>

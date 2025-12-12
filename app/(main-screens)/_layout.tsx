@@ -11,7 +11,7 @@ export default function MainScreensLayout() {
         headerStyle: {
           backgroundColor: colors.background,
         },
-        headerShadowVisible: false, // iOS: removes bottom line
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -20,7 +20,11 @@ export default function MainScreensLayout() {
       />
       <Stack.Screen
         name="bar-view"
-        options={{ headerShown: true, title: "" }}
+        options={{ title: "" }}
+      />
+      <Stack.Screen
+        name="all-products-view"
+        options={{ title: "" }}
       />
     </Stack>
   );

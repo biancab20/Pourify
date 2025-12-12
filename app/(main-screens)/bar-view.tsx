@@ -40,7 +40,7 @@ export default function BarView() {
             Stock
           </Text>
           <GradientButton
-            destination="/(stock)/all-products-page"
+            destination="/all-products-view"
             params={{ barId, barName }}
             text="View stock"
           />

@@ -98,7 +98,7 @@ export default function ProductDetails() {
 
             <Pressable
               onPress={() => router.push({
-                pathname: "/(stock)/edit-stock",
+                pathname: "/edit-stock",
                 params: {
                   productId: params.productId as string,
                   productName: productName,
