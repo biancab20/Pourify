@@ -14,6 +14,7 @@ import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import PermissionModal from "@/components/ui/PermissionModal"; // Import the modal
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ScanNewDelivery() {
   const router = useRouter();
@@ -122,54 +123,58 @@ export default function ScanNewDelivery() {
   }
 
   return (
-    <View
-      style={[
-        styles.overlay,
-        {
-          backgroundColor: theme.isDark
-            ? theme.palette.black
-            : theme.palette.beige,
-        },
-      ]}
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      edges={["bottom", "top"]}
     >
-      <TouchableWithoutFeedback onPress={() => router.back()}>
-        <View style={StyleSheet.absoluteFillObject} />
-      </TouchableWithoutFeedback>
-
       <View
-        style={[styles.sheet, { backgroundColor: theme.colors.background }]}
+        style={[
+          styles.overlay,
+          {
+            backgroundColor: theme.isDark
+              ? theme.palette.black
+              : theme.palette.beige,
+          },
+        ]}
       >
+        <TouchableWithoutFeedback onPress={() => router.back()}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
+
         <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: theme.colors.background,
-              borderBottomColor: theme.isDark
-                ? theme.palette.darkBlue
-                : theme.palette.beige,
-            },
-          ]}
+          style={[styles.sheet, { backgroundColor: theme.colors.background }]}
         >
-          <Text
+          <View
             style={[
-              styles.headerTitle,
+              styles.header,
               {
-                color: theme.isDark
-                  ? theme.palette.yellow
-                  : theme.palette.darkBlue,
+                backgroundColor: theme.colors.background,
+                borderBottomColor: theme.isDark
+                  ? theme.palette.darkBlue
+                  : theme.palette.beige,
               },
             ]}
           >
-            Scan delivery note
-          </Text>
-          <Pressable onPress={() => router.back()}>
-            <Text style={[styles.closeText, { color: theme.colors.text }]}>
-              ✕
+            <Text
+              style={[
+                styles.headerTitle,
+                {
+                  color: theme.isDark
+                    ? theme.palette.yellow
+                    : theme.palette.darkBlue,
+                },
+              ]}
+            >
+              Scan delivery note
             </Text>
-          </Pressable>
-        </View>
+            <Pressable onPress={() => router.back()}>
+              <Text style={[styles.closeText, { color: theme.colors.text }]}>
+                ✕
+              </Text>
+            </Pressable>
+          </View>
 
-        {permission.granted ? (
+          {/* {permission.granted ? (
           <>
             <View style={styles.cameraContainer}>
               <CameraView
@@ -304,16 +309,17 @@ export default function ScanNewDelivery() {
               Waiting for camera permission...
             </Text>
           </View>
-        )}
+        )} */}
 
-        <PermissionModal
+          {/* <PermissionModal
           visible={showPermissionModal}
           onAllow={handleAllowPermission}
           onDontAllow={handleDontAllow}
           theme={theme}
-        />
+        /> */}
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -14,7 +14,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen
           name="(scan-flow)"
-          options={{ animation: "slide_from_bottom" }}
+          options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
         <Stack.Screen
           name="(stock)"

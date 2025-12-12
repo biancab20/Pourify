@@ -1,4 +1,3 @@
-// theme/AppThemeProvider.tsx
 import React, {
   createContext,
   useContext,

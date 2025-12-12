@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
@@ -16,7 +16,7 @@ export default function BarView() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={["bottom"]}
+      edges={Platform.OS === "android" ? ["bottom"] : []}
     >
       <ScrollView
         style={styles.container}
@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 24,
@@ -61,16 +62,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   sectionContainer: {
-    marginTop: 24,
+    marginTop: 15,
   },
   scrollContent: {
-    paddingHorizontal: 10,
-    paddingTop: 0,
     paddingBottom: 60,
     minHeight: 800,
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: "700",
     marginBottom: 8,
   },

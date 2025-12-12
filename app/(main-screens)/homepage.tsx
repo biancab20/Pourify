@@ -13,6 +13,7 @@ import {
   StyleSheet,
   View,
   useWindowDimensions,
+  Platform
 } from "react-native";
 import { dummyData, Bar } from "@/types/DummyData";
 import GradientButton from "@/components/shared/GradientButton";
@@ -37,7 +38,7 @@ export default function HomeScreen() {
   const bars = dummyData.bars.items;
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={Platform.OS === "android" ? ["top", "bottom"] : ["top"]}>
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 40,
+    paddingTop: 20,
   },
 
   sectionContainer: {
