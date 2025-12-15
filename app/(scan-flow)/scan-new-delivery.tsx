@@ -174,7 +174,7 @@ export default function ScanNewDelivery() {
             </Pressable>
           </View>
 
-          {/* {permission.granted ? (
+          {permission.granted ? (
           <>
             <View style={styles.cameraContainer}>
               <CameraView
@@ -309,14 +309,13 @@ export default function ScanNewDelivery() {
               Waiting for camera permission...
             </Text>
           </View>
-        )} */}
-
-          {/* <PermissionModal
+        )} 
+<PermissionModal
           visible={showPermissionModal}
           onAllow={handleAllowPermission}
           onDontAllow={handleDontAllow}
           theme={theme}
-        /> */}
+        /> 
         </View>
       </View>
     </SafeAreaView>

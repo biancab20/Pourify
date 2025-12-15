@@ -2,6 +2,7 @@ import "react-native-reanimated";
 import { AppThemeProvider, useAppTheme } from "@/stores/app-theme-context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 function RootStack() {
   const { theme } = useAppTheme();
@@ -26,9 +27,11 @@ function RootStack() {
 
 export default function RootLayout() {
   return (
-    <AppThemeProvider>
-      <RootStack />
-      <StatusBar style="auto" />
-    </AppThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppThemeProvider>
+        <RootStack />
+        <StatusBar style="auto" />
+      </AppThemeProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -32,11 +32,10 @@ export default function PictureOverview() {
   };
 
   const confirmPhotos = () => {
-    console.log("Photos to process:", photos);
     Alert.alert("Success", `${photos.length} photos saved for processing`, [
       {
         text: "OK",
-        onPress: () => router.replace("/(stock)/all-products-page"),
+        onPress: () => router.replace("/delivery-list"),
       },
     ]);
   };
