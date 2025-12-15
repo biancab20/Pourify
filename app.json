@@ -9,18 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
-      // "fonts": [
-      //   "./assets/fonts/Roobert-Bold.otf",
-      //   "./assets/fonts/Roobert-BoldItalic.otf",
-      //   "./assets/fonts/Roobert-Heavy.otf",
-      //   "./assets/fonts/Roobert-HeavyItalic.otf",
-      //   "./assets/fonts/Roobert-Light.otf",
-      //   "./assets/fonts/Roobert-LightItalic.otf",
-      //   "./assets/fonts/Roobert-Medium.otf"
-      // ]
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pourify",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We use the camera to scan delivery notes."
+      }
     },
     "android": {
+      "package": "com.pourify",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -29,64 +25,6 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
-      // "fonts": [
-      //   {
-      //     "fontFamily": "Roobert-Bold",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-Bold.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-BoldItalic",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-BoldItalic.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-Heavy",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-Heavy.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-HeavyItalic",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-HeavyItalic.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-Light",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-Light.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-LightItalic",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-LightItalic.otf"
-      //       }
-      //     ]
-      //   },
-      //   {
-      //     "fontFamily": "Roobert-Medium",
-      //     "fontDefinitions": [
-      //       {
-      //         "path": "./assets/fonts/Roobert-Medium.otf"
-      //       }
-      //     ]
-      //   }
-      // ]
     },
     "web": {
       "output": "static",

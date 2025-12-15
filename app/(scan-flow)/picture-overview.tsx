@@ -36,7 +36,7 @@ export default function PictureOverview() {
     Alert.alert("Success", `${photos.length} photos saved for processing`, [
       {
         text: "OK",
-        onPress: () => router.replace("/(stock)/all-products-page"),
+        onPress: () => router.replace("/(main-screens)/all-products-view"),
       },
     ]);
   };
