@@ -2,7 +2,6 @@ import {
   View,
   StyleSheet,
   Pressable,
-  TouchableWithoutFeedback,
   Image,
   ScrollView,
   Alert,
@@ -15,8 +14,8 @@ import { useState, useRef, useEffect } from "react";
 import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
-// import PermissionModal from "@/components/ui/PermissionModal"; // 👈 custom modal (commented)
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@/components/icons/Icon";
 
 export default function ScanNewDelivery() {
   const router = useRouter();
@@ -27,8 +26,6 @@ export default function ScanNewDelivery() {
   const cameraRef = useRef<CameraView>(null);
 
   const [permission, requestPermission] = useCameraPermissions();
-  const [cameraType, setCameraType] = useState<CameraType>("back");
-
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
   // =========================
@@ -60,7 +57,7 @@ export default function ScanNewDelivery() {
     }
   }, [permission?.granted]);
 
-  // ✅ NEW: Auto-trigger OS permission prompt when undetermined
+  // Auto-trigger OS permission prompt when undetermined
   useEffect(() => {
     if (!permission) return;
 
@@ -123,10 +120,6 @@ export default function ScanNewDelivery() {
     });
   };
 
-  const toggleCameraType = () => {
-    setCameraType((current) => (current === "back" ? "front" : "back"));
-  };
-
   // Load existing photos if coming back from overview
   useEffect(() => {
     if (params.existingPhotos) {
@@ -160,160 +153,83 @@ export default function ScanNewDelivery() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+        paddingHorizontal: 16,
+      }}
       edges={["bottom", "top"]}
     >
       <View
-        style={[
-          styles.overlay,
-          {
-            backgroundColor: theme.isDark
-              ? theme.palette.black
-              : theme.palette.beige,
-          },
-        ]}
+        style={[styles.sheet, { backgroundColor: theme.colors.background }]}
       >
-        <TouchableWithoutFeedback onPress={() => router.back()}>
-          <View style={StyleSheet.absoluteFillObject} />
-        </TouchableWithoutFeedback>
-
+        {/* header view */}
         <View
-          style={[styles.sheet, { backgroundColor: theme.colors.background }]}
+          style={[
+            styles.header,
+            {
+              backgroundColor: theme.colors.background,
+            },
+          ]}
         >
-          <View
+          <Text
             style={[
-              styles.header,
+              styles.headerTitle,
               {
-                backgroundColor: theme.colors.background,
-                borderBottomColor: theme.isDark
-                  ? theme.palette.darkBlue
-                  : theme.palette.beige,
+                color: theme.isDark
+                  ? theme.palette.yellow
+                  : theme.palette.darkBlue,
               },
             ]}
           >
-            <Text
-              style={[
-                styles.headerTitle,
-                {
-                  color: theme.isDark
-                    ? theme.palette.yellow
-                    : theme.palette.darkBlue,
-                },
-              ]}
-            >
-              Scan delivery note
-            </Text>
-            <Pressable onPress={() => router.back()}>
-              <Text style={[styles.closeText, { color: theme.colors.text }]}>
-                ✕
-              </Text>
-            </Pressable>
-          </View>
+            Scan delivery note
+          </Text>
+          {/* this pressable is 48x48 so matches accessability standards */}
+          <Pressable style={styles.closeButton} onPress={() => router.back()}>
+            <Icon name="exit" size={32} color={theme.colors.icon} />
+          </Pressable>
+        </View>
 
-          {hasCameraPermission ? (
-            <>
-              <View style={styles.cameraContainer}>
-                <CameraView
-                  ref={cameraRef}
-                  style={styles.camera}
-                  facing={cameraType}
-                  enableTorch={false}
-                />
+        {hasCameraPermission ? (
+          <>
+            <View style={styles.cameraContainer}>
+              <CameraView
+                ref={cameraRef}
+                style={styles.camera}
+                facing={"back"}
+                enableTorch={false}
+              />
 
-                <View style={styles.cameraOverlay}>
-                  <View style={styles.cameraControls}>
-                    <Pressable
-                      onPress={toggleCameraType}
-                      style={[
-                        styles.cameraButton,
-                        {
-                          backgroundColor: theme.isDark
-                            ? theme.palette.darkBlue
-                            : theme.palette.beige,
-                        },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.cameraButtonText,
-                          { color: theme.colors.text },
-                        ]}
-                      >
-                        ↻
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  <View style={styles.captureContainer}>
-                    <Pressable
-                      style={[
-                        styles.captureButton,
-                        {
-                          backgroundColor: theme.isDark
-                            ? theme.palette.darkBlue
-                            : theme.palette.beige,
-                          borderColor: theme.isDark
-                            ? theme.palette.black
-                            : theme.palette.white,
-                        },
-                      ]}
-                      onPress={takePicture}
-                    >
-                      <View
-                        style={[
-                          styles.captureButtonInner,
-                          { backgroundColor: theme.colors.cardBackground },
-                        ]}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
-              </View>
-
-              {photos.length > 0 && (
-                <View
+              {/* Capture button INSIDE the camera rectangle */}
+              <View style={styles.captureContainer}>
+                <Pressable
                   style={[
-                    styles.previewContainer,
+                    styles.captureButton,
                     {
-                      borderTopColor: theme.isDark
+                      backgroundColor: theme.isDark
                         ? theme.palette.darkBlue
                         : theme.palette.beige,
+                      borderColor: theme.isDark
+                        ? theme.palette.black
+                        : theme.palette.white,
                     },
                   ]}
+                  onPress={takePicture}
                 >
-                  <Text
-                    style={[styles.previewTitle, { color: theme.colors.text }]}
-                  >
-                    Taken Photos ({photos.length})
-                  </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {photos.map((photo, index) => (
-                      <View key={index} style={styles.previewItem}>
-                        <Image
-                          source={{ uri: photo.uri }}
-                          style={styles.previewImage}
-                        />
-                        <Pressable
-                          style={[
-                            styles.removeButton,
-                            {
-                              backgroundColor: theme.palette.red,
-                              borderColor: theme.colors.background,
-                            },
-                          ]}
-                          onPress={() => removePhoto(index)}
-                        >
-                          <Text style={styles.removeButtonText}>✕</Text>
-                        </Pressable>
-                      </View>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
+                  <View
+                    style={[
+                      styles.captureButtonInner,
+                      { backgroundColor: theme.colors.cardBackground },
+                    ]}
+                  />
+                </Pressable>
+              </View>
+            </View>
 
+            {photos.length > 0 && (
               <View
                 style={[
-                  styles.actionContainer,
+                  styles.previewContainer,
                   {
                     borderTopColor: theme.isDark
                       ? theme.palette.darkBlue
@@ -321,62 +237,79 @@ export default function ScanNewDelivery() {
                   },
                 ]}
               >
+                <Text
+                  style={[styles.previewTitle, { color: theme.colors.text }]}
+                >
+                  Taken Photos ({photos.length})
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {photos.map((photo, index) => (
+                    <View key={index} style={styles.previewItem}>
+                      <Image
+                        source={{ uri: photo.uri }}
+                        style={styles.previewImage}
+                      />
+                      <Pressable
+                        style={[
+                          styles.removeButton,
+                          {
+                            backgroundColor: theme.palette.red,
+                            borderColor: theme.colors.background,
+                          },
+                        ]}
+                        onPress={() => removePhoto(index)}
+                      >
+                        <Text style={styles.removeButtonText}>✕</Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            <View style={styles.actionContainer}>
+              <GradientButton
+                onPress={proceedToOverview}
+                text={`Review (${photos.length})`}
+                disabled={photos.length === 0}
+              />
+            </View>
+          </>
+        ) : (
+          <View
+            style={[
+              styles.cameraPlaceholder,
+              {
+                backgroundColor: theme.isDark
+                  ? theme.palette.darkBlue
+                  : theme.palette.beige,
+              },
+            ]}
+          >
+            <Text
+              style={[styles.placeholderText, { color: theme.colors.text }]}
+            >
+              {isDenied
+                ? "Camera permission is denied. Turn it on in Settings or choose another method to upload delivery notes."
+                : isUndetermined
+                ? "Requesting camera permission..."
+                : "Waiting for camera permission..."}
+            </Text>
+
+            {isDenied && (
+              <View style={{ width: "100%", marginTop: 16, gap: 12 }}>
                 <GradientButton
-                  onPress={proceedToOverview}
-                  text={`Review (${photos.length})`}
-                  disabled={photos.length === 0}
+                  onPress={handleOpenSettings}
+                  text="Open Settings"
+                />
+                <GradientButton
+                  onPress={handleChooseAnotherMethod}
+                  text="Choose another method"
                 />
               </View>
-            </>
-          ) : (
-            <View
-              style={[
-                styles.cameraPlaceholder,
-                {
-                  backgroundColor: theme.isDark
-                    ? theme.palette.darkBlue
-                    : theme.palette.beige,
-                },
-              ]}
-            >
-              <Text
-                style={[styles.placeholderText, { color: theme.colors.text }]}
-              >
-                {isDenied
-                  ? "Camera permission is denied. Turn it on in Settings or choose another method to upload delivery notes."
-                  : isUndetermined
-                  ? "Requesting camera permission..."
-                  : "Waiting for camera permission..."}
-              </Text>
-
-              {isDenied && (
-                <View style={{ width: "100%", marginTop: 16, gap: 12 }}>
-                  <GradientButton
-                    onPress={handleOpenSettings}
-                    text="Open Settings"
-                  />
-                  <GradientButton
-                    onPress={handleChooseAnotherMethod}
-                    text="Choose another method"
-                  />
-                </View>
-              )}
-            </View>
-          )}
-
-          {/*
-          =========================
-          Custom modal (keep for later)
-          =========================
-
-          <PermissionModal
-            visible={showPermissionModal}
-            onAllow={handleAllowPermission}
-            onDontAllow={handleDontAllow}
-            theme={theme}
-          />
-          */}
-        </View>
+            )}
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -385,35 +318,30 @@ export default function ScanNewDelivery() {
 const SHEET_HEIGHT = "100%";
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
   sheet: {
     height: SHEET_HEIGHT,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: "hidden",
   },
   header: {
     height: 56,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
   },
-  closeText: {
-    fontSize: 24,
-    fontWeight: "300",
+  closeButton: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    top: 0,
+    height: 56,
+    minWidth: 48,
+    right: 0,
   },
   cameraContainer: {
     flex: 1,
-    margin: 16,
     borderRadius: 12,
     overflow: "hidden",
     position: "relative",
@@ -433,33 +361,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-  cameraOverlay: {
+  captureContainer: {
     position: "absolute",
-    top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: 16,
+    alignItems: "center",
     backgroundColor: "transparent",
-    justifyContent: "space-between",
-  },
-  cameraControls: {
-    paddingTop: 20,
-    paddingRight: 20,
-    alignItems: "flex-end",
-  },
-  cameraButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  cameraButtonText: {
-    fontSize: 20,
-  },
-  captureContainer: {
-    alignItems: "center",
-    paddingBottom: 40,
   },
   captureButton: {
     width: 80,
@@ -475,9 +383,7 @@ const styles = StyleSheet.create({
     borderRadius: 32,
   },
   previewContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    borderTopWidth: 1,
+    paddingVertical: 16,
   },
   previewTitle: {
     fontSize: 16,
@@ -487,6 +393,7 @@ const styles = StyleSheet.create({
   previewItem: {
     marginRight: 12,
     position: "relative",
+    paddingTop: 6,
   },
   previewImage: {
     width: 80,
@@ -495,7 +402,6 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: "absolute",
-    top: -6,
     right: -6,
     width: 24,
     height: 24,
@@ -510,9 +416,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   actionContainer: {
-    padding: 16,
-    borderTopWidth: 1,
-    alignItems: "center",
+    paddingVertical: 16,
   },
   loadingContainer: {
     flex: 1,

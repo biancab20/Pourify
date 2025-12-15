@@ -5,8 +5,6 @@ export default function ScanFlowLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        // Already presented as transparentModal by root, so here we just define step-to-step animation
-        animation: "slide_from_right",
       }}
     >
       <Stack.Screen name="scan-new-delivery" />
