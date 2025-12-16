@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
-type InfoBoxProps = {
+interface InfoBoxProps {
   title: string | number;
   subtitle: string;
   style?: object;

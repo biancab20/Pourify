@@ -4,7 +4,7 @@ import Svg, { Rect, Defs, LinearGradient, Stop } from "react-native-svg";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
-export interface ProgressBarProps {
+interface ProgressBarProps {
   label: string;
   value: number;
   percentage: number;

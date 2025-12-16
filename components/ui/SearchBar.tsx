@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, TextInput, StyleSheet, Pressable } from "react-native";
-import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
+import { Icon } from "../icons/Icon";
 
-export interface SearchInputProps {
+interface SearchInputProps {
   onSearch: (text: string) => void;
   placeholder?: string;
   initialValue?: string;
@@ -25,15 +25,27 @@ export default function SearchBar({
     onSearch("");
   };
 
+  const borderColor = theme.isDark
+  ? isFocused
+    ? "#FFFFFF"
+    : "#565656"
+  : isFocused
+  ? "#000000"
+  : "#8B8B8B";
+
+const placeholderColor = theme.isDark ? "#565656" : "#8B8B8B";
+
   return (
     <View
       style={[
         styles.container,
         {
-          borderColor: palette.white,
+          borderColor,
           backgroundColor: theme.isDark ? palette.black : palette.white,
         },
       ]}
+      accessibilityRole="search"
+      accessibilityLabel="Search bar"
     >
       <TextInput
         style={[
@@ -43,7 +55,7 @@ export default function SearchBar({
           },
         ]}
         placeholder={placeholder}
-        placeholderTextColor={theme.isDark ? palette.beige : palette.darkBlue}
+        placeholderTextColor={placeholderColor}
         value={searchText}
         onChangeText={(text) => {
           setSearchText(text);
@@ -56,14 +68,8 @@ export default function SearchBar({
       />
 
       {searchText.length > 0 && (
-        <Pressable
-          style={[
-            styles.clearButton,
-            { backgroundColor: palette.pink },
-          ]}
-          onPress={handleClear}
-        >
-          <Text style={styles.clearButtonText}>×</Text>
+        <Pressable style={styles.clearButton} onPress={handleClear} accessibilityRole="button" accessibilityLabel="Clear search">
+          <Icon name="delete" size={20} />
         </Pressable>
       )}
     </View>
@@ -75,31 +81,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 13,
     borderWidth: 0.5,
     width: "100%",
     alignSelf: "center",
+    maxHeight: 48,
   },
   input: {
     flex: 1,
     fontSize: 18,
+    paddingVertical: 13,
+    paddingLeft: 20,
     textAlignVertical: "center",
     includeFontPadding: false,
   },
   clearButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 15,
+    width: 48,
+    height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10,
-  },
-  clearButtonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "500",
-    lineHeight: 20,
-    textAlignVertical: "center",
   },
 });

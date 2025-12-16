@@ -46,7 +46,7 @@ export default function DatePicker({ mode, setMode, currentDate, setCurrentDate 
   };
 
   return (
-    <View style={[styles.container]}>
+    <View style={styles.container}>
       <View
         style={[
           styles.modeRow,
