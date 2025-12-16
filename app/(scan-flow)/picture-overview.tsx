@@ -7,22 +7,46 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Text } from "@/components/shared/Text";
 import GradientButton from "@/components/shared/GradientButton";
+import { useAppTheme } from "@/stores/app-theme-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Icon } from "@/components/icons/Icon";
+import { Photo } from "@/app/(scan-flow)/scan-new-delivery";
+
+function safeParsePhotos(value: unknown): Photo[] {
+  if (typeof value !== "string") return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((p) => p && typeof p.uri === "string")
+      .map((p) => ({
+        id: typeof p.id === "string" ? p.id : `${Date.now()}-${Math.random()}`,
+        uri: p.uri,
+      }));
+  } catch {
+    return [];
+  }
+}
 
 export default function PictureOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [photos, setPhotos] = useState<{ uri: string }[]>(
-    params.photos ? JSON.parse(params.photos as string) : []
-  );
+  const { theme } = useAppTheme();
 
-  useEffect(() => {
-    if (params.photos) {
-      setPhotos(JSON.parse(params.photos as string));
-    }
-  }, [params.photos]);
+  const parsedFromParams = useMemo(
+    () => safeParsePhotos(params.photos),
+    [params.photos]
+  );
+  const [photos, setPhotos] = useState<Photo[]>(parsedFromParams);
+
+useEffect(() => {
+    setPhotos(parsedFromParams);
+  }, [parsedFromParams]);
 
   const addMorePhotos = () => {
     router.push({
@@ -40,16 +64,33 @@ export default function PictureOverview() {
     ]);
   };
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  const removePhoto = (id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Delivery Note Photos</Text>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.closeText}>✕</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["bottom", "top"]}
+    >
+      {/* header */}
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
+        <Text
+          style={[
+            styles.headerTitle,
+            {
+              color: theme.isDark
+                ? theme.palette.yellow
+                : theme.palette.darkBlue,
+            },
+          ]}
+        >
+          Delivery Note Photos
+        </Text>
+        <Pressable style={styles.closeButton} onPress={() => router.back()}>
+          <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
       </View>
 
@@ -57,11 +98,11 @@ export default function PictureOverview() {
       <ScrollView style={styles.photoContainer}>
         <View style={styles.photoGrid}>
           {photos.map((photo, index) => (
-            <View key={index} style={styles.photoItem}>
+            <View key={photo.id} style={styles.photoItem}>
               <Image source={{ uri: photo.uri }} style={styles.photo} />
               <Pressable
                 style={styles.removeButton}
-                onPress={() => removePhoto(index)}
+                onPress={() => removePhoto(photo.id)}
               >
                 <Text style={styles.removeButtonText}>✕</Text>
               </Pressable>
@@ -90,55 +131,56 @@ export default function PictureOverview() {
           variant="secondary"
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#001b3a",
+    paddingHorizontal: 10,
   },
   header: {
+    paddingHorizontal: 6,
     height: 56,
-    backgroundColor: "#001b3a",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
+    justifyContent: "center",
   },
   headerTitle: {
-    color: "#D4FF3B",
     fontSize: 18,
     fontWeight: "600",
   },
-  closeText: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "300",
+  closeButton: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    top: 0,
+    height: 56,
+    minWidth: 48,
+    right: 0,
   },
   photoContainer: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 16,
   },
   photoGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    gap: 14,
+    marginHorizontal: 6,
   },
   photoItem: {
     width: "48%",
     height: 200,
-    marginBottom: 16,
-    position: "relative",
     borderRadius: 12,
-    overflow: "hidden",
+    //overflow: "hidden",
   },
   photo: {
     width: "100%",
     height: "100%",
+    borderRadius: 12,
   },
   removeButton: {
     position: "absolute",
@@ -173,9 +215,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   buttonContainer: {
-    padding: 16,
+    paddingVertical: 16,
     gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.1)",
   },
 });

@@ -11,24 +11,24 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useState, useRef, useEffect } from "react";
-import { CameraView, useCameraPermissions, CameraType } from "expo-camera";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
 
+export type Photo = { id: string; uri: string};
+
 export default function ScanNewDelivery() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
-
-  const [photos, setPhotos] = useState<{ uri: string }[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const cameraRef = useRef<CameraView>(null);
-
   const [permission, requestPermission] = useCameraPermissions();
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
-  // =========================
+
   // Permission-related
   // =========================
 
@@ -94,15 +94,18 @@ export default function ScanNewDelivery() {
         skipProcessing: false,
       });
 
-      setPhotos((prev) => [...prev, photo]);
+      setPhotos((prev) => [
+      ...prev,
+      { id: `${Date.now()}-${Math.random()}`, uri: photo.uri },
+    ]);
     } catch (error) {
       console.error("Error taking picture:", error);
       Alert.alert("Error", "Failed to capture photo");
     }
   };
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  const removePhoto = (id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
   const proceedToOverview = () => {
@@ -122,11 +125,24 @@ export default function ScanNewDelivery() {
 
   // Load existing photos if coming back from overview
   useEffect(() => {
-    if (params.existingPhotos) {
-      const existing = JSON.parse(params.existingPhotos as string);
-      setPhotos(existing);
-    }
-  }, [params.existingPhotos]);
+  if (!params.existingPhotos) return;
+
+  try {
+    const parsed = JSON.parse(params.existingPhotos as string);
+    // allow old shape too ({uri}) by adding ids if missing
+    const normalized = Array.isArray(parsed)
+      ? parsed.map((p: any) => ({
+          id: p.id ?? `${Date.now()}-${Math.random()}`,
+          uri: p.uri,
+        }))
+      : [];
+
+    setPhotos(normalized);
+  } catch {
+    console.warn("Invalid existingPhotos param");
+  }
+}, [params.existingPhotos]);
+
 
   // =========================
   // UI states
@@ -243,8 +259,8 @@ export default function ScanNewDelivery() {
                   Taken Photos ({photos.length})
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {photos.map((photo, index) => (
-                    <View key={index} style={styles.previewItem}>
+                  {photos.map((photo) => (
+                    <View key={photo.id} style={styles.previewItem}>
                       <Image
                         source={{ uri: photo.uri }}
                         style={styles.previewImage}
@@ -257,7 +273,7 @@ export default function ScanNewDelivery() {
                             borderColor: theme.colors.background,
                           },
                         ]}
-                        onPress={() => removePhoto(index)}
+                        onPress={() => removePhoto(photo.id)}
                       >
                         <Text style={styles.removeButtonText}>✕</Text>
                       </Pressable>
