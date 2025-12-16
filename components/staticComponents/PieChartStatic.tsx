@@ -18,7 +18,7 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
   const progressStrokeDasharray = `${(pouredPercentage / 100) * circumference} ${circumference}`;
 
   return (
-    <View style={[styles.circleWrapper, { width: size, height: size }]}>
+    <View style={[styles.circleWrapper, { width: size, height: size }]} accessible={false}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
           {/* Progress gradient */}

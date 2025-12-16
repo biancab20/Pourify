@@ -13,7 +13,7 @@ import {
   StyleSheet,
   View,
   useWindowDimensions,
-  Platform
+  Platform,
 } from "react-native";
 import { dummyData, Bar } from "@/types/DummyData";
 import GradientButton from "@/components/shared/GradientButton";
@@ -38,37 +38,55 @@ export default function HomeScreen() {
   const bars = dummyData.bars.items;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={Platform.OS === "android" ? ["top", "bottom"] : ["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={Platform.OS === "android" ? ["top", "bottom"] : ["top"]}
+    >
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* Top bar */}
         <View style={styles.topBar}>
-          <Text style={[styles.dateText, { color: colors.text }]}>{today}</Text>
+          <Text
+            style={[styles.dateText, { color: colors.text }]}
+            accessible={false}
+          >
+            {today}
+          </Text>
 
           {/* Top bar icons */}
           <View style={styles.iconButtons}>
             <Pressable
               onPress={() => router.push("/(scan-flow)/scan-new-delivery")}
+              accessibilityRole="button"
+              accessibilityLabel="Scan new delivery"
             >
               <Icon name="scan" size={35} color={colors.icon} />
             </Pressable>
-            <Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              accessible={false}
+            >
               <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
-            <Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="More actions"
+              accessible={false}
+            >
               <Icon name="moreActions" size={35} color={colors.icon} />
             </Pressable>
           </View>
         </View>
 
-        <Text variant="gradient" gradientName="paloma" style={styles.title}>
+        <Text variant="gradient" gradientName="paloma" style={styles.title} accessibilityRole="header" accessibilityLabel="Venue name">
           Hachi bar
         </Text>
 
         <WideCardStatic>
-          <View style={[styles.wideCard, { width: cardWidth }]}>
+          <View style={[styles.wideCard, { width: cardWidth }]} accessible={false}>
             <PieChartStatic size={circleSize} />
 
             <View style={styles.statsContainer}>
@@ -91,12 +109,12 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <Text style={[styles.infoBox, { color: colors.text }]}>
+          <Text style={[styles.infoBox, { color: colors.text }]} accessible={false}>
             Transactions from your POS will appear once they are paid
           </Text>
         </WideCardStatic>
 
-        <View style={styles.sectionContainer}>
+        <View style={styles.sectionContainer} accessible={false}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
             Most Popular Drink
           </Text>
@@ -120,7 +138,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="text" accessibilityLabel="Bars within the venue">
             Poured today in your bars
           </Text>
 
@@ -134,6 +152,7 @@ export default function HomeScreen() {
                     params: { barId: bar.barId, barName: bar.name },
                   })
                 }
+                accessibilityRole="button"
               >
                 <InformationCard barName={bar.name} />
               </Pressable>
@@ -142,13 +161,10 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="text">
             Stock
           </Text>
-          <GradientButton
-            destination="/all-products-view"
-            text="View stock"
-          />
+          <GradientButton destination="/all-products-view" text="View stock" />
         </View>
       </ScrollView>
     </SafeAreaView>

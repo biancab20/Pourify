@@ -23,7 +23,7 @@ export default function InformationCardStatic({ barName }: InformationCardStatic
         backgroundColor: theme.isDark ? "#000000" : "#FFFFFF"
       }
     ]}>
-      <Text style={[styles.title, { color: theme.colors.text }]}>{barName}</Text>
+      <Text style={[styles.title, { color: theme.colors.text }]} accessibilityRole="text" accessibilityLabel="Bar name">{barName}</Text>
 
       <PieChartStatic size={circleSize} />
 

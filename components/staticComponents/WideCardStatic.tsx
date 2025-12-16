@@ -21,6 +21,7 @@ export default function WideCardStatic({ children, style }: WideCardStaticProps)
         },
         style,
       ]}
+      accessible={false}
     >
       {children}
     </View>

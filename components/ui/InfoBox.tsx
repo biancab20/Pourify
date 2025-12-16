@@ -14,15 +14,20 @@ export default function InfoBox({ title, subtitle, style }: InfoBoxProps) {
   const { colors, palette } = theme;
 
   return (
-    <View style={[
-      styles.card, 
-      { 
-        backgroundColor: theme.isDark ? palette.darkBlue : palette.beige 
-      },
-      style
-    ]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.isDark ? palette.darkBlue : palette.beige,
+        },
+        style,
+      ]}
+      accessible={false}
+    >
       <Text style={[styles.cardTitle, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.cardSubtitle, { color: colors.text }]}>{subtitle}</Text>
+      <Text style={[styles.cardSubtitle, { color: colors.text }]}>
+        {subtitle}
+      </Text>
     </View>
   );
 }

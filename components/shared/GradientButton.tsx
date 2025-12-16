@@ -16,7 +16,7 @@ import { useAppTheme } from "@/stores/app-theme-context";
 export type ButtonVariant = "primary" | "secondary";
 export type GradientName = "paloma" | "bananaDaiquiri";
 
-export interface ButtonProps {
+interface ButtonProps {
   destination?: string;
   params?: Record<string, any>;
   text?: string;
@@ -78,6 +78,7 @@ export default function Button({
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
       ]}
+      accessibilityRole="button"
     >
       {variant === "primary" ? (
         <LinearGradient
