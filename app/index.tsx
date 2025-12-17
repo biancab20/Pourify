@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   TextInput,
@@ -15,28 +15,37 @@ import { router } from "expo-router";
 
 export default function LoginScreen() {
   const { theme } = useAppTheme();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Create themed styles
-  const themedStyles = {
-    input: {
-      ...styles.input,
-      color: theme.colors.cardText,
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+  const placeholderColor = theme.isDark ? "#565656" : "#8B8B8B";
+
+  const getBorderColor = useCallback(
+    (focused: boolean) => {
+      if (theme.isDark) return focused ? "#FFFFFF" : "#565656";
+      return focused ? "#000000" : "#8B8B8B";
     },
-    passwordInput: {
-      flex: 1,
-      marginBottom: 0,
-      paddingHorizontal: 14,
-      fontSize: 16,
-      color: theme.colors.cardText,
-    },
-    passwordWrapper: {
-      ...styles.passwordWrapper,
-      borderColor: theme.colors.text || "#E6E6E6",
-    },
-  };
+    [theme.isDark]
+  );
+
+  const emailBorderColor = useMemo(
+    () => getBorderColor(isEmailFocused),
+    [getBorderColor, isEmailFocused]
+  );
+
+  const passwordBorderColor = useMemo(
+    () => getBorderColor(isPasswordFocused),
+    [getBorderColor, isPasswordFocused]
+  );
+
+  const handleLogin = useCallback(() => {
+    router.replace("/(main-screens)/homepage");
+  }, []);
 
   return (
     <SafeAreaView
@@ -50,7 +59,6 @@ export default function LoginScreen() {
             style={styles.logo}
             resizeMode="contain"
           />
-
           <Text style={[styles.subtitle, { color: theme.colors.text }]}>
             Every. Drop. Counts.
           </Text>
@@ -60,84 +68,104 @@ export default function LoginScreen() {
         <View
           style={[
             styles.card,
-            {
-              backgroundColor: theme.colors.cardBackground,
-            },
+            { backgroundColor: theme.colors.cardBackground },
           ]}
         >
           {/* Email */}
-          <Text style={{ color: theme.colors.cardText }}>E-mail</Text>
+          <Text
+            style={[styles.label, { color: theme.colors.cardText }]}
+            accessibilityRole="text"
+            accessibilityLabel="Email address label"
+          >
+            Email address
+          </Text>
           <TextInput
             placeholder="hello@example.com"
-            placeholderTextColor="#b6b6b6"
-            style={themedStyles.input}
+            placeholderTextColor={placeholderColor}
+            style={[
+              styles.input,
+              {
+                color: theme.colors.cardText,
+                borderColor: emailBorderColor,
+              },
+            ]}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
+            onFocus={() => setIsEmailFocused(true)}
+            onBlur={() => setIsEmailFocused(false)}
+            accessibilityLabel="Email address"
+            accessibilityHint="Enter your email address"
           />
 
           {/* Password */}
-          <Text style={[styles.label, { color: theme.colors.cardText }]}>
-            Wachtwoord
+          <Text
+            style={[styles.label, { color: theme.colors.cardText }]}
+            accessibilityRole="text"
+            accessibilityLabel="Password label"
+          >
+            Password
           </Text>
-          <View style={themedStyles.passwordWrapper}>
+
+          <View
+            style={[
+              styles.passwordWrapper,
+              { borderColor: passwordBorderColor },
+            ]}
+          >
             <TextInput
               placeholder="•••••••"
-              placeholderTextColor="#b6b6b6"
+              placeholderTextColor={placeholderColor}
               secureTextEntry={!showPassword}
-              style={themedStyles.passwordInput}
+              style={[styles.passwordInput, { color: theme.colors.cardText }]}
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setIsPasswordFocused(true)}
+              onBlur={() => setIsPasswordFocused(false)}
+              accessibilityLabel="Password"
+              accessibilityHint="Enter your password"
             />
 
             <TouchableOpacity
               onPress={() => setShowPassword((prev) => !prev)}
               style={styles.eyeButton}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
             >
               <Ionicons
                 name={showPassword ? "eye" : "eye-off"}
                 size={22}
-                color={theme.colors.text || "#777"} // Use theme icon color if available
+                color={theme.colors.text || "#777"}
               />
             </TouchableOpacity>
           </View>
 
-          {/* Gradient Button */}
-          <GradientButton
-            onPress={() => {
-              router.replace("/(main-screens)/homepage");
-            }}
-            //destination="/(main-screens)/homepage"
-            text="Login"
-            //gradientName="bananaDaiquiri"
-
-           // variant="secondary"
- // text="View details"
- // gradientName="bananaDaiquiri"
-          />
+          <GradientButton onPress={handleLogin} text="Login" />
 
           {/* Footer links */}
-          <TouchableOpacity>
+          <TouchableOpacity accessibilityRole="link">
             <Text
               style={[
                 styles.forgotPassword,
                 { color: theme.colors.text || "#F54D41" },
               ]}
             >
-              Wachtwoord vergeten?
+              Forgot password?
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          <TouchableOpacity accessibilityRole="link">
             <Text
               style={[
                 styles.createAccount,
                 { color: theme.colors.text || "#FF77E0" },
               ]}
             >
-              Geen account?{" "}
-              <Text style={{ fontWeight: "700" }}>Maak er nu een aan!</Text>
+              You don&apos;t have an account?{" "}
+              <Text style={{ fontWeight: "700" }}>Make an account.</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -147,9 +175,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   wrapper: {
     flex: 1,
     justifyContent: "flex-start",
@@ -161,10 +187,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 40,
   },
-  logo: {
-    width: 300,
-    height: 200,
-  },
+  logo: { width: 300, height: 200 },
   subtitle: {
     fontSize: 14,
     fontWeight: "700",
@@ -180,14 +203,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  label: {
-    fontSize: 14,
-    marginBottom: 6,
-  },
+  label: { fontSize: 14, marginBottom: 6 },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: "#E6E6E6",
     borderRadius: 14,
     paddingHorizontal: 14,
     fontSize: 16,
@@ -197,15 +216,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E6E6E6",
     borderRadius: 14,
     height: 48,
     paddingRight: 10,
     marginBottom: 18,
   },
-  eyeButton: {
-    paddingHorizontal: 4,
+  passwordInput: {
+    flex: 1,
+    height: 48,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    includeFontPadding: false,
   },
+  eyeButton: { paddingHorizontal: 4 },
   forgotPassword: {
     marginTop: 16,
     textAlign: "center",
