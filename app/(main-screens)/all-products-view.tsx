@@ -1,4 +1,11 @@
-import { View, StyleSheet, Pressable, ScrollView, Platform } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  Platform,
+  ActionSheetIOS,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
@@ -12,6 +19,7 @@ import {
   dummyData,
 } from "@/types/DummyData";
 import { useState, useMemo, useEffect } from "react";
+import { Picker } from "@react-native-picker/picker";
 
 type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
 
@@ -83,13 +91,25 @@ export default function AllProducts() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={Platform.OS === "android" ? ["top", "bottom"] : ["top"]}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={Platform.OS === "android" ? ["bottom"] : []}
+    >
       <ScrollView style={styles.scrollView}>
-        <StockDropdownNavigation
-          bars={bars}
-          selectedBar={selectedBar}
-          onBarSelect={handleBarSelect}
-        />
+        <View style={styles.header}>
+          <Text
+            variant="gradient"
+            gradientName="paloma"
+            style={[styles.title, { color: colors.text }]}
+          >
+            Stock
+          </Text>
+          <StockDropdownNavigation
+            bars={bars}
+            selectedBar={selectedBar}
+            onBarSelect={handleBarSelect}
+          />
+        </View>
 
         <SearchBar
           onSearch={handleSearch}
@@ -189,9 +209,17 @@ export default function AllProducts() {
 
 const styles = StyleSheet.create({
   scrollView: {
-    flex: 1,
     paddingHorizontal: 16,
-    paddingVertical: 5,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
   },
   productsList: {
     marginTop: 20,
