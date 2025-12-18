@@ -4,7 +4,6 @@ import {
   Pressable,
   ScrollView,
   Platform,
-  ActionSheetIOS,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -19,7 +18,6 @@ import {
   dummyData,
 } from "@/types/DummyData";
 import { useState, useMemo, useEffect } from "react";
-import { Picker } from "@react-native-picker/picker";
 
 type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
 

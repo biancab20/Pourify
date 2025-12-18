@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
   Modal,
-  Pressable,
   PanResponder,
   Animated,
   TouchableWithoutFeedback,
@@ -23,9 +22,9 @@ interface StockDropdownNavigationProps {
 
 type Anchor = { x: number; y: number; width: number; height: number };
 
-const ITEM_HEIGHT = 48; // smaller than before
-const MENU_PADDING = 6; // tighter than before
-const GAP_BELOW_BUTTON = 6;
+const ITEM_HEIGHT = 40; //menu item height(with the padding it has the right touch target)
+const MENU_PADDING = 6; 
+const GAP_BELOW_BUTTON = 4;
 
 export default function StockDropdownNavigation({
   bars = [],
