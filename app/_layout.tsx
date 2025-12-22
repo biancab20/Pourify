@@ -3,6 +3,17 @@ import { AppThemeProvider, useAppTheme } from "@/stores/app-theme-context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useTanStackQueryDevTools } from "@rozenite/tanstack-query-plugin";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 function RootStack() {
   const { theme } = useAppTheme();
@@ -12,7 +23,7 @@ function RootStack() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: colors.background }, 
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen name="index" />
@@ -26,12 +37,15 @@ function RootStack() {
 }
 
 export default function RootLayout() {
+  useTanStackQueryDevTools(queryClient);
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppThemeProvider>
-        <RootStack />
-        <StatusBar style="auto" />
-      </AppThemeProvider>
-    </GestureHandlerRootView>
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppThemeProvider>
+          <RootStack />
+          <StatusBar style="auto" />
+        </AppThemeProvider>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }

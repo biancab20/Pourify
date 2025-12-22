@@ -13,7 +13,10 @@ import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
-import { Photo } from "@/app/(scan-flow)/scan-new-delivery";
+import type { Photo } from "@/types/deliveries";
+
+import { makeId } from "@/utils/ids";
+import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
 
 function safeParsePhotos(value: unknown): Photo[] {
   if (typeof value !== "string") return [];
@@ -25,7 +28,7 @@ function safeParsePhotos(value: unknown): Photo[] {
     return parsed
       .filter((p) => p && typeof p.uri === "string")
       .map((p) => ({
-        id: typeof p.id === "string" ? p.id : `${Date.now()}-${Math.random()}`,
+        id: typeof p.id === "string" ? p.id : makeId(),
         uri: p.uri,
       }));
   } catch {
@@ -38,35 +41,52 @@ export default function PictureOverview() {
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
 
+  const processDeliveryNote = useProcessDeliveryNote();
+
   const parsedFromParams = useMemo(
     () => safeParsePhotos(params.photos),
     [params.photos]
   );
+
   const [photos, setPhotos] = useState<Photo[]>(parsedFromParams);
 
-useEffect(() => {
+  useEffect(() => {
     setPhotos(parsedFromParams);
   }, [parsedFromParams]);
 
   const addMorePhotos = () => {
-    router.push({
+    router.replace({
       pathname: "/(scan-flow)/scan-new-delivery",
       params: { existingPhotos: JSON.stringify(photos) },
     });
   };
 
-  const confirmPhotos = () => {
-    Alert.alert("Success", `${photos.length} photos saved for processing`, [
-      {
-        text: "OK",
-        onPress: () => router.replace("/delivery-list"),
-      },
-    ]);
+  const confirmPhotos = async () => {
+    if (photos.length === 0) return;
+
+    try {
+      const data = await processDeliveryNote.mutateAsync({
+        kind: "photos",
+        photos,
+      });
+
+      Alert.alert("OCR response", JSON.stringify(data, null, 2), [
+        { text: "OK", onPress: () => router.replace("/delivery-list") },
+      ]);
+    } catch (e: any) {
+      // Your ApiError shape: { message, status?, body? }
+      Alert.alert(
+        "Upload failed",
+        e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)
+      );
+    }
   };
 
   const removePhoto = (id: string) => {
     setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const isBusy = processDeliveryNote.isPending;
 
   return (
     <SafeAreaView
@@ -74,21 +94,18 @@ useEffect(() => {
       edges={["bottom", "top"]}
     >
       {/* header */}
-      <View
-        style={[styles.header, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <Text
           style={[
             styles.headerTitle,
             {
-              color: theme.isDark
-                ? theme.palette.yellow
-                : theme.palette.darkBlue,
+              color: theme.isDark ? theme.palette.yellow : theme.palette.darkBlue,
             },
           ]}
         >
           Delivery Note Photos
         </Text>
+
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -103,6 +120,7 @@ useEffect(() => {
               <Pressable
                 style={styles.removeButton}
                 onPress={() => removePhoto(photo.id)}
+                disabled={isBusy}
               >
                 <Text style={styles.removeButtonText}>✕</Text>
               </Pressable>
@@ -115,20 +133,17 @@ useEffect(() => {
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        {/* Confirm Photos - Gradient Button */}
         <GradientButton
           onPress={confirmPhotos}
-          text={`Confirm ${photos.length} Photo${
-            photos.length !== 1 ? "s" : ""
-          }`}
-          disabled={photos.length === 0}
+          text={`Confirm ${photos.length} Photo${photos.length !== 1 ? "s" : ""}`}
+          disabled={photos.length === 0 || isBusy}
         />
 
-        {/* Take More Photos - Secondary Button */}
         <GradientButton
           onPress={addMorePhotos}
           text="Take More Photos"
           variant="secondary"
+          disabled={isBusy}
         />
       </View>
     </SafeAreaView>
@@ -175,7 +190,6 @@ const styles = StyleSheet.create({
     width: "48%",
     height: 200,
     borderRadius: 12,
-    //overflow: "hidden",
   },
   photo: {
     width: "100%",

@@ -5,85 +5,114 @@ import {
   Image,
   ScrollView,
   Alert,
-  AppState,
   Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useState, useRef, useEffect } from "react";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { CameraView } from "expo-camera";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
+import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 
-export type Photo = { id: string; uri: string};
+import type { Photo } from "@/types/deliveries";
+import { makeId } from "@/utils/ids";
+import { toPhotosFromAssets, toPickedFile } from "@/utils/upload";
+import { useCameraPermissionFlow } from "@/hooks/useCameraPermissionFlow";
+import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
+
+export type PickedFile = {
+  id: string;
+  uri: string;
+  name?: string;
+  mimeType?: string;
+};
+
+type UploadMode = "images" | "file" | null;
 
 export default function ScanNewDelivery() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
+
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [files, setFiles] = useState<PickedFile[]>([]);
+  const [uploadMode, setUploadMode] = useState<UploadMode>(null);
+
   const cameraRef = useRef<CameraView>(null);
-  const [permission, requestPermission] = useCameraPermissions();
-  const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
+  const { permission, hasCameraPermission } = useCameraPermissionFlow();
 
-  // Permission-related
+  const processDeliveryNote = useProcessDeliveryNote();
+
   // =========================
-
-  const requestNativePermission = () => {
-    // This triggers the OS native prompt (iOS/Android)
-    requestPermission()
-      .then((res) => setHasCameraPermission(res.granted))
-      .catch((e) => console.log("requestPermission threw:", e));
-  };
-
-  const handleOpenSettings = () => {
-    Linking.openSettings();
-  };
-
-  const handleChooseAnotherMethod = () => {
-    Alert.alert(
-      "Not implemented",
-      "Hook this up to your alternative upload flow."
-    );
-  };
-
-  // Keep local boolean in sync with hook state
-  useEffect(() => {
-    if (permission?.granted !== undefined) {
-      setHasCameraPermission(permission.granted);
-    }
-  }, [permission?.granted]);
-
-  // Auto-trigger OS permission prompt when undetermined
-  useEffect(() => {
-    if (!permission) return;
-
-    if (permission.status === "undetermined") {
-      requestNativePermission();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [permission?.status]);
-
-  // Re-check when returning from Settings (foreground)
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        requestPermission()
-          .then((res) => setHasCameraPermission(res.granted))
-          .catch((e) => console.log("requestPermission on resume threw:", e));
+  // Pick images from gallery
+  // =========================
+  const pickFromGallery = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          "Permission required",
+          "Please allow photo access to select images from your gallery."
+        );
+        return;
       }
-    });
 
-    return () => sub.remove();
-  }, [requestPermission]);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        quality: 1,
+      });
+
+      if (result.canceled) return;
+
+      // Enforce exclusivity
+      if (uploadMode === "file") setFiles([]);
+      setUploadMode("images");
+
+      const newPhotos = toPhotosFromAssets(result.assets);
+      setPhotos((prev) => [...prev, ...newPhotos]);
+    } catch (e) {
+      console.error("pickFromGallery error:", e);
+      Alert.alert("Error", "Failed to pick image(s)");
+    }
+  };
 
   // =========================
-  // Picture-related
+  // Pick file
   // =========================
+  const pickFiles = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
 
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+      if (!asset) return;
+
+      // Enforce exclusivity
+      if (uploadMode === "images") setPhotos([]);
+      setUploadMode("file");
+
+      const picked = toPickedFile(asset);
+      setFiles([picked]);
+    } catch (e) {
+      console.error("pickFiles error:", e);
+      Alert.alert("Error", "Failed to pick file");
+    }
+  };
+
+  // =========================
+  // Take picture
+  // =========================
   const takePicture = async () => {
     if (!cameraRef.current) return;
 
@@ -94,10 +123,11 @@ export default function ScanNewDelivery() {
         skipProcessing: false,
       });
 
-      setPhotos((prev) => [
-      ...prev,
-      { id: `${Date.now()}-${Math.random()}`, uri: photo.uri },
-    ]);
+      // Enforce exclusivity
+      if (uploadMode === "file") setFiles([]);
+      setUploadMode("images");
+
+      setPhotos((prev) => [...prev, { id: makeId(), uri: photo.uri }]);
     } catch (error) {
       console.error("Error taking picture:", error);
       Alert.alert("Error", "Failed to capture photo");
@@ -108,12 +138,17 @@ export default function ScanNewDelivery() {
     setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const clearFile = () => {
+    setFiles([]);
+    setUploadMode(null);
+  };
+
+  // =========================
+  // Actions
+  // =========================
   const proceedToOverview = () => {
-    if (photos.length === 0) {
-      Alert.alert(
-        "No Photos",
-        "Please take at least one photo before proceeding"
-      );
+    if (!(uploadMode === "images" && photos.length > 0)) {
+      Alert.alert("Nothing selected", "Please add photos before proceeding.");
       return;
     }
 
@@ -123,31 +158,96 @@ export default function ScanNewDelivery() {
     });
   };
 
-  // Load existing photos if coming back from overview
+  const uploadFile = async () => {
+    if (!(uploadMode === "file" && files.length === 1)) return;
+
+    try {
+      const file = files[0];
+
+      const data = await processDeliveryNote.mutateAsync({
+        kind: "file",
+        file: {
+          uri: file.uri,
+          name: file.name,
+          mimeType: file.mimeType,
+        },
+      });
+
+      Alert.alert("OCR response", JSON.stringify(data, null, 2));
+    } catch (e: any) {
+      Alert.alert(
+        "Upload failed",
+        e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)
+      );
+    }
+  };
+
+  const isBusy = processDeliveryNote.isPending;
+
+  const canProceed =
+    (uploadMode === "images" && photos.length > 0) ||
+    (uploadMode === "file" && files.length === 1);
+
+  // =========================
+  // Restore state when coming back
+  // =========================
   useEffect(() => {
-  if (!params.existingPhotos) return;
+    if (!params.existingPhotos) return;
 
-  try {
-    const parsed = JSON.parse(params.existingPhotos as string);
-    // allow old shape too ({uri}) by adding ids if missing
-    const normalized = Array.isArray(parsed)
-      ? parsed.map((p: any) => ({
-          id: p.id ?? `${Date.now()}-${Math.random()}`,
-          uri: p.uri,
-        }))
-      : [];
+    try {
+      const parsed = JSON.parse(params.existingPhotos as string);
+      const normalized: Photo[] = Array.isArray(parsed)
+        ? parsed.map((p: any) => ({
+            id: typeof p.id === "string" ? p.id : makeId(),
+            uri: p.uri,
+          }))
+        : [];
 
-    setPhotos(normalized);
-  } catch {
-    console.warn("Invalid existingPhotos param");
-  }
-}, [params.existingPhotos]);
+      setPhotos(normalized);
 
+      if (normalized.length > 0) {
+        setUploadMode("images");
+        setFiles([]);
+      } else if (uploadMode === "images") {
+        setUploadMode(null);
+      }
+    } catch {
+      console.warn("Invalid existingPhotos param");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.existingPhotos]);
+
+  useEffect(() => {
+    if (!params.existingFiles) return;
+
+    try {
+      const parsed = JSON.parse(params.existingFiles as string);
+      const normalized: PickedFile[] = Array.isArray(parsed)
+        ? parsed.map((f: any) => ({
+            id: typeof f.id === "string" ? f.id : makeId(),
+            uri: f.uri,
+            name: f.name,
+            mimeType: f.mimeType,
+          }))
+        : [];
+
+      setFiles(normalized);
+
+      if (normalized.length > 0) {
+        setUploadMode("file");
+        setPhotos([]);
+      } else if (uploadMode === "file") {
+        setUploadMode(null);
+      }
+    } catch {
+      console.warn("Invalid existingFiles param");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.existingFiles]);
 
   // =========================
   // UI states
   // =========================
-
   if (!permission) {
     return (
       <View
@@ -176,31 +276,20 @@ export default function ScanNewDelivery() {
       }}
       edges={["bottom", "top"]}
     >
-      <View
-        style={[styles.sheet, { backgroundColor: theme.colors.background }]}
-      >
-        {/* header view */}
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: theme.colors.background,
-            },
-          ]}
-        >
+      <View style={[styles.sheet, { backgroundColor: theme.colors.background }]}>
+        {/* header */}
+        <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
           <Text
             style={[
               styles.headerTitle,
               {
-                color: theme.isDark
-                  ? theme.palette.yellow
-                  : theme.palette.darkBlue,
+                color: theme.isDark ? theme.palette.yellow : theme.palette.darkBlue,
               },
             ]}
           >
             Scan delivery note
           </Text>
-          {/* this pressable is 48x48 so matches accessability standards */}
+
           <Pressable style={styles.closeButton} onPress={() => router.back()}>
             <Icon name="exit" size={32} color={theme.colors.icon} />
           </Pressable>
@@ -212,12 +301,25 @@ export default function ScanNewDelivery() {
               <CameraView
                 ref={cameraRef}
                 style={styles.camera}
-                facing={"back"}
+                facing="back"
                 enableTorch={false}
               />
 
-              {/* Capture button INSIDE the camera rectangle */}
+              {/* buttons inside camera */}
               <View style={styles.captureContainer}>
+                <Pressable
+                  onPress={pickFromGallery}
+                  style={[
+                    styles.toolButton,
+                    { backgroundColor: theme.colors.background },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Upload from gallery"
+                  disabled={isBusy}
+                >
+                  <MaterialIcons name="photo" size={30} color={theme.colors.icon} />
+                </Pressable>
+
                 <Pressable
                   style={[
                     styles.captureButton,
@@ -231,6 +333,7 @@ export default function ScanNewDelivery() {
                     },
                   ]}
                   onPress={takePicture}
+                  disabled={isBusy}
                 >
                   <View
                     style={[
@@ -239,10 +342,27 @@ export default function ScanNewDelivery() {
                     ]}
                   />
                 </Pressable>
+
+                <Pressable
+                  onPress={pickFiles}
+                  style={[
+                    styles.toolButton,
+                    { backgroundColor: theme.colors.background },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Upload file"
+                  disabled={isBusy}
+                >
+                  <MaterialIcons
+                    name="attach-file"
+                    size={30}
+                    color={theme.colors.icon}
+                  />
+                </Pressable>
               </View>
             </View>
 
-            {photos.length > 0 && (
+            {uploadMode === "images" && photos.length > 0 && (
               <View
                 style={[
                   styles.previewContainer,
@@ -253,18 +373,14 @@ export default function ScanNewDelivery() {
                   },
                 ]}
               >
-                <Text
-                  style={[styles.previewTitle, { color: theme.colors.text }]}
-                >
+                <Text style={[styles.previewTitle, { color: theme.colors.text }]}>
                   Taken Photos ({photos.length})
                 </Text>
+
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   {photos.map((photo) => (
                     <View key={photo.id} style={styles.previewItem}>
-                      <Image
-                        source={{ uri: photo.uri }}
-                        style={styles.previewImage}
-                      />
+                      <Image source={{ uri: photo.uri }} style={styles.previewImage} />
                       <Pressable
                         style={[
                           styles.removeButton,
@@ -274,6 +390,7 @@ export default function ScanNewDelivery() {
                           },
                         ]}
                         onPress={() => removePhoto(photo.id)}
+                        disabled={isBusy}
                       >
                         <Text style={styles.removeButtonText}>✕</Text>
                       </Pressable>
@@ -283,11 +400,62 @@ export default function ScanNewDelivery() {
               </View>
             )}
 
+            {uploadMode === "file" && files.length === 1 && (
+              <View
+                style={[
+                  styles.previewContainer,
+                  {
+                    borderTopColor: theme.isDark
+                      ? theme.palette.darkBlue
+                      : theme.palette.beige,
+                  },
+                ]}
+              >
+                <Text style={[styles.previewTitle, { color: theme.colors.text }]}>
+                  Selected file
+                </Text>
+
+                <View
+                  style={[
+                    styles.fileRow,
+                    { backgroundColor: theme.colors.cardBackground },
+                  ]}
+                >
+                  <MaterialIcons
+                    name="attach-file"
+                    size={20}
+                    color={theme.colors.icon}
+                  />
+
+                  <Text
+                    style={[styles.fileName, { color: theme.colors.text }]}
+                    numberOfLines={1}
+                  >
+                    {files[0].name ?? "File"}
+                  </Text>
+
+                  <Pressable
+                    style={[
+                      styles.removeButton,
+                      {
+                        backgroundColor: theme.palette.red,
+                        borderColor: theme.colors.background,
+                      },
+                    ]}
+                    onPress={clearFile}
+                    disabled={isBusy}
+                  >
+                    <Text style={styles.removeButtonText}>✕</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
+
             <View style={styles.actionContainer}>
               <GradientButton
-                onPress={proceedToOverview}
-                text={`Review (${photos.length})`}
-                disabled={photos.length === 0}
+                onPress={uploadMode === "file" ? uploadFile : proceedToOverview}
+                text={uploadMode === "file" ? "Upload" : `Review (${photos.length})`}
+                disabled={!canProceed || isBusy}
               />
             </View>
           </>
@@ -296,15 +464,11 @@ export default function ScanNewDelivery() {
             style={[
               styles.cameraPlaceholder,
               {
-                backgroundColor: theme.isDark
-                  ? theme.palette.darkBlue
-                  : theme.palette.beige,
+                backgroundColor: theme.isDark ? theme.palette.darkBlue : theme.palette.beige,
               },
             ]}
           >
-            <Text
-              style={[styles.placeholderText, { color: theme.colors.text }]}
-            >
+            <Text style={[styles.placeholderText, { color: theme.colors.text }]}>
               {isDenied
                 ? "Camera permission is denied. Turn it on in Settings or choose another method to upload delivery notes."
                 : isUndetermined
@@ -314,12 +478,14 @@ export default function ScanNewDelivery() {
 
             {isDenied && (
               <View style={{ width: "100%", marginTop: 16, gap: 12 }}>
+                <GradientButton onPress={() => Linking.openSettings()} text="Open Settings" />
                 <GradientButton
-                  onPress={handleOpenSettings}
-                  text="Open Settings"
-                />
-                <GradientButton
-                  onPress={handleChooseAnotherMethod}
+                  onPress={() =>
+                    Alert.alert(
+                      "Not implemented",
+                      "Hook this up to your alternative upload flow."
+                    )
+                  }
                   text="Choose another method"
                 />
               </View>
@@ -379,9 +545,11 @@ const styles = StyleSheet.create({
   },
   captureContainer: {
     position: "absolute",
-    left: 0,
-    right: 0,
+    flexDirection: "row",
+    left: 15,
+    right: 15,
     bottom: 16,
+    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "transparent",
   },
@@ -438,5 +606,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  toolButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  fileRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 10,
+    gap: 10,
+  },
+  fileName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
