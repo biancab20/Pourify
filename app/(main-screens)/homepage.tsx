@@ -65,14 +65,14 @@ export default function HomeScreen() {
               <Icon name="scan" size={35} color={colors.icon} />
             </Pressable>
             <Pressable
+              onPress={() => router.push("/(settings)/venue-settings")}
               accessibilityRole="button"
               accessibilityLabel="Settings"
-              accessible={false}
             >
               <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
             <Pressable
-            onPress={() => router.push("/(scan-flow)/supplier-check")}
+              onPress={() => router.push("/(scan-flow)/supplier-check")}
               accessibilityRole="button"
               accessibilityLabel="More actions"
               accessible={false}
@@ -82,12 +82,21 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <Text variant="gradient" gradientName="paloma" style={styles.title} accessibilityRole="header" accessibilityLabel="Venue name">
+        <Text
+          variant="gradient"
+          gradientName="paloma"
+          style={styles.title}
+          accessibilityRole="header"
+          accessibilityLabel="Venue name"
+        >
           Hachi bar
         </Text>
 
         <WideCardStatic>
-          <View style={[styles.wideCard, { width: cardWidth }]} accessible={false}>
+          <View
+            style={[styles.wideCard, { width: cardWidth }]}
+            accessible={false}
+          >
             <PieChartStatic size={circleSize} />
 
             <View style={styles.statsContainer}>
@@ -110,7 +119,10 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <Text style={[styles.infoBox, { color: colors.text }]} accessible={false}>
+          <Text
+            style={[styles.infoBox, { color: colors.text }]}
+            accessible={false}
+          >
             Transactions from your POS will appear once they are paid
           </Text>
         </WideCardStatic>
@@ -139,7 +151,11 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="text" accessibilityLabel="Bars within the venue">
+          <Text
+            style={[styles.sectionTitle, { color: colors.text }]}
+            accessibilityRole="text"
+            accessibilityLabel="Bars within the venue"
+          >
             Poured today in your bars
           </Text>
 
@@ -162,7 +178,10 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="text">
+          <Text
+            style={[styles.sectionTitle, { color: colors.text }]}
+            accessibilityRole="text"
+          >
             Stock
           </Text>
           <GradientButton destination="/all-products-view" text="View stock" />

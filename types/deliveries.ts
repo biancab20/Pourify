@@ -1,23 +1,25 @@
+import type { PaginatedResponse } from "./api";
+import type { Product } from "@/types/products";
+
 export type Photo = { id: string; uri: string };
 
-export type Supplier = {
+// Supplier shape inside delivery responses (id, not supplierId)
+export type DeliverySupplier = {
   id: number;
   name: string;
   email: string;
 };
 
-export type DeliveryProduct = {
-  productId: number;
-  name: string;
-  volume: number;
-  type: "KEG" | "BOX" | "UNIT" | string;
-};
-
-export type DeliveryOcrResponse = {
+export type Delivery = {
   deliveryNoteId: number;
-  deliveryDate: string; // ISO string
-  supplier: Supplier;
-  products: DeliveryProduct[];
+  deliveryDate: string;
+  supplier: DeliverySupplier;
+  products: Product[];
   deliveryNotePictureId: string;
   deliveryPilePictureId: string;
 };
+
+export type DeliveryOcrResponse = Delivery;
+
+// /getDeliveries returns a list
+export type GetDeliveriesResponse = PaginatedResponse<Delivery>;

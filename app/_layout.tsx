@@ -32,6 +32,7 @@ function RootStack() {
         options={{ presentation: "modal", animation: "slide_from_bottom" }}
       />
       <Stack.Screen name="(main-screens)" />
+      <Stack.Screen name="(settings)" options={{ presentation: "modal", animation: "slide_from_bottom" }} />
     </Stack>
   );
 }
