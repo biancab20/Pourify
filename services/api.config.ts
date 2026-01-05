@@ -31,4 +31,10 @@ export const API = {
     updateProduct: `${BASE_URL}/product`,
     deleteProduct: `${BASE_URL}/product`,
   },
+  suppliers: {
+    getSuppliers: `${BASE_URL}/supplier`,
+    updateSupplier: `${BASE_URL}/supplier`,
+    deleteSupplier: `${BASE_URL}/supplier`,
+    createSupplier: `${BASE_URL}/supplier`
+  },
 } as const;
