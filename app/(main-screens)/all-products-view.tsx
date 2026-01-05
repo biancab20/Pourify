@@ -15,7 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
 import { useStocks } from "@/hooks/useStock";
-import { Bar } from "@/types/locations";
 import { Product } from "@/types/products";
 
 type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
