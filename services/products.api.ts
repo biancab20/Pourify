@@ -1,18 +1,18 @@
 // import { API } from "@/services/api.config";
 // import type {
-//   Bar,
-//   GetBarsResponse,
-//   UpdateBarResponse,
-//   DeleteBarResponse,
-// } from "@/types/locations";
+//   Product,
+//   GetProductsResponse,
+//   UpdateProductResponse,
+//   DeleteProductResponse,
+// } from "@/types/products";
 // import type { ApiError } from "@/services/api.errors";
 
 // /**
-//  * GET /locations (bars)
+//  * GET /products
 //  */
-// export async function getBars(
+// export async function getProducts(
 //   params?: Record<string, string | number>
-// ): Promise<GetBarsResponse> {
+// ): Promise<GetProductsResponse> {
 //   const query = params
 //     ? "?" +
 //       new URLSearchParams(
@@ -20,7 +20,7 @@
 //       ).toString()
 //     : "";
 
-//   const res = await fetch(`${API.locations.getBars}${query}`, {
+//   const res = await fetch(`${API.products.getProducts}${query}`, {
 //     method: "GET",
 //     headers: {
 //       Accept: "application/json",
@@ -39,7 +39,7 @@
 //   }
 
 //   try {
-//     return JSON.parse(text) as GetBarsResponse;
+//     return JSON.parse(text) as GetProductsResponse;
 //   } catch {
 //     throw {
 //       message: "Failed to parse JSON response",
@@ -50,13 +50,13 @@
 // }
 
 // /**
-//  * PUT /locations/:id
+//  * PUT /products/:id
 //  */
-// export async function updateBar(
-//   barId: number,
-//   payload: Partial<Bar>
-// ): Promise<UpdateBarResponse> {
-//   const res = await fetch(`${API.locations.updateBar}/${barId}`, {
+// export async function updateProduct(
+//   productId: number,
+//   payload: Partial<Product>
+// ): Promise<UpdateProductResponse> {
+//   const res = await fetch(`${API.products.updateProduct}/${productId}`, {
 //     method: "PUT",
 //     headers: {
 //       "Content-Type": "application/json",
@@ -77,7 +77,7 @@
 //   }
 
 //   try {
-//     return JSON.parse(text) as UpdateBarResponse;
+//     return JSON.parse(text) as UpdateProductResponse;
 //   } catch {
 //     throw {
 //       message: "Failed to parse JSON response",
@@ -88,11 +88,13 @@
 // }
 
 // /**
-//  * DELETE /locations/:id
+//  * DELETE /products/:id
 //  * 204 No Content
 //  */
-// export async function deleteBar(barId: number): Promise<DeleteBarResponse> {
-//   const res = await fetch(`${API.locations.deleteBar}/${barId}`, {
+// export async function deleteProduct(
+//   productId: number
+// ): Promise<DeleteProductResponse> {
+//   const res = await fetch(`${API.products.deleteProduct}/${productId}`, {
 //     method: "DELETE",
 //     headers: {
 //       Accept: "application/json",
@@ -109,42 +111,61 @@
 //     throw err;
 //   }
 
-//   // 204 No Content
 //   return;
 // }
 
 
-// locations.api.ts
+// products.api.ts
 import { API } from "@/services/api.config";
 import type {
-  Bar,
-  GetBarsResponse,
-  UpdateBarResponse,
-  DeleteBarResponse,
-} from "@/types/locations";
+  Product,
+  GetProductsResponse,
+  UpdateProductResponse,
+  DeleteProductResponse,
+} from "@/types/products";
 import type { ApiError } from "@/services/api.errors";
 
 // TEST DATA - REMOVE WHEN API IS READY
-const TEST_BARS = {
+const TEST_PRODUCTS = {
   items: [
     {
-      barId: 1,
-      name: "Main Bar",
+      productId: 1,
+      name: "Heineken Beer",
+      volume: 3.5,
+      type: "KEG",
     },
     {
-      barId: 2,
-      name: "Pool Bar",
+      productId: 2,
+      name: "Chardonnay White Wine",
+      volume: 0.75,
+      type: "WINE",
     },
     {
-      barId: 3,
-      name: "Rooftop Bar",
+      productId: 3,
+      name: "Jack Daniels Whiskey",
+      volume: 1.0,
+      type: "UNIT",
     },
     {
-      barId: 4,
-      name: "Lobby Bar",
+      productId: 4,
+      name: "Corona Beer Box",
+      volume: 24,
+      type: "BOX",
+    },
+    {
+      productId: 5,
+      name: "Red Wine Merlot",
+      volume: 0.75,
+      type: "WINE",
+    },
+    {
+      productId: 6,
+      name: "Vodka Absolute",
+      volume: 1.0,
+      type: "UNIT",
     },
   ],
-  totalCount: 4,
+  totalCount: 6,
   page: 1,
   pageSize: 20,
   totalPages: 1,
@@ -153,15 +174,15 @@ const TEST_BARS = {
 const useTestData = true; // SET TO FALSE WHEN API IS READY
 
 /**
- * GET /locations (bars)
+ * GET /products
  */
-export async function getBars(
+export async function getProducts(
   params?: Record<string, string | number>
-): Promise<GetBarsResponse> {
+): Promise<GetProductsResponse> {
   // TEST DATA RETURN
   if (useTestData) {
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    return { ...TEST_BARS } as GetBarsResponse;
+    return { ...TEST_PRODUCTS } as GetProductsResponse;
   }
 
   const query = params
@@ -171,7 +192,7 @@ export async function getBars(
       ).toString()
     : "";
 
-  const res = await fetch(`${API.locations.getBars}${query}`, {
+  const res = await fetch(`${API.products.getProducts}${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -190,7 +211,7 @@ export async function getBars(
   }
 
   try {
-    return JSON.parse(text) as GetBarsResponse;
+    return JSON.parse(text) as GetProductsResponse;
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -201,30 +222,31 @@ export async function getBars(
 }
 
 /**
- * PUT /locations/:id
+ * PUT /products/:id
  */
-export async function updateBar(
-  barId: number,
-  payload: Partial<Bar>
-): Promise<UpdateBarResponse> {
+export async function updateProduct(
+  productId: number,
+  payload: Partial<Product>
+): Promise<UpdateProductResponse> {
   // TEST DATA RETURN
   if (useTestData) {
     await new Promise(resolve => setTimeout(resolve, 300));
-    const bar = TEST_BARS.items.find(b => b.barId === barId);
-    if (!bar) {
+    const product = TEST_PRODUCTS.items.find(p => p.productId === productId);
+    if (!product) {
       throw {
-        message: "Bar not found",
+        message: "Product not found",
         status: 404,
         body: "",
       } satisfies ApiError;
     }
     return {
-      ...bar,
+      ...product,
       ...payload,
-    } as UpdateBarResponse;
+      updatedAt: new Date().toISOString(),
+    } as UpdateProductResponse;
   }
 
-  const res = await fetch(`${API.locations.updateBar}/${barId}`, {
+  const res = await fetch(`${API.products.updateProduct}/${productId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -245,7 +267,7 @@ export async function updateBar(
   }
 
   try {
-    return JSON.parse(text) as UpdateBarResponse;
+    return JSON.parse(text) as UpdateProductResponse;
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -256,22 +278,24 @@ export async function updateBar(
 }
 
 /**
- * DELETE /locations/:id
+ * DELETE /products/:id
  * 204 No Content
  */
-export async function deleteBar(barId: number): Promise<DeleteBarResponse> {
+export async function deleteProduct(
+  productId: number
+): Promise<DeleteProductResponse> {
   // TEST DATA RETURN
   if (useTestData) {
     await new Promise(resolve => setTimeout(resolve, 300));
-    const index = TEST_BARS.items.findIndex(b => b.barId === barId);
+    const index = TEST_PRODUCTS.items.findIndex(p => p.productId === productId);
     if (index > -1) {
-      TEST_BARS.items.splice(index, 1);
-      TEST_BARS.totalCount -= 1;
+      TEST_PRODUCTS.items.splice(index, 1);
+      TEST_PRODUCTS.totalCount -= 1;
     }
     return;
   }
 
-  const res = await fetch(`${API.locations.deleteBar}/${barId}`, {
+  const res = await fetch(`${API.products.deleteProduct}/${productId}`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",

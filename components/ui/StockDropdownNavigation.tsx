@@ -1,4 +1,4 @@
-import { Bar } from "@/types/DummyData";
+import { Bar } from "@/types/locations";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -22,7 +22,7 @@ interface StockDropdownNavigationProps {
 
 type Anchor = { x: number; y: number; width: number; height: number };
 
-const ITEM_HEIGHT = 40; //menu item height(with the padding it has the right touch target)
+const ITEM_HEIGHT = 40;
 const MENU_PADDING = 6; 
 const GAP_BELOW_BUTTON = 4;
 
@@ -48,7 +48,6 @@ export default function StockDropdownNavigation({
 
   const buttonRef = useRef<View>(null);
 
-  // ---- open animation (pop) ----
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
 
@@ -89,7 +88,6 @@ export default function StockDropdownNavigation({
     closeDropdown();
   };
 
-  // ---- press & slide highlight ONLY (no select on release) ----
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -109,7 +107,6 @@ export default function StockDropdownNavigation({
         else setActiveIndex(null);
       },
 
-      // ✅ do NOT close or select on release
       onPanResponderRelease: () => {
         setActiveIndex(null);
       },
@@ -158,12 +155,10 @@ export default function StockDropdownNavigation({
         onRequestClose={closeDropdown}
       >
         <View style={styles.overlay}>
-          {/* Outside area closes */}
           <TouchableWithoutFeedback onPress={closeDropdown}>
             <View style={StyleSheet.absoluteFillObject} />
           </TouchableWithoutFeedback>
 
-          {/* Menu (does NOT close when pressed) */}
           <View
             style={{
               position: "absolute",
@@ -203,7 +198,7 @@ export default function StockDropdownNavigation({
                           isActive && styles.itemActive,
                           isSelected && styles.itemSelectedRow,
                         ]}
-                        onPress={() => handleBarSelect(item)} // stays open now
+                        onPress={() => handleBarSelect(item)}
                       >
                         <Text
                           style={[
@@ -301,12 +296,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  // highlight while dragging
   itemActive: {
     backgroundColor: "rgba(255,255,255,0.14)",
   },
 
-  // optional subtle selected background (independent of active)
   itemSelectedRow: {
     backgroundColor: "rgba(255,255,255,0.08)",
   },

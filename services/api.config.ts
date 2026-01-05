@@ -25,5 +25,10 @@ export const API = {
     getBars: `${BASE_URL}/bar`,
     updateBar: `${BASE_URL}/bar`,
     deleteBar: `${BASE_URL}/bar`,
-  }
+  },
+  products: {
+    getProducts: `${BASE_URL}/product`,
+    updateProduct: `${BASE_URL}/product`,
+    deleteProduct: `${BASE_URL}/product`,
+  },
 } as const;

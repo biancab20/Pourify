@@ -2,12 +2,6 @@ import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/ui/InputBox";
 import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
 import { useAppTheme } from "@/stores/app-theme-context";
-import {
-    Product,
-    dummyData,
-    getStockForBar,
-    getTotalStockForAllBars,
-} from "@/types/DummyData";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -18,6 +12,11 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useBars } from "@/hooks/useLocations";
+import { useProducts } from "@/hooks/useProducts";
+import { useStocks } from "@/hooks/useStock";
+import { Bar } from "@/types/locations";
+import { Product } from "@/types/products";
 
 type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
 
@@ -34,7 +33,14 @@ export default function AllProducts() {
     name: string;
   }>({ id: null, name: "General Stock" });
 
-  const bars = dummyData.bars.items;
+  const { data: barsData } = useBars();
+  const { data: productsData } = useProducts();
+  const { data: stocksData, isLoading: stocksLoading, refetch: refetchStocks } = useStocks(
+    selectedBar.id ? { barId: selectedBar.id } : undefined
+  );
+
+  const bars = useMemo(() => barsData?.items || [], [barsData]);
+  const allProducts = useMemo(() => productsData?.items || [], [productsData]);
 
   const barIdFromParams = params.barId
     ? Array.isArray(params.barId)
@@ -57,14 +63,54 @@ export default function AllProducts() {
   }, [barIdFromParams, barNameFromParams]);
 
   useEffect(() => {
-    if (selectedBar.id) {
-      const barStock = getStockForBar(selectedBar.id);
-      setProducts(barStock);
-    } else {
-      const totalStock = getTotalStockForAllBars();
-      setProducts(totalStock);
+    // Clear products when bar changes
+    setProducts([]);
+    
+    if (stocksLoading || !stocksData || allProducts.length === 0) {
+      return;
     }
-  }, [selectedBar]);
+
+    const stockItems = stocksData.items || [];
+    const productMap = new Map<number, ProductWithStock>();
+
+    // Process all stock items
+    stockItems.forEach((stock) => {
+      const product = allProducts.find(p => p.productId === stock.productId);
+      if (product) {
+        const bottleCount = Math.floor(stock.volume / product.volume);
+        
+        if (productMap.has(product.productId)) {
+          const existing = productMap.get(product.productId)!;
+          existing.totalVolume += stock.volume;
+          existing.bottleCount += bottleCount;
+        } else {
+          productMap.set(product.productId, {
+            ...product,
+            totalVolume: stock.volume,
+            bottleCount
+          });
+        }
+      }
+    });
+
+    // For specific bar, only show products with stock
+    if (selectedBar.id) {
+      const productsWithStock = Array.from(productMap.values())
+        .filter(p => p.totalVolume > 0);
+      setProducts(productsWithStock);
+    } else {
+      // For general view, show all products
+      const allProductsArray = allProducts.map(product => {
+        const stockProduct = productMap.get(product.productId);
+        return stockProduct || {
+          ...product,
+          totalVolume: 0,
+          bottleCount: 0
+        };
+      });
+      setProducts(allProductsArray);
+    }
+  }, [selectedBar.id, stocksData, stocksLoading, allProducts]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -76,16 +122,22 @@ export default function AllProducts() {
       (product: ProductWithStock) =>
         product.name.toLowerCase().includes(query) ||
         product.type.toLowerCase().includes(query) ||
-        product.volume.toString().includes(query)
+        product.volume.toString().includes(query) ||
+        product.totalVolume.toString().includes(query)
     );
   }, [products, searchQuery]);
 
-  const handleSearch = (searchText: string) => {
-    setSearchQuery(searchText);
+  const handleSearch = (searchText: string | number) => {
+    setSearchQuery(searchText.toString());
   };
 
   const handleBarSelect = (bar: { id: number | null; name: string }) => {
+    console.log("Switching to bar:", bar.id, bar.name);
     setSelectedBar(bar);
+    // Clear products immediately when bar changes
+    setProducts([]);
+    // Force refetch
+    refetchStocks();
   };
 
   return (
@@ -115,7 +167,13 @@ export default function AllProducts() {
           initialValue=""
         />
 
-        {searchQuery && (
+        {stocksLoading && (
+          <View style={styles.loadingContainer}>
+            <Text style={{ color: colors.text }}>Loading stock data...</Text>
+          </View>
+        )}
+
+        {searchQuery && !stocksLoading && (
           <View style={styles.resultsContainer}>
             <Text style={[styles.resultsText, { color: colors.text }]}>
               {filteredProducts.length} product
@@ -125,7 +183,7 @@ export default function AllProducts() {
         )}
 
         <View style={styles.productsList}>
-          {filteredProducts.map((product: ProductWithStock) => (
+          {!stocksLoading && filteredProducts.map((product: ProductWithStock) => (
             <Pressable
               key={product.productId}
               style={[
@@ -179,7 +237,7 @@ export default function AllProducts() {
             </Pressable>
           ))}
 
-          {filteredProducts.length === 0 && !searchQuery && (
+          {!stocksLoading && filteredProducts.length === 0 && !searchQuery && (
             <View style={styles.emptyStateContainer}>
               <Text style={[styles.emptyStateText, { color: colors.text }]}>
                 {selectedBar.id
@@ -192,7 +250,7 @@ export default function AllProducts() {
             </View>
           )}
 
-          {searchQuery && filteredProducts.length === 0 && (
+          {!stocksLoading && searchQuery && filteredProducts.length === 0 && (
             <View style={styles.noResultsContainer}>
               <Text style={[styles.noResultsText, { color: colors.text }]}>
                 No products found for {searchQuery}
@@ -289,5 +347,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     opacity: 0.7,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: "center",
   },
 });
