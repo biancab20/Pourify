@@ -1,23 +1,23 @@
-import {
-  View,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Platform,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
-import SearchBar from "@/components/ui/SearchBar";
+import SearchBar from "@/components/ui/InputBox";
 import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
 import { useAppTheme } from "@/stores/app-theme-context";
 import {
-  Product,
-  getTotalStockForAllBars,
-  getStockForBar,
-  dummyData,
+    Product,
+    dummyData,
+    getStockForBar,
+    getTotalStockForAllBars,
 } from "@/types/DummyData";
-import { useState, useMemo, useEffect } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
 

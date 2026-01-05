@@ -8,7 +8,7 @@ interface ProgressBarProps {
   label: string;
   value: number;
   percentage: number;
-  width?: number; // note: not directly used in your original code
+  width?: number; 
   height?: number;
   gradientColors: [string, string];
   showBackground?: boolean;

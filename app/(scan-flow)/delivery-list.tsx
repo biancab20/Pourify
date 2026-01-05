@@ -1,9 +1,9 @@
+import { Text } from "@/components/shared/Text";
+import SearchBar from "@/components/ui/InputBox";
 import ListItem from "@/components/ui/ListItem";
-import SearchBar from "@/components/ui/SearchBar";
+import { useAppTheme } from "@/stores/app-theme-context";
 import React, { useMemo, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
-import { Text } from "@/components/shared/Text";
-import { useAppTheme } from "@/stores/app-theme-context";
 
 type DeliveryItem = {
   id: string;
