@@ -1,3 +1,4 @@
+// StockDropdownNavigation.tsx
 import { Bar } from "@/types/locations";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
@@ -6,7 +7,6 @@ import {
   TouchableOpacity,
   View,
   Modal,
-  PanResponder,
   Animated,
   TouchableWithoutFeedback,
 } from "react-native";
@@ -16,14 +16,14 @@ import { BlurView } from "expo-blur";
 
 interface StockDropdownNavigationProps {
   bars: Bar[];
-  selectedBar: { id: number | null; name: string };
-  onBarSelect: (bar: { id: number | null; name: string }) => void;
+  selectedBar: { id: string | null; name: string }; // Changed from number | null to string | null
+  onBarSelect: (bar: { id: string | null; name: string }) => void; // Updated here too
 }
 
 type Anchor = { x: number; y: number; width: number; height: number };
 
 const ITEM_HEIGHT = 40;
-const MENU_PADDING = 6; 
+const MENU_PADDING = 6;
 const GAP_BELOW_BUTTON = 4;
 
 export default function StockDropdownNavigation({
@@ -37,20 +37,19 @@ export default function StockDropdownNavigation({
   const dropdownItems = useMemo(
     () => [
       { id: null, name: "General Stock" },
-      ...bars.map((bar) => ({ id: bar.barId, name: bar.name })),
+      ...bars.map(bar => ({ id: bar.barId, name: bar.name })), // bar.barId is string
     ],
     [bars]
   );
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const buttonRef = useRef<View>(null);
-
   const opacity = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.96)).current;
 
+  // Animate dropdown
   useEffect(() => {
     if (!showDropdown) return;
 
@@ -58,18 +57,10 @@ export default function StockDropdownNavigation({
     scale.setValue(0.96);
 
     Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 160,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scale, {
-        toValue: 1,
-        duration: 160,
-        useNativeDriver: true,
-      }),
+      Animated.timing(opacity, { toValue: 1, duration: 160, useNativeDriver: true }),
+      Animated.timing(scale, { toValue: 1, duration: 160, useNativeDriver: true }),
     ]).start();
-  }, [showDropdown, opacity, scale]);
+  }, [showDropdown, opacity, scale]); // Added opacity and scale to dependencies
 
   const openDropdown = () => {
     buttonRef.current?.measureInWindow((x, y, width, height) => {
@@ -78,42 +69,12 @@ export default function StockDropdownNavigation({
     });
   };
 
-  const closeDropdown = () => {
-    setShowDropdown(false);
-    setActiveIndex(null);
+  const closeDropdown = () => setShowDropdown(false);
+
+  const handleSelect = (bar: { id: string | null; name: string }) => { // Updated type here
+    onBarSelect(bar); // update selectedBar in parent
+    closeDropdown();  // close dropdown
   };
-
-  const handleBarSelect = (bar: { id: number | null; name: string }) => {
-    onBarSelect(bar);
-    closeDropdown();
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-
-      onPanResponderGrant: (evt) => {
-        const y = evt.nativeEvent.locationY;
-        const idx = Math.floor((y - MENU_PADDING) / ITEM_HEIGHT);
-        if (idx >= 0 && idx < dropdownItems.length) setActiveIndex(idx);
-        else setActiveIndex(null);
-      },
-
-      onPanResponderMove: (evt) => {
-        const y = evt.nativeEvent.locationY;
-        const idx = Math.floor((y - MENU_PADDING) / ITEM_HEIGHT);
-        if (idx >= 0 && idx < dropdownItems.length) setActiveIndex(idx);
-        else setActiveIndex(null);
-      },
-
-      onPanResponderRelease: () => {
-        setActiveIndex(null);
-      },
-
-      onPanResponderTerminate: () => setActiveIndex(null),
-    })
-  ).current;
 
   const menuLeft = anchor?.x ?? 0;
   const menuTop = (anchor?.y ?? 0) + (anchor?.height ?? 0) + GAP_BELOW_BUTTON;
@@ -123,22 +84,12 @@ export default function StockDropdownNavigation({
     <View style={styles.container}>
       <View ref={buttonRef} collapsable={false}>
         <TouchableOpacity
-          style={[
-            styles.dropdownButton,
-            { backgroundColor: colors.cardBackground },
-          ]}
+          style={[styles.dropdownButton, { backgroundColor: colors.cardBackground }]}
           onPress={showDropdown ? closeDropdown : openDropdown}
-          accessibilityRole="button"
-          accessibilityLabel="Select bar"
-          accessibilityState={{ expanded: showDropdown }}
         >
-          <Text
-            style={[styles.buttonText, { color: colors.text }]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.buttonText, { color: colors.text }]} numberOfLines={1}>
             {selectedBar.name}
           </Text>
-
           <Ionicons
             name={showDropdown ? "chevron-up" : "chevron-down"}
             size={18}
@@ -148,83 +99,35 @@ export default function StockDropdownNavigation({
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={showDropdown}
-        transparent
-        animationType="none"
-        onRequestClose={closeDropdown}
-      >
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback onPress={closeDropdown}>
-            <View style={StyleSheet.absoluteFillObject} />
-          </TouchableWithoutFeedback>
+      <Modal visible={showDropdown} transparent animationType="none">
+        <TouchableWithoutFeedback onPress={closeDropdown}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
 
-          <View
-            style={{
-              position: "absolute",
-              left: menuLeft,
-              top: menuTop,
-              width: menuWidth,
-            }}
-          >
-            <Animated.View
-              style={[
-                styles.menuWrapper,
-                { width: menuWidth, opacity, transform: [{ scale }] },
-              ]}
-            >
-              <BlurView
-                intensity={35}
-                tint={theme.isDark ? "dark" : "light"}
-                style={styles.blurCard}
-              >
-                <View
-                  style={[
-                    styles.glassBorder,
-                    { borderColor: theme.isDark ? "#3A3A3A" : "#D0D0D0" },
-                  ]}
-                />
+        <View style={{ position: "absolute", left: menuLeft, top: menuTop, width: menuWidth }}>
+          <Animated.View style={[styles.menuWrapper, { width: menuWidth, opacity, transform: [{ scale }] }]}>
+            <BlurView intensity={35} tint={theme.isDark ? "dark" : "light"} style={styles.blurCard}>
+              <View style={[styles.glassBorder, { borderColor: theme.isDark ? "#3A3A3A" : "#D0D0D0" }]} />
 
-                <View style={styles.menuContent} {...panResponder.panHandlers}>
-                  {dropdownItems.map((item, index) => {
-                    const isSelected = selectedBar.id === item.id;
-                    const isActive = activeIndex === index;
-
-                    return (
-                      <TouchableOpacity
-                        key={item.id === null ? "general" : `bar-${item.id}`}
-                        style={[
-                          styles.itemRow,
-                          isActive && styles.itemActive,
-                          isSelected && styles.itemSelectedRow,
-                        ]}
-                        onPress={() => handleBarSelect(item)}
-                      >
-                        <Text
-                          style={[
-                            styles.itemText,
-                            { color: colors.text },
-                            isSelected && styles.itemSelectedText,
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {item.name}
-                        </Text>
-
-                        {isSelected && (
-                          <Ionicons
-                            name="checkmark"
-                            size={18}
-                            color={colors.text}
-                          />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </BlurView>
-            </Animated.View>
-          </View>
+              <View style={styles.menuContent}>
+                {dropdownItems.map(item => {
+                  const isSelected = selectedBar.id === item.id;
+                  return (
+                    <TouchableOpacity
+                      key={item.id === null ? "general" : `bar-${item.id}`}
+                      style={[styles.itemRow, isSelected && styles.itemSelectedRow]}
+                      onPress={() => handleSelect(item)}
+                    >
+                      <Text style={[styles.itemText, { color: colors.text }, isSelected && styles.itemSelectedText]}>
+                        {item.name}
+                      </Text>
+                      {isSelected && <Ionicons name="checkmark" size={18} color={colors.text} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </BlurView>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -232,86 +135,16 @@ export default function StockDropdownNavigation({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignSelf: "flex-start",
-  },
-
-  dropdownButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    maxWidth: 320,
-    maxHeight: 48,
-  },
-
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "400",
-    flexShrink: 1,
-  },
-
-  chevron: {
-    marginLeft: 8,
-  },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-
-  menuWrapper: {
-    borderRadius: 18,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 12,
-  },
-
-  blurCard: {
-    borderRadius: 18,
-    overflow: "hidden",
-  },
-
-  glassBorder: {
-    ...StyleSheet.absoluteFillObject,
-    borderWidth: 1,
-    borderRadius: 18,
-    opacity: 0.7,
-  },
-
-  menuContent: {
-    padding: MENU_PADDING,
-  },
-
-  itemRow: {
-    height: ITEM_HEIGHT,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  itemActive: {
-    backgroundColor: "rgba(255,255,255,0.14)",
-  },
-
-  itemSelectedRow: {
-    backgroundColor: "rgba(255,255,255,0.08)",
-  },
-
-  itemText: {
-    fontSize: 16,
-    fontWeight: "500",
-    flexShrink: 1,
-    paddingRight: 10,
-  },
-
-  itemSelectedText: {
-    fontWeight: "700",
-  },
+  container: { alignSelf: "flex-start" },
+  dropdownButton: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, maxWidth: 320 },
+  buttonText: { fontSize: 16, fontWeight: "400", flexShrink: 1 },
+  chevron: { marginLeft: 8 },
+  menuWrapper: { borderRadius: 18, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, elevation: 12 },
+  blurCard: { borderRadius: 18, overflow: "hidden" },
+  glassBorder: { ...StyleSheet.absoluteFillObject, borderWidth: 1, borderRadius: 18, opacity: 0.7 },
+  menuContent: { padding: MENU_PADDING },
+  itemRow: { height: ITEM_HEIGHT, borderRadius: 14, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  itemSelectedRow: { backgroundColor: "rgba(255,255,255,0.08)" },
+  itemText: { fontSize: 16, fontWeight: "500", flexShrink: 1, paddingRight: 10 },
+  itemSelectedText: { fontWeight: "700" },
 });

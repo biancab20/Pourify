@@ -1,7 +1,8 @@
+// types/locations.ts
 import type { PaginatedResponse } from "./api";
 
 export type Bar = {
-  barId: number;
+  barId: string;  // Changed from number to string to match GUID
   name: string;
 };
 

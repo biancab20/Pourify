@@ -1,3 +1,4 @@
+// useLocations.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Bar,
@@ -27,7 +28,7 @@ export function useUpdateBar() {
   return useMutation<
     UpdateBarResponse,
     ApiError,
-    { barId: number; data: Partial<Bar> }
+    { barId: string; data: Partial<Bar> }  // Changed barId from number to string
   >({
     mutationKey: ["locations", "updateBar"],
     mutationFn: ({ barId, data }) => updateBar(barId, data),
@@ -43,7 +44,7 @@ export function useUpdateBar() {
 export function useDeleteBar() {
   const queryClient = useQueryClient();
 
-  return useMutation<DeleteBarResponse, ApiError, number>({
+  return useMutation<DeleteBarResponse, ApiError, string>({  // Changed from number to string
     mutationKey: ["locations", "deleteBar"],
     mutationFn: deleteBar,
     onSuccess: () => {

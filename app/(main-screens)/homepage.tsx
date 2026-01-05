@@ -15,16 +15,21 @@ import {
   useWindowDimensions,
   Platform,
 } from "react-native";
-import { dummyData, Bar } from "@/types/DummyData";
 import GradientButton from "@/components/shared/GradientButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
+import { useBars } from "@/hooks/useLocations";
+import { Bar } from "@/types/locations"; 
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
   const { width } = useWindowDimensions();
+
+  const { data: barsData, isLoading, error } = useBars();
+  
+  const bars = barsData?.items || [];
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -34,8 +39,6 @@ export default function HomeScreen() {
 
   const cardWidth = width - 32;
   const circleSize = 150;
-
-  const bars = dummyData.bars.items;
 
   return (
     <SafeAreaView
@@ -159,22 +162,36 @@ export default function HomeScreen() {
             Poured today in your bars
           </Text>
 
-          <View style={styles.cardsRow}>
-            {bars.map((bar: Bar) => (
-              <Pressable
-                key={bar.barId}
-                onPress={() =>
-                  router.push({
-                    pathname: "/bar-view",
-                    params: { barId: bar.barId, barName: bar.name },
-                  })
-                }
-                accessibilityRole="button"
-              >
-                <InformationCard barName={bar.name} />
-              </Pressable>
-            ))}
-          </View>
+          {isLoading ? (
+            <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+              Loading bars...
+            </Text>
+          ) : error ? (
+            <Text style={{ color: palette.red, textAlign: "center", marginTop: 20 }}>
+              Error loading bars
+            </Text>
+          ) : bars.length === 0 ? (
+            <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+              No bars found
+            </Text>
+          ) : (
+            <View style={styles.cardsRow}>
+              {bars.map((bar: Bar) => (
+                <Pressable
+                  key={bar.barId}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/bar-view",
+                      params: { barId: bar.barId, barName: bar.name },
+                    })
+                  }
+                  accessibilityRole="button"
+                >
+                  <InformationCard barName={bar.name} />
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
 
         <View style={styles.sectionContainer}>
