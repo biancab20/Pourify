@@ -1,11 +1,10 @@
-// services/locations.api.ts
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
 import type {
-    Bar,
-    DeleteBarResponse,
-    GetBarsResponse,
-    UpdateBarResponse,
+  Bar,
+  DeleteBarResponse,
+  GetBarsResponse,
+  UpdateBarResponse,
 } from "@/types/locations";
 
 /**
@@ -41,25 +40,66 @@ export async function getBars(
 
   try {
     const data = JSON.parse(text);
-    
+
     // Transform the API response to match your expected type
     // Your API returns { "@odata.context": "...", "value": [...] }
     // But GetBarsResponse expects { items: [...], totalCount: ..., etc }
-    
+
     const items = data.value || [];
-    
+
     // Create the response matching GetBarsResponse type
     return {
       items: items.map((item: any) => ({
-        barId: item.BarId,     // Note: API returns "BarId" not "barId"
-        name: item.BarName,    // Note: API returns "BarName" not "name"
+        barId: item.BarId, // Note: API returns "BarId" not "barId"
+        name: item.BarName, // Note: API returns "BarName" not "name"
       })),
       totalCount: items.length,
       page: 1,
       pageSize: items.length,
       totalPages: 1,
     } as GetBarsResponse;
-    
+  } catch {
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * POST /bar
+ * (Create new location)
+ */
+export async function createBar(payload: { name: string }): Promise<Bar> {
+  const res = await fetch(`${API.locations.updateBar}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      BarName: payload.name,
+    }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    const err: ApiError = {
+      message: `Request failed with status ${res.status}`,
+      status: res.status,
+      body: text,
+    };
+    throw err;
+  }
+
+  try {
+    const data = JSON.parse(text);
+    return {
+      barId: data.BarId,
+      name: data.BarName,
+    } as Bar;
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -73,7 +113,7 @@ export async function getBars(
  * PUT /locations/:id
  */
 export async function updateBar(
-  barId: string,  // Changed from number to string
+  barId: string, // Changed from number to string
   payload: Partial<Bar>
 ): Promise<UpdateBarResponse> {
   const res = await fetch(`${API.locations.updateBar}/${barId}`, {

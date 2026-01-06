@@ -3,7 +3,6 @@ import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
 import {
   useLocalSearchParams,
   useRouter,
-  Stack,
   useNavigation,
 } from "expo-router";
 import FormInput from "@/components/ui/FormInput";
@@ -12,14 +11,13 @@ import GradientButton from "@/components/shared/GradientButton";
 import { Text as CustomText } from "@/components/shared/Text";
 import { Icon } from "@/components/icons/Icon";
 import { useAppTheme } from "@/stores/app-theme-context";
-
 import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
 import { ConfigRow } from "@/components/ui/ConfigRow";
 
-// ✅ keep this import (used on Save)
 import { useCreateSupplier } from "@/hooks/useSuppliers";
+import { useCreateBar } from "@/hooks/useLocations";
 
-type EntityKey = "products" | "suppliers";
+type EntityKey = "products" | "suppliers" | "locations";
 type FieldType = "text" | "select";
 
 type FieldConfig = {
@@ -53,15 +51,52 @@ type EntityScreenConfig<TItem> = {
   };
 };
 
-// Local list item types (for this screen)
 type LocalSupplier = { supplierId: string; name: string; email: string };
 type LocalProduct = { productId: string; name: string; category: string };
+type LocalBar = { barId: string; name: string };
 
 function useEntityConfig(
   entity: EntityKey,
   venueName: string,
   theme: any
 ): EntityScreenConfig<any> {
+  if (entity === "locations") {
+    return {
+      headerTitle: () => "Add stock locations",
+      description: (v) =>
+        `Where do you store stock in ${v}? Add your stock locations below (you can add more later).`,
+      createButtonLabel: "Create Location",
+      listTitle: (_v, count) => `Added locations (${count})`,
+      emptyListText: "Please add at least one stock location",
+
+      fields: [
+        {
+          key: "name",
+          label: "Location name",
+          placeholder: "e.g. Main Bar",
+          type: "text",
+          required: true,
+        },
+      ],
+
+      buildPayload: (values) => ({
+        name: values.name.trim(),
+      }),
+
+      validate: (values) => {
+        if (!values.name?.trim()) return "Please enter a location name.";
+        return null;
+      },
+
+      row: {
+        leftIconName: "cube-outline",
+        title: (b: LocalBar) => b.name,
+        keyExtractor: (b: LocalBar) => b.barId,
+        onPress: (b: LocalBar) => Alert.alert("Location", b.name),
+      },
+    };
+  }
+
   if (entity === "suppliers") {
     return {
       headerTitle: () => "Add your suppliers",
@@ -111,7 +146,7 @@ function useEntityConfig(
     };
   }
 
-  // Products (still local-only until you wire API)
+  // Products (local-only)
   return {
     headerTitle: () => "Add your products",
     description: (v) =>
@@ -179,13 +214,11 @@ export default function AddEntityScreen() {
 
   const config = useEntityConfig(entity, venueName, theme);
 
-  // ✅ local staged list
   const [itemsLocal, setItemsLocal] = useState<any[]>([]);
 
-  // ✅ keep create supplier hook (used on Save)
   const createSupplier = useCreateSupplier();
+  const createBar = useCreateBar();
 
-  // form state generated from fields
   const [values, setValues] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     for (const f of config.fields) init[f.key] = "";
@@ -220,7 +253,6 @@ export default function AddEntityScreen() {
     );
   };
 
-  // ✅ intercept native back (header back / swipe / android back)
   useEffect(() => {
     const sub = navigation.addListener("beforeRemove", (e: any) => {
       if (!hasUnsavedChanges) return;
@@ -241,7 +273,6 @@ export default function AddEntityScreen() {
 
     const payload = config.buildPayload(values);
 
-    // ✅ stage locally only (no API call here)
     if (entity === "suppliers") {
       const localSupplier: LocalSupplier = {
         supplierId: `local-${Date.now()}`,
@@ -249,6 +280,12 @@ export default function AddEntityScreen() {
         email: payload.email,
       };
       setItemsLocal((prev) => [localSupplier, ...prev]);
+    } else if (entity === "locations") {
+      const localBar: LocalBar = {
+        barId: `local-${Date.now()}`,
+        name: payload.name,
+      };
+      setItemsLocal((prev) => [localBar, ...prev]);
     } else {
       const localProduct: LocalProduct = {
         productId: `local-${Date.now()}`,
@@ -267,18 +304,21 @@ export default function AddEntityScreen() {
       return;
     }
 
-    if (entity !== "suppliers") {
-      Alert.alert(
-        "Not implemented yet",
-        "Bulk save for this entity will be added later."
-      );
-      return;
-    }
-
     try {
-      // ✅ save one-by-one for now
-      for (const s of itemsLocal as LocalSupplier[]) {
-        await createSupplier.mutateAsync({ name: s.name, email: s.email });
+      if (entity === "suppliers") {
+        for (const s of itemsLocal as LocalSupplier[]) {
+          await createSupplier.mutateAsync({ name: s.name, email: s.email });
+        }
+      } else if (entity === "locations") {
+        for (const b of itemsLocal as LocalBar[]) {
+          await createBar.mutateAsync({ name: b.name });
+        }
+      } else {
+        Alert.alert(
+          "Not implemented yet",
+          "Bulk save for this entity will be added later."
+        );
+        return;
       }
 
       setItemsLocal([]);
@@ -288,7 +328,7 @@ export default function AddEntityScreen() {
     }
   };
 
-  const isSaving = createSupplier.isPending;
+  const isSaving = createSupplier.isPending || createBar.isPending;
 
   return (
     <SafeAreaView
@@ -296,11 +336,7 @@ export default function AddEntityScreen() {
       edges={["top", "bottom"]}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <CustomText
-          variant="gradient"
-          gradientName="paloma"
-          style={styles.title}
-        >
+        <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
           {config.headerTitle(venueName)}
         </CustomText>
 
@@ -308,15 +344,12 @@ export default function AddEntityScreen() {
           {config.description(venueName)}
         </CustomText>
 
-        {/* Dynamic form card */}
         <View style={styles.formCard}>
           {config.fields.map((f) => {
             if (f.type === "text") {
               return (
                 <View key={f.key} style={styles.field}>
-                  <CustomText
-                    style={[styles.label, { color: theme.colors.text }]}
-                  >
+                  <CustomText style={[styles.label, { color: theme.colors.text }]}>
                     {f.label}
                   </CustomText>
                   <FormInput
@@ -339,9 +372,7 @@ export default function AddEntityScreen() {
 
             return (
               <View key={f.key} style={styles.field}>
-                <CustomText
-                  style={[styles.label, { color: theme.colors.text }]}
-                >
+                <CustomText style={[styles.label, { color: theme.colors.text }]}>
                   {f.label}
                 </CustomText>
 
@@ -373,15 +404,12 @@ export default function AddEntityScreen() {
           />
         </View>
 
-        {/* Local list */}
         <ConfigSectionCard<any>
           title={config.listTitle(venueName, count)}
           items={itemsLocal}
           emptyText={config.emptyListText}
           addLabel="Add more"
-          onAdd={() =>
-            Alert.alert("Tip", "Fill the form above and press Create.")
-          }
+          onAdd={() => Alert.alert("Tip", "Fill the form above and press Create.")}
           keyExtractor={(it) => config.row.keyExtractor(it)}
           renderItem={({ item }) => (
             <ConfigRow

@@ -7,7 +7,7 @@ import type {
   DeleteBarResponse,
 } from "@/types/locations";
 import type { ApiError } from "@/services/api.errors";
-import { getBars, updateBar, deleteBar } from "@/services/locations.api";
+import { getBars, updateBar, deleteBar, createBar } from "@/services/locations.api";
 
 /**
  * GET bars (locations)
@@ -16,6 +16,21 @@ export function useBars(params?: Record<string, string | number>) {
   return useQuery<GetBarsResponse, ApiError>({
     queryKey: ["locations", "bars", params],
     queryFn: () => getBars(params),
+  });
+}
+
+/**
+ * CREATE bar
+ */
+export function useCreateBar() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Bar, ApiError, { name: string }>({
+    mutationKey: ["locations", "createBar"],
+    mutationFn: ({ name }) => createBar({ name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["locations", "bars"] });
+    },
   });
 }
 
