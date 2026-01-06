@@ -61,7 +61,7 @@ export default function PictureOverview() {
 
     queryClient.setQueryData(["deliveries", "latest"], ocrData);
 
-    router.replace("/delivery-list");
+    router.replace("/delivery-check");
   };
 
   return (

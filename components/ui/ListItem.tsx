@@ -23,9 +23,10 @@ type Props = {
   delivery: DeliveryItem;
   onSwipeComplete?: (id: string) => void;
   onRemove?: (id: string) => void;
+  onPress?: (item: DeliveryItem) => void;
 };
 
-export default function ListItem({ delivery, onSwipeComplete, onRemove }: Props) {
+export default function ListItem({ delivery, onSwipeComplete, onRemove, onPress }: Props) {
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
 
@@ -65,6 +66,12 @@ export default function ListItem({ delivery, onSwipeComplete, onRemove }: Props)
     }, 300);
   };
 
+  const handleItemPress = () => {
+    if (onPress) {
+      onPress(delivery);
+    }
+  };
+
   const renderLeftActions = () => (
     <TouchableOpacity
       style={[styles.leftAction, { backgroundColor: palette.green }]}
@@ -99,36 +106,41 @@ export default function ListItem({ delivery, onSwipeComplete, onRemove }: Props)
   return (
     <>
       <Swipeable
-  ref={swipeableRef}
-  renderLeftActions={renderLeftActions}  // just the green background, no press needed
-  renderRightActions={renderRightActions}
-  overshootLeft={false}
-  overshootRight={false}
-  leftThreshold={100}
-  rightThreshold={30}
-  friction={3}
-  onSwipeableOpen={(side) => {
-    if (side === "left") {
-      handleSwipeComplete(); // automatically remove item
-    }
-    // right swipe does nothing
-  }}
->
-        <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.title, { color: colors.cardText }]}>{delivery.name}</Text>
+        ref={swipeableRef}
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+        overshootLeft={false}
+        overshootRight={false}
+        leftThreshold={100}
+        rightThreshold={30}
+        friction={3}
+        onSwipeableOpen={(side) => {
+          if (side === "left") {
+            handleSwipeComplete();
+          }
+        }}
+      >
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={handleItemPress}
+          disabled={!onPress}
+        >
+          <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.title, { color: colors.cardText }]}>{delivery.name}</Text>
 
-          <View style={styles.badges}>
-            <View style={[styles.badge, { backgroundColor: colors.background }]}>
-              <Text style={[styles.badgeValue, { color: colors.text }]}>{delivery.cases}</Text>
-              <Text style={[styles.badgeLabel, { color: colors.icon }]}>cases</Text>
-            </View>
+            <View style={styles.badges}>
+              <View style={[styles.badge, { backgroundColor: colors.background }]}>
+                <Text style={[styles.badgeValue, { color: colors.text }]}>{delivery.cases}</Text>
+                <Text style={[styles.badgeLabel, { color: colors.icon }]}>cases</Text>
+              </View>
 
-            <View style={[styles.badge, { backgroundColor: colors.background }]}>
-              <Text style={[styles.badgeValue, { color: colors.text }]}>{delivery.cans}</Text>
-              <Text style={[styles.badgeLabel, { color: colors.icon }]}>cans</Text>
+              <View style={[styles.badge, { backgroundColor: colors.background }]}>
+                <Text style={[styles.badgeValue, { color: colors.text }]}>{delivery.cans}</Text>
+                <Text style={[styles.badgeLabel, { color: colors.icon }]}>cans</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Swipeable>
 
       <Modal
