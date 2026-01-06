@@ -10,7 +10,7 @@ import {
 import { Text as CustomText}  from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
-export interface ConfigSectionCardProps<T> {
+interface ConfigSectionCardProps<T> {
   title: string;
   items: T[];
   emptyText: string;

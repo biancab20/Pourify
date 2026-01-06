@@ -49,17 +49,15 @@ export default function EditableSectionCard({
   const { theme } = useAppTheme();
   const { colors } = theme;
 
-  const editIconName: IconName = theme.isDark ? "editDarkMode" : "editLightMode";
+  const editIconName: IconName = theme.isDark
+    ? "editDarkMode"
+    : "editLightMode";
 
   return (
     <View style={styles.wrapper}>
       {!!title && (
         <Text
-          style={[
-            styles.sectionTitle,
-            { color: colors.text },
-            headerStyle,
-          ]}
+          style={[styles.sectionTitle, { color: colors.text }, headerStyle]}
         >
           {title}
         </Text>
@@ -215,7 +213,8 @@ const styles = StyleSheet.create({
 
   value: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: "400",
     lineHeight: 20,
   },
 

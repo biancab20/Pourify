@@ -15,9 +15,11 @@ import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
 import { ConfigRow } from "@/components/ui/ConfigRow";
 import type { Supplier } from "@/types";
 import type { Bar as ApiBar } from "@/types/locations";
+import type { Product as ApiProduct } from "@/types/products";
 import { useMemo, useState } from "react";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
+import { useProducts } from "@/hooks/useProducts";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
 
 /** ✅ Local-only bars (old naming mistake) */
@@ -31,9 +33,7 @@ export default function VenueSettings() {
   const { theme } = useAppTheme();
 
   // ✅ Keep the old local list (empty)
-  const [staticBars, setStaticBars] = useState<StaticBar[]>([
-    // { barId: "1", name: "Main Bar (static)" },
-  ]);
+  const [staticBars, setStaticBars] = useState<StaticBar[]>([]);
 
   // ✅ API bars (real stock locations)
   const {
@@ -41,10 +41,22 @@ export default function VenueSettings() {
     isLoading: isApiBarsLoading,
     error: apiBarsError,
     refetch: refetchApiBars,
-    isRefetching: isApiBarsRefetching,
   } = useBars();
 
   const apiBars = useMemo(() => apiBarsData?.items ?? [], [apiBarsData?.items]);
+
+  // ✅ Products API
+  const {
+    data: productsData,
+    isLoading: isProductsLoading,
+    error: productsError,
+    refetch: refetchProducts,
+  } = useProducts();
+
+  const products = useMemo(
+    () => productsData?.items ?? [],
+    [productsData?.items]
+  );
 
   // ✅ Suppliers API
   const {
@@ -58,8 +70,6 @@ export default function VenueSettings() {
   const suppliers = useMemo(() => suppliersData?.items ?? [], [suppliersData]);
 
   const addStaticBar = () => {
-    // dummy add for now
-    // you can wire this later to local form / modal / etc.
     setStaticBars((prev) => [
       ...prev,
       { barId: `static-${Date.now()}`, name: "New static bar" },
@@ -69,20 +79,21 @@ export default function VenueSettings() {
   const onAddSupplier = () => {
     router.push({
       pathname: "/(settings)/[entity]/add",
-      params: {
-        entity: "suppliers",
-        venueName: "Hachi bar",
-      },
+      params: { entity: "suppliers", venueName: "Hachi bar" },
     });
   };
 
   const onAddLocation = () => {
     router.push({
       pathname: "/(settings)/[entity]/add",
-      params: {
-        entity: "locations",
-        venueName: "Hachi bar",
-      },
+      params: { entity: "locations", venueName: "Hachi bar" },
+    });
+  };
+
+  const onAddProduct = () => {
+    router.push({
+      pathname: "/(settings)/[entity]/add",
+      params: { entity: "products", venueName: "Hachi bar" },
     });
   };
 
@@ -94,6 +105,10 @@ export default function VenueSettings() {
     Alert.alert("Open location", `Location ID: ${barId}`);
   };
 
+  const openProduct = (productId: string) => {
+    Alert.alert("Open product", `Product ID: ${productId}`);
+  };
+
   const renderErrorState = (
     message: string,
     onRetry: () => void,
@@ -103,9 +118,7 @@ export default function VenueSettings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      <View
-        style={[styles.header, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -132,16 +145,13 @@ export default function VenueSettings() {
     </SafeAreaView>
   );
 
-  // Only block the whole screen if suppliers fail to load (since you already had that behavior)
   if (isSuppliersLoading) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["bottom", "top"]}
       >
-        <View
-          style={[styles.header, { backgroundColor: theme.colors.background }]}
-        >
+        <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
           <Pressable style={styles.closeButton} onPress={() => router.back()}>
             <Icon name="exit" size={32} color={theme.colors.icon} />
           </Pressable>
@@ -175,10 +185,7 @@ export default function VenueSettings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      {/* header */}
-      <View
-        style={[styles.header, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -195,7 +202,7 @@ export default function VenueSettings() {
           Hachi bar Settings
         </Text>
 
-        {/* ✅ 1) Old local/static bars list (kept empty) */}
+        {/* 1) Old local/static bars list */}
         <ConfigSectionCard<StaticBar>
           title="Bars"
           items={staticBars}
@@ -212,11 +219,9 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* ✅ 2) API bars list (stock locations) */}
+        {/* 2) API bars list (stock locations) */}
         {apiBarsError ? (
-          <View
-            style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}
-          >
+          <View style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}>
             <Text>
               Could not load stock locations.{" "}
               <Text
@@ -232,9 +237,7 @@ export default function VenueSettings() {
             title="Stock locations within your venue"
             items={apiBars}
             emptyText={
-              isApiBarsLoading
-                ? "Loading stock locations..."
-                : "No stock locations found"
+              isApiBarsLoading ? "Loading stock locations..." : "No stock locations found"
             }
             addLabel="Add Location"
             onAdd={onAddLocation}
@@ -249,7 +252,39 @@ export default function VenueSettings() {
           />
         )}
 
-        {/* ✅ Suppliers */}
+        {/* 3) Products (API) */}
+        {productsError ? (
+          <View style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}>
+            <Text>
+              Could not load products.{" "}
+              <Text
+                onPress={() => refetchProducts()}
+                style={{ textDecorationLine: "underline" }}
+              >
+                Tap to retry
+              </Text>
+            </Text>
+          </View>
+        ) : (
+          <ConfigSectionCard<ApiProduct>
+            title="Products"
+            items={products}
+            emptyText={isProductsLoading ? "Loading products..." : "No products found"}
+            addLabel="Add Product"
+            onAdd={onAddProduct}
+            keyExtractor={(p) => p.productId}
+            renderItem={({ item }) => (
+              <ConfigRow
+                title={item.name}
+                leftIconName="wine-outline"
+                rightLabel={`${item.volume} mL • ${item.type}`}
+                onPress={() => openProduct(item.productId)}
+              />
+            )}
+          />
+        )}
+
+        {/* 4) Suppliers */}
         <ConfigSectionCard<Supplier>
           title="Suppliers"
           items={suppliers}
@@ -266,45 +301,47 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* <EditableSectionCard
+        {/* 5) Editable venue settings */}
+        <EditableSectionCard
           title="Venue settings"
           rows={[
             {
               id: "venueName",
-              //leftIconName: "scan",
               title: "Venue name",
-              value: "Test 2",
+              value: "Hachi bar",
               onEditPress: () => console.log("Edit venue name"),
               editA11yLabel: "Edit venue name",
             },
             {
               id: "openingHours",
-              //leftIconName: "settings",
               title: "Opening hours",
               value: "17:00  →  02:00",
               onEditPress: () => console.log("Edit opening hours"),
+              editA11yLabel: "Edit venue opening hours",
+            },
+            {
+              id: "shotSize",
+              title: "Default shot size",
+              value: "30 mL",
+              onEditPress: () => console.log("Edit shot size"),
+              editA11yLabel: "Edit venue shot size",
             },
             {
               id: "location",
-              //leftIconName: "location-outline",
               title: "Location",
-              value:
-                "Bulevardul Dacia, 115\nBucharest, Bucharest, 020506, Romania",
+              value: "Haarlem\nNorth Holland, Netherlands",
               valueNumberOfLines: 3,
-              showEdit: false, // ✅ hide edit icon if needed
+              showEdit: false,
             },
           ]}
-        /> */}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
+  container: { flex: 1, paddingHorizontal: 16 },
   header: {
     height: 56,
     gap: 0,
