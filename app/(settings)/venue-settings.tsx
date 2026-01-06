@@ -38,12 +38,9 @@ export default function VenueSettings() {
   }, [suppliersData?.items]);
 
   const addBar = () => {
-    const newBar: Bar = {
-      barId: bars.length + 1,
-      name: `New Bar ${bars.length + 1}`,
-    };
+    
 
-    setBars((prev) => [...prev, newBar]);
+    setBars((prev) => [...prev]);
   };
   const onAddSupplier = () => {
   router.push({
@@ -56,7 +53,7 @@ export default function VenueSettings() {
 };
 
   /** Dummy navigation / open function */
-  const openBar = (barId: number) => {
+  const openBar = (barId: string) => {
     Alert.alert("Open Bar", `Bar ID: ${barId}`);
   };
 
