@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -24,7 +24,6 @@ export default function AllProducts() {
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<ProductWithStock[]>([]);
   const [selectedBar, setSelectedBar] = useState<{ id: string | null; name: string }>({
     id: null,
     name: "General Stock",
@@ -33,9 +32,11 @@ export default function AllProducts() {
   // Data hooks
   const { data: barsData } = useBars();
   const { data: productsData } = useProducts();
-  const { data: stocksData, isLoading: stocksLoading, refetch: refetchStocks } = useStocks(
-    selectedBar.id ? { barId: selectedBar.id } : undefined
-  );
+  const {
+    data: stocksData,
+    isLoading: stocksLoading,
+    refetch: refetchStocks,
+  } = useStocks(selectedBar.id ? { barId: selectedBar.id } : undefined);
 
   // Memoized arrays
   const bars = useMemo(() => barsData?.items || [], [barsData]);
@@ -51,70 +52,66 @@ export default function AllProducts() {
     }
   }, [params.barId, params.barName]);
 
-  // Update products when bar, stock, or product data changes
-  useEffect(() => {
-    if (!allProducts.length) return;
+  // Merge products with stock and filter based on selected bar & search
+  const filteredProducts = useMemo(() => {
+    if (!allProducts.length) return [];
 
     const productMap = new Map<string, ProductWithStock>();
 
-    // Initialize all products
+    // Initialize products
     allProducts.forEach(product => {
-      productMap.set(product.productId.toString(), { // Convert productId to string
+      const productId = product.productId.toString();
+      productMap.set(productId, {
         ...product,
-        productId: product.productId.toString(), // Ensure productId is string
-        totalVolume: 0, 
-        bottleCount: 0 
+        productId,
+        totalVolume: 0,
+        bottleCount: 0,
       });
     });
 
-    // Add stock data if available
-    if (stocksData?.items) {
-      stocksData.items.forEach(stock => {
-        const product = productMap.get(stock.productId.toString()); // Convert to string
-        if (product) {
-          const bottleCount = Math.floor(stock.volume / product.volume);
-          product.totalVolume += stock.volume;
-          product.bottleCount += bottleCount;
-        }
-      });
-    }
+    // Merge stock data
+    stocksData?.items.forEach(stock => {
+      const product = productMap.get(stock.productId);
+      if (product) {
+        product.totalVolume += stock.volume;
+        product.bottleCount += Math.floor(stock.volume / product.volume);
+      }
+    });
 
-    // Filter products based on selected bar
-    let filteredProducts: ProductWithStock[];
+    // Convert map to array and filter for selected bar (only products with stock)
+    let productsArray = Array.from(productMap.values());
     if (selectedBar.id) {
-      filteredProducts = Array.from(productMap.values()).filter(p => p.totalVolume > 0);
-    } else {
-      filteredProducts = Array.from(productMap.values());
+      productsArray = productsArray.filter(p => p.totalVolume > 0);
     }
 
-    setProducts(filteredProducts);
-  }, [selectedBar, allProducts, stocksData]);
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      productsArray = productsArray.filter(
+        p =>
+          p.name.toLowerCase().includes(query) ||
+          p.type.toLowerCase().includes(query) ||
+          p.volume.toString().includes(query) ||
+          p.totalVolume.toString().includes(query)
+      );
+    }
 
-  // Search filter
-  const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-
-    const query = searchQuery.toLowerCase().trim();
-    return products.filter(
-      product =>
-        product.name.toLowerCase().includes(query) ||
-        product.type.toLowerCase().includes(query) ||
-        product.volume.toString().includes(query) ||
-        product.totalVolume.toString().includes(query)
-    );
-  }, [products, searchQuery]);
+    return productsArray;
+  }, [allProducts, stocksData, selectedBar, searchQuery]);
 
   // Handlers
   const handleSearch = (text: string | number) => setSearchQuery(text.toString());
 
   const handleBarSelect = (bar: { id: string | null; name: string }) => {
     setSelectedBar(bar);
-    setProducts([]); // clear products immediately
     refetchStocks(); // refetch stock for the selected bar
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={Platform.OS === "android" ? ["bottom"] : []}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={Platform.OS === "android" ? ["bottom"] : []}
+    >
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
@@ -208,7 +205,14 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
   title: { fontSize: 32, fontWeight: "700" },
   productsList: { marginTop: 20, gap: 12 },
-  productButton: { paddingHorizontal: 16, paddingVertical: 16, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  productButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   productInfo: { flex: 1 },
   productName: { fontWeight: "600", fontSize: 16, marginBottom: 4 },
   productDetails: { fontWeight: "500", fontSize: 14, marginBottom: 2 },

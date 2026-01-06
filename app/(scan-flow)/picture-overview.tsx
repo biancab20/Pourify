@@ -7,30 +7,27 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Text } from "@/components/shared/Text";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
 import type { Photo } from "@/types/deliveries";
-
 import { makeId } from "@/utils/ids";
-import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
+import { useQueryClient } from "@tanstack/react-query";
+import type { DeliveryOcrResponse } from "@/types/deliveries";
 
 function safeParsePhotos(value: unknown): Photo[] {
   if (typeof value !== "string") return [];
-
   try {
     const parsed = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .filter((p) => p && typeof p.uri === "string")
-      .map((p) => ({
-        id: typeof p.id === "string" ? p.id : makeId(),
-        uri: p.uri,
-      }));
+    return Array.isArray(parsed)
+      ? parsed.map((p) => ({
+          id: p.id ?? makeId(),
+          uri: p.uri,
+        }))
+      : [];
   } catch {
     return [];
   }
@@ -40,110 +37,70 @@ export default function PictureOverview() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
+  const queryClient = useQueryClient();
 
-  const processDeliveryNote = useProcessDeliveryNote();
-
-  const parsedFromParams = useMemo(
+  const photos = useMemo(
     () => safeParsePhotos(params.photos),
     [params.photos]
   );
 
-  const [photos, setPhotos] = useState<Photo[]>(parsedFromParams);
-
-  useEffect(() => {
-    setPhotos(parsedFromParams);
-  }, [parsedFromParams]);
-
-  const addMorePhotos = () => {
-    router.replace({
-      pathname: "/(scan-flow)/scan-new-delivery",
-      params: { existingPhotos: JSON.stringify(photos) },
-    });
-  };
-
-  const confirmPhotos = async () => {
-    if (photos.length === 0) return;
-
+  const ocrData = useMemo<DeliveryOcrResponse | null>(() => {
+    if (typeof params.ocrData !== "string") return null;
     try {
-      const data = await processDeliveryNote.mutateAsync({
-        kind: "photos",
-        photos,
-      });
-
-      Alert.alert("OCR response", JSON.stringify(data, null, 2), [
-        { text: "OK", onPress: () => router.replace("/delivery-list") },
-      ]);
-    } catch (e: any) {
-      // Your ApiError shape: { message, status?, body? }
-      Alert.alert(
-        "Upload failed",
-        e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)
-      );
+      return JSON.parse(params.ocrData);
+    } catch {
+      return null;
     }
-  };
+  }, [params.ocrData]);
 
-  const removePhoto = (id: string) => {
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
-  };
+  const confirmPhotos = () => {
+    if (!ocrData) {
+      Alert.alert("No OCR data found");
+      return;
+    }
 
-  const isBusy = processDeliveryNote.isPending;
+    queryClient.setQueryData(["deliveries", "latest"], ocrData);
+
+    router.replace("/delivery-check");
+  };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["bottom", "top"]}
-    >
-      {/* header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Text
-          style={[
-            styles.headerTitle,
-            {
-              color: theme.isDark ? theme.palette.yellow : theme.palette.darkBlue,
-            },
-          ]}
-        >
-          Delivery Note Photos
-        </Text>
-
-        <Pressable style={styles.closeButton} onPress={() => router.back()}>
-          <Icon name="exit" size={32} color={theme.colors.icon} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Delivery Photos</Text>
+        <Pressable onPress={() => router.back()}>
+          <Icon name="exit" size={28} color={theme.colors.icon} />
         </Pressable>
       </View>
 
-      {/* Photo Grid */}
-      <ScrollView style={styles.photoContainer}>
-        <View style={styles.photoGrid}>
-          {photos.map((photo, index) => (
-            <View key={photo.id} style={styles.photoItem}>
-              <Image source={{ uri: photo.uri }} style={styles.photo} />
-              <Pressable
-                style={styles.removeButton}
-                onPress={() => removePhoto(photo.id)}
-                disabled={isBusy}
-              >
-                <Text style={styles.removeButtonText}>✕</Text>
-              </Pressable>
-              <View style={styles.photoNumberBadge}>
-                <Text style={styles.photoNumberText}>Page {index + 1}</Text>
-              </View>
+      {/* Photos */}
+      <ScrollView>
+        <View style={styles.grid}>
+          {photos.map((p, i) => (
+            <View key={p.id} style={styles.photoBox}>
+              <Image source={{ uri: p.uri }} style={styles.photo} />
+              <Text style={styles.page}>Page {i + 1}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
 
-      <View style={styles.buttonContainer}>
+      {/* Actions */}
+      <View style={styles.actions}>
         <GradientButton
+          text="Confirm & Continue"
           onPress={confirmPhotos}
-          text={`Confirm ${photos.length} Photo${photos.length !== 1 ? "s" : ""}`}
-          disabled={photos.length === 0 || isBusy}
         />
-
         <GradientButton
-          onPress={addMorePhotos}
-          text="Take More Photos"
+          text="Add More Photos"
           variant="secondary"
-          disabled={isBusy}
+          onPress={() =>
+            router.replace({
+              pathname: "/(scan-flow)/scan-new-delivery",
+              params: { existingPhotos: JSON.stringify(photos) },
+            })
+          }
         />
       </View>
     </SafeAreaView>
@@ -151,85 +108,44 @@ export default function PictureOverview() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 10,
-  },
   header: {
-    paddingHorizontal: 6,
     height: 56,
+    paddingHorizontal: 16,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
   },
-  closeButton: {
-    position: "absolute",
-    justifyContent: "center",
-    alignItems: "center",
-    top: 0,
-    height: 56,
-    minWidth: 48,
-    right: 0,
-  },
-  photoContainer: {
-    flex: 1,
-    paddingVertical: 16,
-  },
-  photoGrid: {
+  grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 14,
-    marginHorizontal: 6,
+    gap: 12,
+    padding: 16,
   },
-  photoItem: {
+  photoBox: {
     width: "48%",
-    height: 200,
+    height: 180,
     borderRadius: 12,
+    overflow: "hidden",
   },
   photo: {
     width: "100%",
     height: "100%",
-    borderRadius: 12,
   },
-  removeButton: {
+  page: {
     position: "absolute",
-    top: -6,
-    right: -6,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#ff3b30",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#001b3a",
-  },
-  removeButtonText: {
-    color: "white",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  photoNumberBadge: {
-    position: "absolute",
-    top: 8,
+    bottom: 8,
     left: 8,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  photoNumberText: {
     color: "white",
-    fontSize: 12,
-    fontWeight: "500",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 6,
+    borderRadius: 6,
   },
-  buttonContainer: {
-    paddingVertical: 16,
+  actions: {
+    padding: 16,
     gap: 12,
   },
 });
