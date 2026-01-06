@@ -11,7 +11,7 @@ import { Icon } from "@/components/icons/Icon";
 
 export type FormInputType = "text" | "email" | "number" | "select"; // select for later
 
-export interface FormInputProps {
+interface FormInputProps {
   value: string;
   onChange: (value: string | number) => void;
 

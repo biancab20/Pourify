@@ -18,6 +18,7 @@ import type { Bar as ApiBar } from "@/types/locations";
 import { useMemo, useState } from "react";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
+import EditableSectionCard from "@/components/ui/EditableSectionCard";
 
 /** ✅ Local-only bars (old naming mistake) */
 type StaticBar = {
@@ -102,7 +103,9 @@ export default function VenueSettings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -112,7 +115,12 @@ export default function VenueSettings() {
         <Text>{message}</Text>
         <Pressable
           onPress={onRetry}
-          style={{ marginTop: 14, padding: 12, minWidth: 120, alignItems: "center" }}
+          style={{
+            marginTop: 14,
+            padding: 12,
+            minWidth: 120,
+            alignItems: "center",
+          }}
         >
           {isRetrying ? (
             <ActivityIndicator color={theme.colors.icon} />
@@ -131,7 +139,9 @@ export default function VenueSettings() {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         edges={["bottom", "top"]}
       >
-        <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <View
+          style={[styles.header, { backgroundColor: theme.colors.background }]}
+        >
           <Pressable style={styles.closeButton} onPress={() => router.back()}>
             <Icon name="exit" size={32} color={theme.colors.icon} />
           </Pressable>
@@ -147,7 +157,9 @@ export default function VenueSettings() {
 
   if (suppliersError) {
     const msg =
-      typeof suppliersError === "object" && suppliersError && "message" in suppliersError
+      typeof suppliersError === "object" &&
+      suppliersError &&
+      "message" in suppliersError
         ? String((suppliersError as any).message)
         : "Unknown error";
 
@@ -164,7 +176,9 @@ export default function VenueSettings() {
       edges={["bottom", "top"]}
     >
       {/* header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -200,10 +214,11 @@ export default function VenueSettings() {
 
         {/* ✅ 2) API bars list (stock locations) */}
         {apiBarsError ? (
-          <View style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}>
+          <View
+            style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}
+          >
             <Text>
-              Could not load stock locations.
-              {" "}
+              Could not load stock locations.{" "}
               <Text
                 onPress={() => refetchApiBars()}
                 style={{ textDecorationLine: "underline" }}
@@ -217,7 +232,9 @@ export default function VenueSettings() {
             title="Stock locations within your venue"
             items={apiBars}
             emptyText={
-              isApiBarsLoading ? "Loading stock locations..." : "No stock locations found"
+              isApiBarsLoading
+                ? "Loading stock locations..."
+                : "No stock locations found"
             }
             addLabel="Add Location"
             onAdd={onAddLocation}
@@ -248,6 +265,36 @@ export default function VenueSettings() {
             />
           )}
         />
+
+        {/* <EditableSectionCard
+          title="Venue settings"
+          rows={[
+            {
+              id: "venueName",
+              //leftIconName: "scan",
+              title: "Venue name",
+              value: "Test 2",
+              onEditPress: () => console.log("Edit venue name"),
+              editA11yLabel: "Edit venue name",
+            },
+            {
+              id: "openingHours",
+              //leftIconName: "settings",
+              title: "Opening hours",
+              value: "17:00  →  02:00",
+              onEditPress: () => console.log("Edit opening hours"),
+            },
+            {
+              id: "location",
+              //leftIconName: "location-outline",
+              title: "Location",
+              value:
+                "Bulevardul Dacia, 115\nBucharest, Bucharest, 020506, Romania",
+              valueNumberOfLines: 3,
+              showEdit: false, // ✅ hide edit icon if needed
+            },
+          ]}
+        /> */}
       </ScrollView>
     </SafeAreaView>
   );
