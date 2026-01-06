@@ -1,6 +1,5 @@
+// app/(main-screens)/product-stock.tsx
 import { Text } from "@/components/shared/Text";
-import InformationCard from "@/components/staticComponents/InformationCardStatic";
-import InfoCard from "@/components/ui/InfoBox";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,9 +8,17 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CircularChart from "@/components/ui/CircularChart"; 
 import DatePicker, { Mode } from "@/components/ui/DatePicker";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
-import { dummyData, Bar } from "@/types/DummyData";
+import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
+import { useBars } from "@/hooks/useLocations";
+import { Bar } from "@/types/locations";
+import { useStocks } from "@/hooks/useStock";
+import { useProducts } from "@/hooks/useProducts";
+import BarStockCard from "@/components/ui/BarStockCard";
+import TotalStockSummary from "@/components/ui/TotalStockSummary";
+import InfoCard from "@/components/ui/InfoBox";
+import { StockItem } from "@/types/stock"; // Import StockItem type
 
 export default function ProductDetails() {
   const router = useRouter();
@@ -21,6 +28,110 @@ export default function ProductDetails() {
 
   const [mode, setMode] = useState<Mode>("Week");
   const [currentDate, setCurrentDate] = useState(dayjs());
+  const [selectedBar, setSelectedBar] = useState<{ id: string | null; name: string }>({
+    id: null,
+    name: "General Stock",
+  });
+
+  // Get product ID from params
+  const productId = Array.isArray(params.productId) ? params.productId[0] : params.productId || "";
+  const productName = Array.isArray(params.productName) ? params.productName[0] : params.productName || "Product";
+  const productVolume = Array.isArray(params.productVolume) ? params.productVolume[0] : params.productVolume || "0";
+  
+  const parsedProductVolume = parseFloat(productVolume);
+
+  // Data hooks
+  const { data: barsData, isLoading: barsLoading } = useBars();
+  const { data: productsData } = useProducts();
+  const { data: stocksData, isLoading: stocksLoading } = useStocks();
+
+  // Memoized arrays
+  const bars = useMemo(() => barsData?.items || [], [barsData?.items]);
+  const stocks = useMemo(() => stocksData?.items || [], [stocksData?.items]);
+  const products = useMemo(() => productsData?.items || [], [productsData?.items]);
+
+  // Find current product
+  const currentProduct = useMemo(() => {
+    return products.find(p => p.productId.toString() === productId);
+  }, [products, productId]);
+
+  // Get stock data for this product across all bars
+  const productStockByBar = useMemo(() => {
+    const stockMap = new Map<string, { totalVolume: number; bottleCount: number }>();
+    
+    // Initialize all bars with zero stock
+    bars.forEach(bar => {
+      stockMap.set(bar.barId, { totalVolume: 0, bottleCount: 0 });
+    });
+
+    // Add actual stock data
+    stocks.forEach((stock: StockItem) => {
+      // Check if this stock belongs to the current product
+      // Note: You may need to check the actual property name from your StockItem type
+      if (stock.productId.toString() === productId) {
+        // Check which bar this stock belongs to
+        // This depends on your StockItem type structure
+        // If StockItem has locationId or barId property, use that
+        const barId = (stock as any).barId || (stock as any).locationId || (stock as any).BarId;
+        
+        if (barId) {
+          const currentStock = stockMap.get(barId.toString()) || { totalVolume: 0, bottleCount: 0 };
+          const bottleCount = parsedProductVolume > 0 ? Math.floor(stock.volume / parsedProductVolume) : 0;
+          
+          stockMap.set(barId.toString(), {
+            totalVolume: stock.volume,
+            bottleCount: bottleCount,
+          });
+        }
+      }
+    });
+
+    return stockMap;
+  }, [stocks, bars, productId, parsedProductVolume]);
+
+  // Calculate totals
+  const totalStock = useMemo(() => {
+    let totalVolume = 0;
+    let totalBottles = 0;
+    
+    productStockByBar.forEach(stock => {
+      totalVolume += stock.totalVolume;
+      totalBottles += stock.bottleCount;
+    });
+
+    return { totalVolume, totalBottles };
+  }, [productStockByBar]);
+
+  // Initialize selected bar from params
+  useEffect(() => {
+    const barIdParam = Array.isArray(params.barId) ? params.barId[0] : params.barId || "";
+    const barNameParam = Array.isArray(params.barName) ? params.barName[0] : params.barName || "";
+
+    if (barIdParam && barNameParam) {
+      setSelectedBar({ id: barIdParam, name: barNameParam });
+    }
+  }, [params.barId, params.barName]);
+
+  // Get stock for selected bar
+  const selectedBarStock = selectedBar.id ? productStockByBar.get(selectedBar.id) : null;
+
+  const isGeneralStock = !selectedBar.id;
+
+  const handleBarSelect = (bar: { id: string | null; name: string }) => {
+    setSelectedBar(bar);
+    
+    // Navigate to the product details with the selected bar
+    router.push({
+      pathname: "/product-stock",
+      params: {
+        productId,
+        productName,
+        productVolume,
+        barId: bar.id || "",
+        barName: bar.name,
+      },
+    });
+  };
 
   const chartData = {
     ordered: 42,
@@ -28,71 +139,97 @@ export default function ProductDetails() {
     sold: 28.56
   };
 
-  const bars = dummyData.bars.items;
-
-  const productName = Array.isArray(params.productName) ? params.productName[0] : params.productName || "Product";
-  const productVolume = Array.isArray(params.productVolume) ? params.productVolume[0] : params.productVolume || "0";
- // const productType = Array.isArray(params.productType) ? params.productType[0] : params.productType || "";
-  const totalVolume = Array.isArray(params.totalVolume) ? params.totalVolume[0] : params.totalVolume || "0";
-  const bottleCount = Array.isArray(params.bottleCount) ? params.bottleCount[0] : params.bottleCount || "0";
-  const barName = Array.isArray(params.barName) ? params.barName[0] : params.barName || "";
-  const barId = Array.isArray(params.barId) ? params.barId[0] : params.barId || "";
-
-  //const parsedProductVolume = parseFloat(productVolume);
-  const parsedTotalVolume = parseFloat(totalVolume);
-  const parsedBottleCount = parseInt(bottleCount);
-
-  const isGeneralStock = !barName || barName === "General Stock";
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['bottom']}>
       <ScrollView style={[styles.container, {backgroundColor: colors.background}]}>
-        <View style={styles.sectionContainer}>
+        {/* Header with Product Name and Dropdown */}
+        <View style={styles.header}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{productName}</Text>
-
-          <DatePicker 
-            mode={mode}
-            setMode={setMode}
-            currentDate={currentDate}
-            setCurrentDate={setCurrentDate}
+          
+          <StockDropdownNavigation 
+            bars={bars} 
+            selectedBar={selectedBar} 
+            onBarSelect={handleBarSelect} 
           />
-          <View style={styles.chartWrapper}>
-            <CircularChart data={chartData} mode={mode} />
-          </View>
-
-          {!isGeneralStock && (
-            <WideCardStatic>
-              <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>{barName}</Text>
-
-              <View style={[styles.divider, { backgroundColor: colors.text }]} />
-
-              <View style={styles.row}>
-                <InfoCard 
-                  title={`${parsedTotalVolume} L`} 
-                  subtitle="#Litres" 
-                  style={{ width: '45%', marginRight: 10 }} 
-                />
-                <InfoCard 
-                  title={parsedBottleCount.toString()} 
-                  subtitle="#Bottles" 
-                  style={{ width: '45%' }} 
-                />
-              </View>
-            </WideCardStatic>
-          )}
         </View>
 
-        <View style={styles.sectionContainer}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Available in other bars</Text>
-
-          <View style={styles.cardsRow}>
-            {bars.map((bar: Bar) => (
-              <InformationCard key={bar.barId} barName={bar.name} />
-            ))}
-          </View>
+        <DatePicker 
+          mode={mode}
+          setMode={setMode}
+          currentDate={currentDate}
+          setCurrentDate={setCurrentDate}
+        />
+        
+        <View style={styles.chartWrapper}>
+          <CircularChart data={chartData} mode={mode} />
         </View>
 
-        {!isGeneralStock && (
+        {/* Show selected bar stock or total stock */}
+        {!isGeneralStock && selectedBarStock ? (
+          <WideCardStatic>
+            <Text style={[styles.popularDrinkTitle, { color: colors.text }]}>
+              In {selectedBar.name}
+            </Text>
+
+            <View style={[styles.divider, { backgroundColor: colors.text }]} />
+
+            <View style={styles.row}>
+              <InfoCard 
+                title={`${selectedBarStock.totalVolume.toFixed(1)}L`} 
+                subtitle="#Litres" 
+                style={{ width: '45%', marginRight: 10 }} 
+              />
+              <InfoCard 
+                title={selectedBarStock.bottleCount.toString()} 
+                subtitle="#Bottles" 
+                style={{ width: '45%' }} 
+              />
+            </View>
+          </WideCardStatic>
+        ) : (
+          <TotalStockSummary 
+            totalVolume={totalStock.totalVolume}
+            totalBottles={totalStock.totalBottles}
+          />
+        )}
+
+        {/* Show stock in all bars */}
+<View style={styles.sectionContainer}>
+  <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 15 }]}>
+    {isGeneralStock ? "Stock Overview" : "Available in other bars"}
+  </Text>
+
+  {(barsLoading || stocksLoading) ? (
+    <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+      Loading stock data...
+    </Text>
+  ) : bars.length === 0 ? (
+    <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+      No bars found
+    </Text>
+  ) : (
+    <View style={styles.cardsRow}>
+      {bars.map((bar: Bar) => {
+        const stock = productStockByBar.get(bar.barId);
+        if (isGeneralStock || bar.barId !== selectedBar.id) {
+          return (
+            <BarStockCard
+              key={bar.barId}
+              barName={bar.name}
+              totalVolume={stock?.totalVolume || 0}
+              bottleCount={stock?.bottleCount || 0}
+              productVolume={parsedProductVolume}
+              totalStockAcrossAllBars={totalStock.totalVolume} // Pass total stock
+            />
+          );
+        }
+        return null;
+      })}
+    </View>
+  )}
+</View>
+
+        {!isGeneralStock && selectedBarStock && (
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Modify Stock</Text>
 
@@ -100,12 +237,12 @@ export default function ProductDetails() {
               onPress={() => router.push({
                 pathname: "/edit-stock",
                 params: {
-                  productId: params.productId as string,
+                  productId: productId,
                   productName: productName,
                   productVolume: productVolume,
-                  barId: barId,
-                  barName: barName,
-                  currentStock: parsedBottleCount.toString()
+                  barId: selectedBar.id,
+                  barName: selectedBar.name,
+                  currentStock: selectedBarStock.bottleCount.toString()
                 }
               })}
               style={styles.stockButton}
@@ -145,6 +282,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 5,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
   sectionContainer: {
     marginTop: 24,
   },
@@ -157,7 +300,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: "700",
-    marginBottom: 15,
+    flex: 1,
+    marginRight: 16,
   },
   cardsRow: {
     flexDirection: "row",

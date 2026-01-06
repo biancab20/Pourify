@@ -3,7 +3,7 @@ import { PaginatedResponse } from "@/types/api";
 export type ProductType = "KEG" | "WINE" | "BOX" | "UNIT" | string;
 
 export type Product = {
-  productId: number;
+  productId: string;
   name: string;
   volume: number;
   type: ProductType;

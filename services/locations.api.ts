@@ -1,156 +1,12 @@
-// import { API } from "@/services/api.config";
-// import type {
-//   Bar,
-//   GetBarsResponse,
-//   UpdateBarResponse,
-//   DeleteBarResponse,
-// } from "@/types/locations";
-// import type { ApiError } from "@/services/api.errors";
-
-// /**
-//  * GET /locations (bars)
-//  */
-// export async function getBars(
-//   params?: Record<string, string | number>
-// ): Promise<GetBarsResponse> {
-//   const query = params
-//     ? "?" +
-//       new URLSearchParams(
-//         Object.entries(params).map(([k, v]) => [k, String(v)])
-//       ).toString()
-//     : "";
-
-//   const res = await fetch(`${API.locations.getBars}${query}`, {
-//     method: "GET",
-//     headers: {
-//       Accept: "application/json",
-//     },
-//   });
-
-//   const text = await res.text();
-
-//   if (!res.ok) {
-//     const err: ApiError = {
-//       message: `Request failed with status ${res.status}`,
-//       status: res.status,
-//       body: text,
-//     };
-//     throw err;
-//   }
-
-//   try {
-//     return JSON.parse(text) as GetBarsResponse;
-//   } catch {
-//     throw {
-//       message: "Failed to parse JSON response",
-//       status: res.status,
-//       body: text,
-//     } satisfies ApiError;
-//   }
-// }
-
-// /**
-//  * PUT /locations/:id
-//  */
-// export async function updateBar(
-//   barId: number,
-//   payload: Partial<Bar>
-// ): Promise<UpdateBarResponse> {
-//   const res = await fetch(`${API.locations.updateBar}/${barId}`, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Accept: "application/json",
-//     },
-//     body: JSON.stringify(payload),
-//   });
-
-//   const text = await res.text();
-
-//   if (!res.ok) {
-//     const err: ApiError = {
-//       message: `Request failed with status ${res.status}`,
-//       status: res.status,
-//       body: text,
-//     };
-//     throw err;
-//   }
-
-//   try {
-//     return JSON.parse(text) as UpdateBarResponse;
-//   } catch {
-//     throw {
-//       message: "Failed to parse JSON response",
-//       status: res.status,
-//       body: text,
-//     } satisfies ApiError;
-//   }
-// }
-
-// /**
-//  * DELETE /locations/:id
-//  * 204 No Content
-//  */
-// export async function deleteBar(barId: number): Promise<DeleteBarResponse> {
-//   const res = await fetch(`${API.locations.deleteBar}/${barId}`, {
-//     method: "DELETE",
-//     headers: {
-//       Accept: "application/json",
-//     },
-//   });
-
-//   if (!res.ok) {
-//     const text = await res.text();
-//     const err: ApiError = {
-//       message: `Request failed with status ${res.status}`,
-//       status: res.status,
-//       body: text,
-//     };
-//     throw err;
-//   }
-
-//   // 204 No Content
-//   return;
-// }
-
-
-// locations.api.ts
+// services/locations.api.ts
 import { API } from "@/services/api.config";
-import type {
-  Bar,
-  GetBarsResponse,
-  UpdateBarResponse,
-  DeleteBarResponse,
-} from "@/types/locations";
 import type { ApiError } from "@/services/api.errors";
-
-// TEST DATA - REMOVE WHEN API IS READY
-const TEST_BARS = {
-  items: [
-    {
-      barId: 1,
-      name: "Main Bar",
-    },
-    {
-      barId: 2,
-      name: "Pool Bar",
-    },
-    {
-      barId: 3,
-      name: "Rooftop Bar",
-    },
-    {
-      barId: 4,
-      name: "Lobby Bar",
-    },
-  ],
-  totalCount: 4,
-  page: 1,
-  pageSize: 20,
-  totalPages: 1,
-};
-
-const useTestData = true; // SET TO FALSE WHEN API IS READY
+import type {
+    Bar,
+    DeleteBarResponse,
+    GetBarsResponse,
+    UpdateBarResponse,
+} from "@/types/locations";
 
 /**
  * GET /locations (bars)
@@ -158,12 +14,6 @@ const useTestData = true; // SET TO FALSE WHEN API IS READY
 export async function getBars(
   params?: Record<string, string | number>
 ): Promise<GetBarsResponse> {
-  // TEST DATA RETURN
-  if (useTestData) {
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-    return { ...TEST_BARS } as GetBarsResponse;
-  }
-
   const query = params
     ? "?" +
       new URLSearchParams(
@@ -190,7 +40,26 @@ export async function getBars(
   }
 
   try {
-    return JSON.parse(text) as GetBarsResponse;
+    const data = JSON.parse(text);
+    
+    // Transform the API response to match your expected type
+    // Your API returns { "@odata.context": "...", "value": [...] }
+    // But GetBarsResponse expects { items: [...], totalCount: ..., etc }
+    
+    const items = data.value || [];
+    
+    // Create the response matching GetBarsResponse type
+    return {
+      items: items.map((item: any) => ({
+        barId: item.BarId,     // Note: API returns "BarId" not "barId"
+        name: item.BarName,    // Note: API returns "BarName" not "name"
+      })),
+      totalCount: items.length,
+      page: 1,
+      pageSize: items.length,
+      totalPages: 1,
+    } as GetBarsResponse;
+    
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -204,33 +73,20 @@ export async function getBars(
  * PUT /locations/:id
  */
 export async function updateBar(
-  barId: number,
+  barId: string,  // Changed from number to string
   payload: Partial<Bar>
 ): Promise<UpdateBarResponse> {
-  // TEST DATA RETURN
-  if (useTestData) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const bar = TEST_BARS.items.find(b => b.barId === barId);
-    if (!bar) {
-      throw {
-        message: "Bar not found",
-        status: 404,
-        body: "",
-      } satisfies ApiError;
-    }
-    return {
-      ...bar,
-      ...payload,
-    } as UpdateBarResponse;
-  }
-
   const res = await fetch(`${API.locations.updateBar}/${barId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify(payload),
+    // Transform from camelCase to PascalCase for API
+    body: JSON.stringify({
+      BarName: payload.name,
+      // Add other fields as needed
+    }),
   });
 
   const text = await res.text();
@@ -245,7 +101,12 @@ export async function updateBar(
   }
 
   try {
-    return JSON.parse(text) as UpdateBarResponse;
+    const data = JSON.parse(text);
+    // Transform response from PascalCase to camelCase
+    return {
+      barId: data.BarId,
+      name: data.BarName,
+    } as UpdateBarResponse;
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -259,18 +120,7 @@ export async function updateBar(
  * DELETE /locations/:id
  * 204 No Content
  */
-export async function deleteBar(barId: number): Promise<DeleteBarResponse> {
-  // TEST DATA RETURN
-  if (useTestData) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const index = TEST_BARS.items.findIndex(b => b.barId === barId);
-    if (index > -1) {
-      TEST_BARS.items.splice(index, 1);
-      TEST_BARS.totalCount -= 1;
-    }
-    return;
-  }
-
+export async function deleteBar(barId: string): Promise<DeleteBarResponse> {
   const res = await fetch(`${API.locations.deleteBar}/${barId}`, {
     method: "DELETE",
     headers: {
@@ -288,5 +138,6 @@ export async function deleteBar(barId: number): Promise<DeleteBarResponse> {
     throw err;
   }
 
+  // 204 No Content
   return;
 }
