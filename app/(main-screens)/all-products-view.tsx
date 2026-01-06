@@ -1,20 +1,17 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
 
 import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/ui/InputBox";
 import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
 
-import { useAppTheme } from "@/stores/app-theme-context";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
 import { useStocks } from "@/hooks/useStock";
-
-import { Product } from "@/types/products";
-
-type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
+import { useAppTheme } from "@/stores/app-theme-context";
+import { StockItem } from "@/types/stock";
 
 export default function AllProducts() {
   const router = useRouter();
@@ -29,82 +26,77 @@ export default function AllProducts() {
     name: "General Stock",
   });
 
-  // Data hooks
+  // Data
   const { data: barsData } = useBars();
   const { data: productsData } = useProducts();
-  const {
-    data: stocksData,
-    isLoading: stocksLoading,
-    refetch: refetchStocks,
-  } = useStocks(selectedBar.id ? { barId: selectedBar.id } : undefined);
+  const { data: stocksData, isLoading: stocksLoading } = useStocks();
 
-  // Memoized arrays
   const bars = useMemo(() => barsData?.items || [], [barsData]);
-  const allProducts = useMemo(() => productsData?.items || [], [productsData]);
+  const products = useMemo(() => productsData?.items || [], [productsData]);
+  const stocks = useMemo(() => stocksData?.items || [], [stocksData]);
 
-  // Initialize selected bar from params if present
+  // Init bar from params
   useEffect(() => {
-    const barIdParam = params.barId ? (Array.isArray(params.barId) ? params.barId[0] : params.barId) : null;
-    const barNameParam = params.barName ? (Array.isArray(params.barName) ? params.barName[0] : params.barName) : null;
+    const barId = Array.isArray(params.barId) ? params.barId[0] : params.barId;
+    const barName = Array.isArray(params.barName) ? params.barName[0] : params.barName;
 
-    if (barIdParam && barNameParam) {
-      setSelectedBar({ id: barIdParam, name: barNameParam });
+    if (barId && barName) {
+      setSelectedBar({ id: barId, name: barName });
     }
   }, [params.barId, params.barName]);
 
-  // Merge products with stock and filter based on selected bar & search
-  const filteredProducts = useMemo(() => {
-    if (!allProducts.length) return [];
+  // ✅ CORE FIXED LOGIC
+  const filteredStocks = useMemo(() => {
+    if (!products.length) return [];
 
-    const productMap = new Map<string, ProductWithStock>();
+    return products
+      .map(product => {
+        // All stock entries for this product
+        let productStocks = stocks.filter(
+          (stock: StockItem) => stock.productId === product.productId
+        );
 
-    // Initialize products
-    allProducts.forEach(product => {
-      const productId = product.productId.toString();
-      productMap.set(productId, {
-        ...product,
-        productId,
-        totalVolume: 0,
-        bottleCount: 0,
-      });
-    });
+        // Filter by bar if selected
+        if (selectedBar.id) {
+          productStocks = productStocks.filter(
+            stock => stock.storagePlaceId === selectedBar.id
+          );
+        }
 
-    // Merge stock data
-    stocksData?.items.forEach(stock => {
-      const product = productMap.get(stock.productId);
-      if (product) {
-        product.totalVolume += stock.volume;
-        product.bottleCount += Math.floor(stock.volume / product.volume);
-      }
-    });
+        // Sum ALL storage places in that bar
+        const totalVolume = productStocks.reduce(
+          (sum, stock) => sum + stock.volume,
+          0
+        );
 
-    // Convert map to array and filter for selected bar (only products with stock)
-    let productsArray = Array.from(productMap.values());
-    if (selectedBar.id) {
-      productsArray = productsArray.filter(p => p.totalVolume > 0);
-    }
+        const bottleCount =
+          product.volume > 0
+            ? Math.floor(totalVolume / product.volume)
+            : 0;
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      productsArray = productsArray.filter(
-        p =>
-          p.name.toLowerCase().includes(query) ||
-          p.type.toLowerCase().includes(query) ||
-          p.volume.toString().includes(query) ||
-          p.totalVolume.toString().includes(query)
+        return {
+          stockId: `${product.productId}-${selectedBar.id ?? "general"}`,
+          productId: product.productId,
+          productName: product.name,
+          productType: product.type,
+          productVolume: product.volume,
+          volume: totalVolume, // ✅ correct per bar
+          bottleCount,
+        };
+      })
+      .filter(stock =>
+        searchQuery
+          ? stock.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            stock.productType.toLowerCase().includes(searchQuery.toLowerCase())
+          : true
       );
-    }
+  }, [products, stocks, selectedBar, searchQuery]);
 
-    return productsArray;
-  }, [allProducts, stocksData, selectedBar, searchQuery]);
-
-  // Handlers
-  const handleSearch = (text: string | number) => setSearchQuery(text.toString());
+  const handleSearch = (text: string | number) =>
+    setSearchQuery(text.toString());
 
   const handleBarSelect = (bar: { id: string | null; name: string }) => {
     setSelectedBar(bar);
-    refetchStocks(); // refetch stock for the selected bar
   };
 
   return (
@@ -115,83 +107,77 @@ export default function AllProducts() {
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
-          <Text variant="gradient" gradientName="paloma" style={[styles.title, { color: colors.text }]}>
+          <Text variant="gradient" gradientName="paloma" style={styles.title}>
             Stock
           </Text>
-
-          <StockDropdownNavigation bars={bars} selectedBar={selectedBar} onBarSelect={handleBarSelect} />
+          <StockDropdownNavigation
+            bars={bars}
+            selectedBar={selectedBar}
+            onBarSelect={handleBarSelect}
+          />
         </View>
 
-        {/* Search */}
-        <SearchBar onSearch={handleSearch} placeholder="Search products..." initialValue="" />
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Search stock..."
+          initialValue=""
+        />
 
-        {/* Loading */}
         {stocksLoading && (
           <View style={styles.loadingContainer}>
-            <Text style={{ color: colors.text }}>Loading stock data...</Text>
+            <Text style={{ color: colors.text }}>Loading stock data…</Text>
           </View>
         )}
 
-        {/* Search results count */}
-        {searchQuery && !stocksLoading && (
-          <View style={styles.resultsContainer}>
-            <Text style={[styles.resultsText, { color: colors.text }]}>
-              {filteredProducts.length} product{filteredProducts.length !== 1 ? "s" : ""} found
-            </Text>
-          </View>
-        )}
-
-        {/* Products list */}
         <View style={styles.productsList}>
           {!stocksLoading &&
-            filteredProducts.map(product => (
+            filteredStocks.map(stock => (
               <Pressable
-                key={product.productId}
-                style={[styles.productButton, { backgroundColor: theme.colors.cardBackground }]}
+                key={stock.stockId}
+                style={[
+                  styles.productButton,
+                  { backgroundColor: theme.colors.cardBackground },
+                ]}
                 onPress={() =>
                   router.push({
                     pathname: "/product-stock",
                     params: {
-                      productId: product.productId,
-                      productName: product.name,
-                      productVolume: product.volume.toString(),
-                      productType: product.type,
-                      totalVolume: product.totalVolume.toString(),
-                      bottleCount: product.bottleCount.toString(),
-                      ...(selectedBar.id && { barId: selectedBar.id, barName: selectedBar.name }),
+                      productId: stock.productId,
+                      productName: stock.productName,
+                      productVolume: stock.productVolume.toString(),
+                      productType: stock.productType,
+                      totalVolume: stock.volume.toString(),
+                      bottleCount: stock.bottleCount.toString(),
+                      ...(selectedBar.id && {
+                        barId: selectedBar.id,
+                        barName: selectedBar.name,
+                      }),
                     },
                   })
                 }
               >
                 <View style={styles.productInfo}>
-                  <Text style={[styles.productName, { color: theme.colors.cardText }]}>{product.name}</Text>
+                  <Text style={[styles.productName, { color: theme.colors.cardText }]}>
+                    {stock.productName}
+                  </Text>
                   <Text style={[styles.productDetails, { color: theme.colors.cardText }]}>
-                    {product.totalVolume}L Total • {product.bottleCount} Bottles
+                    {stock.volume}L • {stock.bottleCount} Bottles
                   </Text>
                 </View>
 
-                <View style={styles.alcoholTypeContainer}>
-                  <Text style={[styles.alcoholTypeText, { color: theme.palette.pink }]}>
-                    {product.type} {">"}
-                  </Text>
-                </View>
+                <Text style={{ color: theme.palette.pink, fontWeight: "600" }}>
+                  {stock.productType} &gt;
+                </Text>
               </Pressable>
             ))}
 
-          {/* Empty state */}
-          {!stocksLoading && filteredProducts.length === 0 && !searchQuery && (
+          {!stocksLoading && filteredStocks.length === 0 && (
             <View style={styles.emptyStateContainer}>
-              <Text style={[styles.emptyStateText, { color: colors.text }]}>
-                {selectedBar.id ? `No stock available for ${selectedBar.name}` : "No stock available in your bars"}
+              <Text style={{ color: colors.text }}>
+                {selectedBar.id
+                  ? `No stock available for ${selectedBar.name}`
+                  : "No stock available"}
               </Text>
-              <Text style={[styles.emptyStateSubtext, { color: colors.text }]}>Add products to see them appear here</Text>
-            </View>
-          )}
-
-          {/* No search results */}
-          {!stocksLoading && searchQuery && filteredProducts.length === 0 && (
-            <View style={styles.noResultsContainer}>
-              <Text style={[styles.noResultsText, { color: colors.text }]}>No products found for {searchQuery}</Text>
             </View>
           )}
         </View>
@@ -202,28 +188,30 @@ export default function AllProducts() {
 
 const styles = StyleSheet.create({
   scrollView: { paddingHorizontal: 16 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
-  title: { fontSize: 32, fontWeight: "700" },
-  productsList: { marginTop: 20, gap: 12 },
-  productButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 12,
+  header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  title: { fontSize: 32, fontWeight: "700" },
+  productsList: { marginTop: 20, gap: 12 },
+  productButton: {
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   productInfo: { flex: 1 },
-  productName: { fontWeight: "600", fontSize: 16, marginBottom: 4 },
-  productDetails: { fontWeight: "500", fontSize: 14, marginBottom: 2 },
-  alcoholTypeContainer: { marginLeft: 12, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-  alcoholTypeText: { fontWeight: "600", fontSize: 12 },
-  resultsContainer: { marginTop: 16, marginBottom: 8 },
-  resultsText: { fontSize: 14, fontWeight: "500", textAlign: "center" },
-  noResultsContainer: { padding: 20, alignItems: "center" },
-  noResultsText: { fontSize: 16, fontWeight: "500", textAlign: "center" },
-  emptyStateContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40, marginTop: 60 },
-  emptyStateText: { fontSize: 18, fontWeight: "600", textAlign: "center", marginBottom: 8 },
-  emptyStateSubtext: { fontSize: 14, textAlign: "center", opacity: 0.7 },
-  loadingContainer: { padding: 20, alignItems: "center" },
+  productName: { fontSize: 16, fontWeight: "600" },
+  productDetails: { fontSize: 14, marginTop: 4 },
+  emptyStateContainer: {
+    marginTop: 60,
+    alignItems: "center",
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
 });
