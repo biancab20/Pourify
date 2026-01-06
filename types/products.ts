@@ -1,6 +1,6 @@
 import { PaginatedResponse } from "@/types/api";
 
-export type ProductType = "KEG" | "WINE" | "BOX" | "UNIT" | string;
+export type ProductType = "KEG" | "WINE" | "BOX" | "UNIT" | "BOTTLE" | string;
 
 export type Product = {
   productId: string;

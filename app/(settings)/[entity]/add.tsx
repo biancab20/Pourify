@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
-import {
-  useLocalSearchParams,
-  useRouter,
-  useNavigation,
-} from "expo-router";
+import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import FormInput from "@/components/ui/FormInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GradientButton from "@/components/shared/GradientButton";
@@ -16,6 +12,7 @@ import { ConfigRow } from "@/components/ui/ConfigRow";
 
 import { useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateBar } from "@/hooks/useLocations";
+import { useCreateProduct } from "@/hooks/useProducts";
 
 type EntityKey = "products" | "suppliers" | "locations";
 type FieldType = "text" | "select";
@@ -52,8 +49,13 @@ type EntityScreenConfig<TItem> = {
 };
 
 type LocalSupplier = { supplierId: string; name: string; email: string };
-type LocalProduct = { productId: string; name: string; category: string };
 type LocalBar = { barId: string; name: string };
+type LocalProduct = {
+  productId: string;
+  name: string;
+  volume: number;
+  type: string;
+};
 
 function useEntityConfig(
   entity: EntityKey,
@@ -79,9 +81,7 @@ function useEntityConfig(
         },
       ],
 
-      buildPayload: (values) => ({
-        name: values.name.trim(),
-      }),
+      buildPayload: (values) => ({ name: values.name.trim() }),
 
       validate: (values) => {
         if (!values.name?.trim()) return "Please enter a location name.";
@@ -146,11 +146,10 @@ function useEntityConfig(
     };
   }
 
-  // Products (local-only)
   return {
     headerTitle: () => "Add your products",
     description: (v) =>
-      `Which bottles do you serve in ${v}? Please add them below (you can always add more!).`,
+      `Which products do you serve in ${v}? Add them below (you can add more later).`,
     createButtonLabel: "Create Product",
     listTitle: (_v, count) => `Added products (${count})`,
     emptyListText: "Please add at least one product",
@@ -164,38 +163,50 @@ function useEntityConfig(
         required: true,
       },
       {
-        key: "category",
-        label: "Category",
+        key: "volume",
+        label: "Volume (L)",
+        placeholder: "e.g. 0.25",
+        type: "text",
+        required: true,
+      },
+      {
+        key: "type",
+        label: "Type",
         type: "select",
         required: true,
         options: [
-          { label: "Whiskey", value: "Whiskey" },
-          { label: "Vodka", value: "Vodka" },
-          { label: "Rum", value: "Rum" },
-          { label: "Gin", value: "Gin" },
-          { label: "Tequila", value: "Tequila" },
-          { label: "Brandy", value: "Brandy" },
+          { label: "Keg", value: "KEG" },
+          { label: "Wine", value: "WINE" },
+          { label: "Box", value: "BOX" },
+          { label: "Unit", value: "UNIT" },
+          { label: "Bottle", value: "BOTTLE" },
         ],
       },
     ],
 
     buildPayload: (values) => ({
       name: values.name.trim(),
-      category: values.category,
+      volume: Number(values.volume),
+      type: values.type,
     }),
 
     validate: (values) => {
       if (!values.name?.trim()) return "Please enter a product name.";
-      if (!values.category) return "Please select a category.";
+      if (!values.volume?.trim()) return "Please enter a volume.";
+      const vol = Number(values.volume);
+      if (!Number.isFinite(vol) || vol <= 0)
+        return "Please enter a valid volume.";
+      if (!values.type) return "Please select a type.";
       return null;
     },
 
     row: {
       leftIconName: "wine-outline",
       title: (p: LocalProduct) => p.name,
-      rightLabel: (p: LocalProduct) => p.category,
+      rightLabel: (p: LocalProduct) => `${p.volume} mL • ${p.type}`,
       keyExtractor: (p: LocalProduct) => p.productId,
-      onPress: (p: LocalProduct) => Alert.alert("Product", p.name),
+      onPress: (p: LocalProduct) =>
+        Alert.alert("Product", `${p.name}\n${p.volume} mL • ${p.type}`),
     },
   };
 }
@@ -218,6 +229,7 @@ export default function AddEntityScreen() {
 
   const createSupplier = useCreateSupplier();
   const createBar = useCreateBar();
+  const createProduct = useCreateProduct();
 
   const [values, setValues] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
@@ -290,7 +302,8 @@ export default function AddEntityScreen() {
       const localProduct: LocalProduct = {
         productId: `local-${Date.now()}`,
         name: payload.name,
-        category: payload.category,
+        volume: payload.volume,
+        type: payload.type,
       };
       setItemsLocal((prev) => [localProduct, ...prev]);
     }
@@ -314,11 +327,13 @@ export default function AddEntityScreen() {
           await createBar.mutateAsync({ name: b.name });
         }
       } else {
-        Alert.alert(
-          "Not implemented yet",
-          "Bulk save for this entity will be added later."
-        );
-        return;
+        for (const p of itemsLocal as LocalProduct[]) {
+          await createProduct.mutateAsync({
+            name: p.name,
+            volume: p.volume,
+            type: p.type,
+          });
+        }
       }
 
       setItemsLocal([]);
@@ -328,7 +343,8 @@ export default function AddEntityScreen() {
     }
   };
 
-  const isSaving = createSupplier.isPending || createBar.isPending;
+  const isSaving =
+    createSupplier.isPending || createBar.isPending || createProduct.isPending;
 
   return (
     <SafeAreaView
@@ -336,7 +352,11 @@ export default function AddEntityScreen() {
       edges={["top", "bottom"]}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
+        <CustomText
+          variant="gradient"
+          gradientName="paloma"
+          style={styles.title}
+        >
           {config.headerTitle(venueName)}
         </CustomText>
 
@@ -349,14 +369,24 @@ export default function AddEntityScreen() {
             if (f.type === "text") {
               return (
                 <View key={f.key} style={styles.field}>
-                  <CustomText style={[styles.label, { color: theme.colors.text }]}>
+                  <CustomText
+                    style={[styles.label, { color: theme.colors.text }]}
+                  >
                     {f.label}
                   </CustomText>
                   <FormInput
                     value={values[f.key]}
                     onChange={(v) => setField(f.key, String(v))}
                     placeholder={f.placeholder}
-                    type={f.key === "email" ? "email" : "text"}
+                    type={
+                      f.key === "email"
+                        ? "email"
+                        : f.key === "volume"
+                        ? "number"
+                        : "text"
+                    }
+                    min={f.key === "volume" ? 1 : undefined}
+                    decimal={f.key === "volume" ? false : undefined}
                     accessibilityLabel={f.label}
                   />
                 </View>
@@ -372,7 +402,9 @@ export default function AddEntityScreen() {
 
             return (
               <View key={f.key} style={styles.field}>
-                <CustomText style={[styles.label, { color: theme.colors.text }]}>
+                <CustomText
+                  style={[styles.label, { color: theme.colors.text }]}
+                >
                   {f.label}
                 </CustomText>
 
@@ -409,7 +441,9 @@ export default function AddEntityScreen() {
           items={itemsLocal}
           emptyText={config.emptyListText}
           addLabel="Add more"
-          onAdd={() => Alert.alert("Tip", "Fill the form above and press Create.")}
+          onAdd={() =>
+            Alert.alert("Tip", "Fill the form above and press Create.")
+          }
           keyExtractor={(it) => config.row.keyExtractor(it)}
           renderItem={({ item }) => (
             <ConfigRow

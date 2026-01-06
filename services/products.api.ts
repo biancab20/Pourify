@@ -22,9 +22,7 @@ export async function getProducts(
 
   const res = await fetch(`${API.products.getProducts}${query}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
   });
 
   const text = await res.text();
@@ -40,17 +38,11 @@ export async function getProducts(
 
   try {
     const data = JSON.parse(text);
-    
-    // Transform the API response to match your expected type
-    // Your API returns { "@odata.context": "...", "value": [...] }
-    // But GetProductsResponse expects { items: [...], totalCount: ..., etc }
-    
     const items = data.value || [];
-    
-    // Create the response matching GetProductsResponse type
+
     return {
       items: items.map((item: any) => ({
-        productId: item.ProductId, // Note: API returns "ProductId" not "productId"
+        productId: item.ProductId,
         name: item.Name,
         volume: item.Volume,
         type: item.Type,
@@ -60,7 +52,56 @@ export async function getProducts(
       pageSize: items.length,
       totalPages: 1,
     } as GetProductsResponse;
-    
+  } catch {
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * POST /products
+ */
+export async function createProduct(payload: {
+  name: string;
+  volume: number;
+  type: string;
+}): Promise<Product> {
+  const res = await fetch(`${API.products.updateProduct}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    // ✅ align with API casing you receive (Name, Volume, Type)
+    body: JSON.stringify({
+      Name: payload.name,
+      Volume: payload.volume,
+      Type: payload.type,
+    }),
+  });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    const err: ApiError = {
+      message: `Request failed with status ${res.status}`,
+      status: res.status,
+      body: text,
+    };
+    throw err;
+  }
+
+  try {
+    const data = JSON.parse(text);
+    return {
+      productId: data.ProductId,
+      name: data.Name,
+      volume: data.Volume,
+      type: data.Type,
+    } as Product;
   } catch {
     throw {
       message: "Failed to parse JSON response",
@@ -74,7 +115,7 @@ export async function getProducts(
  * PUT /products/:id
  */
 export async function updateProduct(
-  productId: number,
+  productId: string,
   payload: Partial<Product>
 ): Promise<UpdateProductResponse> {
   const res = await fetch(`${API.products.updateProduct}/${productId}`, {
@@ -83,7 +124,11 @@ export async function updateProduct(
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      Name: payload.name,
+      Volume: payload.volume,
+      Type: payload.type,
+    }),
   });
 
   const text = await res.text();
@@ -99,7 +144,6 @@ export async function updateProduct(
 
   try {
     const data = JSON.parse(text);
-    // Transform response if needed
     return {
       productId: data.ProductId,
       name: data.Name,
@@ -121,13 +165,11 @@ export async function updateProduct(
  * 204 No Content
  */
 export async function deleteProduct(
-  productId: number
+  productId: string
 ): Promise<DeleteProductResponse> {
   const res = await fetch(`${API.products.deleteProduct}/${productId}`, {
     method: "DELETE",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
   });
 
   if (!res.ok) {

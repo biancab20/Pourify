@@ -8,6 +8,7 @@ import type {
 import type { ApiError } from "@/services/api.errors";
 import {
   getProducts,
+  createProduct,
   updateProduct,
   deleteProduct,
 } from "@/services/products.api";
@@ -23,6 +24,23 @@ export function useProducts(params?: Record<string, string | number>) {
 }
 
 /**
+ * CREATE product
+ */
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation<Product, ApiError, { name: string; volume: number; type: string }>(
+    {
+      mutationKey: ["products", "create"],
+      mutationFn: (data) => createProduct(data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["products", "list"] });
+      },
+    }
+  );
+}
+
+/**
  * UPDATE product
  */
 export function useUpdateProduct() {
@@ -31,7 +49,7 @@ export function useUpdateProduct() {
   return useMutation<
     UpdateProductResponse,
     ApiError,
-    { productId: number; data: Partial<Product> }
+    { productId: string; data: Partial<Product> }
   >({
     mutationKey: ["products", "update"],
     mutationFn: ({ productId, data }) => updateProduct(productId, data),
@@ -47,7 +65,7 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
-  return useMutation<DeleteProductResponse, ApiError, number>({
+  return useMutation<DeleteProductResponse, ApiError, string>({
     mutationKey: ["products", "delete"],
     mutationFn: deleteProduct,
     onSuccess: () => {
