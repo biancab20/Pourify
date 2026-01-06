@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ListRenderItem,
 } from "react-native";
+import { Text as CustomText}  from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
 export interface ConfigSectionCardProps<T> {
@@ -44,9 +45,7 @@ export default function ConfigSectionCard<T>({
       >
         {isEmpty ? (
           <View style={styles.emptyState}>
-            <Text
-              style={[styles.emptyText, { color: theme.colors.text }]}
-            >
+            <Text style={[styles.emptyText, { color: theme.colors.text }]}>
               {emptyText}
             </Text>
           </View>
@@ -75,9 +74,14 @@ export default function ConfigSectionCard<T>({
         />
 
         <Pressable onPress={onAdd} style={styles.addButton}>
-          <Text style={[styles.addLabel, { color: theme.colors.text }]}>
+          <CustomText
+            variant="gradient"
+            gradientName="paloma"
+            style={styles.addLabel}
+            accessibilityRole="button"
+          >
             {addLabel}
-          </Text>
+          </CustomText>
         </Pressable>
       </View>
     </View>
