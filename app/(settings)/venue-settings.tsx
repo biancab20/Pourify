@@ -45,6 +45,15 @@ export default function VenueSettings() {
 
     setBars((prev) => [...prev, newBar]);
   };
+  const onAddSupplier = () => {
+  router.push({
+    pathname: "/(settings)/[entity]/add",
+    params: {
+      entity: "suppliers",
+      venueName: "Hachi bar", // or your dynamic venue name
+    },
+  });
+};
 
   /** Dummy navigation / open function */
   const openBar = (barId: number) => {
@@ -163,7 +172,7 @@ export default function VenueSettings() {
           items={suppliers}
           emptyText="No suppliers have been added yet"
           addLabel="Add Supplier"
-          onAdd={() => Alert.alert("Add supplier", "Open add supplier flow")}
+          onAdd={onAddSupplier}
           keyExtractor={(s) => s.supplierId}
           renderItem={({ item }) => (
             <ConfigRow
