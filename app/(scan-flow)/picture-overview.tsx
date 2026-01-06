@@ -13,10 +13,9 @@ import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
-import type { Photo } from "@/types/deliveries";
 import { makeId } from "@/utils/ids";
 import { useQueryClient } from "@tanstack/react-query";
-import type { DeliveryOcrResponse } from "@/types/deliveries";
+import type {Photo, DeliveryOcrResponse } from "@/types/deliveries";
 
 function safeParsePhotos(value: unknown): Photo[] {
   if (typeof value !== "string") return [];
