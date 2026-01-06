@@ -195,8 +195,8 @@ export default function ProductDetails() {
 
         {/* Show stock in all bars */}
 <View style={styles.sectionContainer}>
-  <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 15 }]}>
-    {isGeneralStock ? "Stock Overview" : "Available in other bars"}
+  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+    {isGeneralStock ? "Stock in all bars" : "Available in other bars"}
   </Text>
 
   {(barsLoading || stocksLoading) ? (

@@ -144,18 +144,30 @@ export default function ScanNewDelivery() {
   };
 
   // =========================
-  // Actions
+  // Actions - UPDATED TO PROCESS PHOTOS TOO
   // =========================
-  const proceedToOverview = () => {
+  const proceedToOverview = async () => {
     if (!(uploadMode === "images" && photos.length > 0)) {
       Alert.alert("Nothing selected", "Please add photos before proceeding.");
       return;
     }
 
-    router.push({
-      pathname: "/(scan-flow)/picture-overview",
-      params: { photos: JSON.stringify(photos) },
-    });
+    try {
+      const data = await processDeliveryNote.mutateAsync({
+        kind: "photos",
+        photos,
+      });
+
+      router.push({
+        pathname: "/(scan-flow)/picture-overview",
+        params: {
+          photos: JSON.stringify(photos),
+          ocrData: JSON.stringify(data),
+        },
+      });
+    } catch (e: any) {
+      Alert.alert("Upload failed", e?.message ?? "Unknown error");
+    }
   };
 
   const uploadFile = async () => {
@@ -173,8 +185,20 @@ export default function ScanNewDelivery() {
         },
       });
 
-      Alert.alert("OCR response", JSON.stringify(data, null, 2));
+      console.log("File OCR Response:", JSON.stringify(data, null, 2));
+
+      // Pass OCR response to PictureOverview
+      router.push({
+        pathname: "/(scan-flow)/picture-overview",
+        params: { 
+          photos: JSON.stringify(photos),
+          files: JSON.stringify(files),
+          ocrData: JSON.stringify(data), // Pass OCR response
+          sourceType: "file"
+        },
+      });
     } catch (e: any) {
+      console.error("File OCR Error:", e);
       Alert.alert(
         "Upload failed",
         e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)

@@ -4,6 +4,7 @@ import type {
   UpdateStockResponse,
   TransferStockResponse,
   StockItem,
+  TransferStockRequest, // Added
 } from "@/types/stock";
 import type { ApiError } from "@/services/api.errors";
 import {
@@ -31,7 +32,7 @@ export function useUpdateStock() {
   return useMutation<
     UpdateStockResponse,
     ApiError,
-    { stockId: number; data: Partial<StockItem> }
+    { stockId: string; data: Partial<StockItem> } // Changed stockId to string
   >({
     mutationKey: ["stock", "update"],
     mutationFn: ({ stockId, data }) => updateStock(stockId, data),
@@ -47,11 +48,28 @@ export function useUpdateStock() {
 export function useTransferStock() {
   const queryClient = useQueryClient();
 
-  return useMutation<TransferStockResponse, ApiError, TransferStockResponse>({
+  // Changed from TransferStockResponse to TransferStockRequest
+  return useMutation<TransferStockResponse, ApiError, TransferStockRequest>({
     mutationKey: ["stock", "transfer"],
     mutationFn: transferStock,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
     },
+  });
+}
+
+// Optional: Add a hook to get a single stock item
+export function useStock(stockId: string) {
+  return useQuery<StockItem, ApiError>({
+    queryKey: ["stock", "detail", stockId],
+    queryFn: async () => {
+      const response = await getStocks();
+      const stock = response.items.find(item => item.stockId === stockId);
+      if (!stock) {
+        throw new Error(`Stock with ID ${stockId} not found`);
+      }
+      return stock;
+    },
+    enabled: !!stockId, // Only run if stockId is provided
   });
 }
