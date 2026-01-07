@@ -4,7 +4,6 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
@@ -28,6 +27,14 @@ type StaticBar = {
   name: string;
 };
 
+function getErrorMessage(err: unknown): string | null {
+  if (!err) return null;
+  if (typeof err === "object" && err && "message" in err) {
+    return String((err as any).message);
+  }
+  return "Unknown error";
+}
+
 export default function VenueSettings() {
   const router = useRouter();
   const { theme } = useAppTheme();
@@ -41,6 +48,7 @@ export default function VenueSettings() {
     isLoading: isApiBarsLoading,
     error: apiBarsError,
     refetch: refetchApiBars,
+    isRefetching: isApiBarsRefetching,
   } = useBars();
 
   const apiBars = useMemo(() => apiBarsData?.items ?? [], [apiBarsData?.items]);
@@ -51,12 +59,10 @@ export default function VenueSettings() {
     isLoading: isProductsLoading,
     error: productsError,
     refetch: refetchProducts,
+    isRefetching: isProductsRefetching,
   } = useProducts();
 
-  const products = useMemo(
-    () => productsData?.items ?? [],
-    [productsData?.items]
-  );
+  const products = useMemo(() => productsData?.items ?? [], [productsData?.items]);
 
   // ✅ Suppliers API
   const {
@@ -109,77 +115,6 @@ export default function VenueSettings() {
     Alert.alert("Open product", `Product ID: ${productId}`);
   };
 
-  const renderErrorState = (
-    message: string,
-    onRetry: () => void,
-    isRetrying: boolean
-  ) => (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["bottom", "top"]}
-    >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Pressable style={styles.closeButton} onPress={() => router.back()}>
-          <Icon name="exit" size={32} color={theme.colors.icon} />
-        </Pressable>
-      </View>
-
-      <View style={styles.centerContainer}>
-        <Text>{message}</Text>
-        <Pressable
-          onPress={onRetry}
-          style={{
-            marginTop: 14,
-            padding: 12,
-            minWidth: 120,
-            alignItems: "center",
-          }}
-        >
-          {isRetrying ? (
-            <ActivityIndicator color={theme.colors.icon} />
-          ) : (
-            <Text>Retry</Text>
-          )}
-        </Pressable>
-      </View>
-    </SafeAreaView>
-  );
-
-  if (isSuppliersLoading) {
-    return (
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-        edges={["bottom", "top"]}
-      >
-        <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-          <Pressable style={styles.closeButton} onPress={() => router.back()}>
-            <Icon name="exit" size={32} color={theme.colors.icon} />
-          </Pressable>
-        </View>
-
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={theme.colors.icon} />
-          <Text style={{ marginTop: 10 }}>Loading suppliers...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (suppliersError) {
-    const msg =
-      typeof suppliersError === "object" &&
-      suppliersError &&
-      "message" in suppliersError
-        ? String((suppliersError as any).message)
-        : "Unknown error";
-
-    return renderErrorState(
-      `Error loading suppliers: ${msg}`,
-      () => refetchSuppliers(),
-      isSuppliersRefetching
-    );
-  }
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -220,69 +155,53 @@ export default function VenueSettings() {
         />
 
         {/* 2) API bars list (stock locations) */}
-        {apiBarsError ? (
-          <View style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}>
-            <Text>
-              Could not load stock locations.{" "}
-              <Text
-                onPress={() => refetchApiBars()}
-                style={{ textDecorationLine: "underline" }}
-              >
-                Tap to retry
-              </Text>
-            </Text>
-          </View>
-        ) : (
-          <ConfigSectionCard<ApiBar>
-            title="Stock locations within your venue"
-            items={apiBars}
-            emptyText={
-              isApiBarsLoading ? "Loading stock locations..." : "No stock locations found"
-            }
-            addLabel="Add Location"
-            onAdd={onAddLocation}
-            keyExtractor={(b) => b.barId}
-            renderItem={({ item }) => (
-              <ConfigRow
-                title={item.name}
-                leftIconName="cube-outline"
-                onPress={() => openApiBar(item.barId)}
-              />
-            )}
-          />
-        )}
+        <ConfigSectionCard<ApiBar>
+          title="Stock locations within your venue"
+          items={apiBars}
+          emptyText="No stock locations found"
+          addLabel="Add Location"
+          onAdd={onAddLocation}
+          isLoading={isApiBarsLoading}
+          loadingText="Loading stock locations..."
+          errorMessage={
+            apiBarsError ? `Could not load stock locations: ${getErrorMessage(apiBarsError)}` : null
+          }
+          onRetry={() => refetchApiBars()}
+          isRetrying={isApiBarsRefetching}
+          keyExtractor={(b) => b.barId}
+          renderItem={({ item }) => (
+            <ConfigRow
+              title={item.name}
+              leftIconName="cube-outline"
+              onPress={() => openApiBar(item.barId)}
+            />
+          )}
+        />
 
         {/* 3) Products (API) */}
-        {productsError ? (
-          <View style={{ paddingHorizontal: 4, paddingTop: 10, paddingBottom: 6 }}>
-            <Text>
-              Could not load products.{" "}
-              <Text
-                onPress={() => refetchProducts()}
-                style={{ textDecorationLine: "underline" }}
-              >
-                Tap to retry
-              </Text>
-            </Text>
-          </View>
-        ) : (
-          <ConfigSectionCard<ApiProduct>
-            title="Products"
-            items={products}
-            emptyText={isProductsLoading ? "Loading products..." : "No products found"}
-            addLabel="Add Product"
-            onAdd={onAddProduct}
-            keyExtractor={(p) => p.productId}
-            renderItem={({ item }) => (
-              <ConfigRow
-                title={item.name}
-                leftIconName="wine-outline"
-                rightLabel={`${item.volume} mL • ${item.type}`}
-                onPress={() => openProduct(item.productId)}
-              />
-            )}
-          />
-        )}
+        <ConfigSectionCard<ApiProduct>
+          title="Products"
+          items={products}
+          emptyText="No products found"
+          addLabel="Add Product"
+          onAdd={onAddProduct}
+          isLoading={isProductsLoading}
+          loadingText="Loading products..."
+          errorMessage={
+            productsError ? `Could not load products: ${getErrorMessage(productsError)}` : null
+          }
+          onRetry={() => refetchProducts()}
+          isRetrying={isProductsRefetching}
+          keyExtractor={(p) => p.productId}
+          renderItem={({ item }) => (
+            <ConfigRow
+              title={item.name}
+              leftIconName="wine-outline"
+              rightLabel={`${item.volume} mL • ${item.type}`}
+              onPress={() => openProduct(item.productId)}
+            />
+          )}
+        />
 
         {/* 4) Suppliers */}
         <ConfigSectionCard<Supplier>
@@ -291,6 +210,13 @@ export default function VenueSettings() {
           emptyText="No suppliers have been added yet"
           addLabel="Add Supplier"
           onAdd={onAddSupplier}
+          isLoading={isSuppliersLoading}
+          loadingText="Loading suppliers..."
+          errorMessage={
+            suppliersError ? `Error loading suppliers: ${getErrorMessage(suppliersError)}` : null
+          }
+          onRetry={() => refetchSuppliers()}
+          isRetrying={isSuppliersRefetching}
           keyExtractor={(s) => s.supplierId}
           renderItem={({ item }) => (
             <ConfigRow
@@ -358,11 +284,5 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "600",
     marginBottom: 16,
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
   },
 });

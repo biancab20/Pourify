@@ -16,7 +16,6 @@ export type ApiStocksResponse = {
     StoragePlaceId: string;
     ProductId: string;
     Volume: number;
-    LastUpdatedAt?: string; // Optional if not in response
   }>;
 };
 
