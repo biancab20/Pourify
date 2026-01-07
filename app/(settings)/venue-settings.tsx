@@ -51,7 +51,7 @@ export default function VenueSettings() {
     isRefetching: isApiBarsRefetching,
   } = useBars();
 
-  const apiBars = useMemo(() => apiBarsData?.items ?? [], [apiBarsData?.items]);
+  const apiBars = useMemo(() => apiBarsData?.value ?? [], [apiBarsData?.value]);
 
   // ✅ Products API
   const {
@@ -62,7 +62,7 @@ export default function VenueSettings() {
     isRefetching: isProductsRefetching,
   } = useProducts();
 
-  const products = useMemo(() => productsData?.items ?? [], [productsData?.items]);
+  const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
 
   // ✅ Suppliers API
   const {
@@ -73,7 +73,7 @@ export default function VenueSettings() {
     isRefetching: isSuppliersRefetching,
   } = useSuppliers();
 
-  const suppliers = useMemo(() => suppliersData?.items ?? [], [suppliersData]);
+  const suppliers = useMemo(() => suppliersData?.value ?? [], [suppliersData?.value]);
 
   const addStaticBar = () => {
     setStaticBars((prev) => [

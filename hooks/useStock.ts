@@ -4,17 +4,13 @@ import type {
   UpdateStockResponse,
   TransferStockResponse,
   StockItem,
-  TransferStockRequest, // Added
+  TransferStockRequest,
 } from "@/types/stock";
 import type { ApiError } from "@/services/api.errors";
-import {
-  getStocks,
-  updateStock,
-  transferStock,
-} from "@/services/stock.api";
+import { getStocks, updateStock, transferStock, getStockById } from "@/services/stock.api";
 
 /**
- * GET stock items
+ * GET stock items (OData list)
  */
 export function useStocks(params?: Record<string, string | number>) {
   return useQuery<GetStocksResponse, ApiError>({
@@ -24,20 +20,28 @@ export function useStocks(params?: Record<string, string | number>) {
 }
 
 /**
+ * GET single stock item (uses dedicated endpoint)
+ */
+export function useStock(stockId: string) {
+  return useQuery<StockItem, ApiError>({
+    queryKey: ["stock", "detail", stockId],
+    queryFn: () => getStockById(stockId),
+    enabled: !!stockId,
+  });
+}
+
+/**
  * UPDATE stock item
  */
 export function useUpdateStock() {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    UpdateStockResponse,
-    ApiError,
-    { stockId: string; data: Partial<StockItem> } // Changed stockId to string
-  >({
+  return useMutation<UpdateStockResponse, ApiError, { stockId: string; data: Partial<StockItem> }>({
     mutationKey: ["stock", "update"],
     mutationFn: ({ stockId, data }) => updateStock(stockId, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["stock", "detail", variables.stockId] });
     },
   });
 }
@@ -48,28 +52,11 @@ export function useUpdateStock() {
 export function useTransferStock() {
   const queryClient = useQueryClient();
 
-  // Changed from TransferStockResponse to TransferStockRequest
   return useMutation<TransferStockResponse, ApiError, TransferStockRequest>({
     mutationKey: ["stock", "transfer"],
     mutationFn: transferStock,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
     },
-  });
-}
-
-// Optional: Add a hook to get a single stock item
-export function useStock(stockId: string) {
-  return useQuery<StockItem, ApiError>({
-    queryKey: ["stock", "detail", stockId],
-    queryFn: async () => {
-      const response = await getStocks();
-      const stock = response.items.find(item => item.stockId === stockId);
-      if (!stock) {
-        throw new Error(`Stock with ID ${stockId} not found`);
-      }
-      return stock;
-    },
-    enabled: !!stockId, // Only run if stockId is provided
   });
 }

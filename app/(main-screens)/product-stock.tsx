@@ -48,9 +48,9 @@ export default function ProductDetails() {
   const { data: stocksData, isLoading: stocksLoading } = useStocks();
 
   // Memoized arrays
-  const bars = useMemo(() => barsData?.items || [], [barsData?.items]);
-  const stocks = useMemo(() => stocksData?.items || [], [stocksData?.items]);
-  const products = useMemo(() => productsData?.items || [], [productsData?.items]);
+  const bars = useMemo(() => barsData?.value || [], [barsData?.value]);
+  const stocks = useMemo(() => stocksData?.value || [], [stocksData?.value]);
+  const products = useMemo(() => productsData?.value || [], [productsData?.value]);
 
   // Current product
   const currentProduct = useMemo(

@@ -7,16 +7,8 @@ import type {
   DeleteSupplierResponse,
 } from "@/types/suppliers";
 import type { ApiError } from "@/services/api.errors";
-import {
-  getSuppliers,
-  createSupplier,
-  updateSupplier,
-  deleteSupplier,
-} from "@/services/suppliers.api";
+import { getSuppliers, createSupplier, updateSupplier, deleteSupplier, getSupplierById } from "@/services/suppliers.api";
 
-/**
- * GET suppliers
- */
 export function useSuppliers(params?: Record<string, string | number>) {
   return useQuery<GetSuppliersResponse, ApiError>({
     queryKey: ["suppliers", "list", params],
@@ -24,9 +16,14 @@ export function useSuppliers(params?: Record<string, string | number>) {
   });
 }
 
-/**
- * CREATE supplier
- */
+export function useSupplier(supplierId: string) {
+  return useQuery<Supplier, ApiError>({
+    queryKey: ["suppliers", "detail", supplierId],
+    queryFn: () => getSupplierById(supplierId),
+    enabled: !!supplierId,
+  });
+}
+
 export function useCreateSupplier() {
   const queryClient = useQueryClient();
 
@@ -39,9 +36,6 @@ export function useCreateSupplier() {
   });
 }
 
-/**
- * UPDATE supplier
- */
 export function useUpdateSupplier() {
   const queryClient = useQueryClient();
 
@@ -52,15 +46,13 @@ export function useUpdateSupplier() {
   >({
     mutationKey: ["suppliers", "update"],
     mutationFn: ({ supplierId, data }) => updateSupplier(supplierId, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["suppliers", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["suppliers", "detail", variables.supplierId] });
     },
   });
 }
 
-/**
- * DELETE supplier
- */
 export function useDeleteSupplier() {
   const queryClient = useQueryClient();
 

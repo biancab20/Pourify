@@ -14,34 +14,53 @@ if (!OCR_URL) {
   throw new Error("Missing env: EXPO_PUBLIC_OCR_PROCESS_DELIVERY_NOTE_URL");
 }
 
+/**
+ * Helper that generates consistent endpoints for standard CRUD resources.
+ * Example:
+ *   const suppliers = resource("/supplier")
+ *   suppliers.list      -> ".../supplier"
+ *   suppliers.create    -> ".../supplier"
+ *   suppliers.byId(id)  -> ".../supplier/{id}"
+ */
+function resource(path: `/${string}`) {
+  const base = `${BASE_URL}${path}` as const;
+
+  return {
+    base,
+    list: base,
+    create: base,
+    byId: (id: string) => `${base}/${id}` as const,
+
+    // optional aliases (use if you like clarity)
+    update: (id: string) => `${base}/${id}` as const,
+    delete: (id: string) => `${base}/${id}` as const,
+  } as const;
+}
+
 export const API = {
+  baseUrl: BASE_URL,
+
   auth: {
     token: AUTH_TOKEN_URL,
     clientId: "app",
   },
+
+  // separate domain/service
   ocr: {
     processDeliveryNote: OCR_URL,
   },
-  stock: {
-    getStocks: `${BASE_URL}/stock`,
-    updateStock: `${BASE_URL}/stock`,
-    // Get actua; url from the cloud team later
-    transferStock: `${BASE_URL}/stocks/transfer`,
+
+  // standard CRUD resources
+  suppliers: resource("/supplier"),
+  products: resource("/product"),
+  locations: resource("/bar"),
+  stock: resource("/stock"),
+
+  // special-case endpoint that doesn't fit CRUD on /stock
+  stockTransfer: {
+    transfer: `${BASE_URL}/stocks/transfer`,
   },
-  locations: {
-    getBars: `${BASE_URL}/bar`,
-    updateBar: `${BASE_URL}/bar`,
-    deleteBar: `${BASE_URL}/bar`,
-  },
-  products: {
-    getProducts: `${BASE_URL}/product`,
-    updateProduct: `${BASE_URL}/product`,
-    deleteProduct: `${BASE_URL}/product`,
-  },
-  suppliers: {
-    getSuppliers: `${BASE_URL}/supplier`,
-    updateSupplier: `${BASE_URL}/supplier`,
-    deleteSupplier: `${BASE_URL}/supplier`,
-    createSupplier: `${BASE_URL}/supplier`,
-  },
+
+  // deliveries (you have GET /delivery; keep this ready)
+  deliveries: resource("/delivery"),
 } as const;

@@ -1,20 +1,23 @@
-// shared
-export type { PaginatedResponse } from "./api";
 
 // auth
-export type { AuthUser, AuthCallbackResponse } from "./auth";
+export type { AuthSession, AuthTokenResponse } from "./auth";
 
 // domain
 export type {
   Delivery,
   DeliveryOcrResponse,
   GetDeliveriesResponse,
+  DeliveryDto,
+  DeliveryProduct,
+  DeliveryProductDto,
   DeliverySupplier,
+  DeliverySupplierDto,
   Photo,
 } from "./deliveries";
 
 export type {
   Product,
+  ProductDto,
   ProductType,
   GetProductsResponse,
   UpdateProductResponse,
@@ -23,6 +26,7 @@ export type {
 
 export type {
   Supplier,
+  SupplierDto,
   GetSuppliersResponse,
   CreateSupplierResponse,
   UpdateSupplierResponse,
@@ -31,6 +35,7 @@ export type {
 
 export type {
   Bar,
+  BarDto,
   GetBarsResponse,
   UpdateBarResponse,
   DeleteBarResponse,
@@ -38,6 +43,7 @@ export type {
 
 export type {
   StockItem,
+  StockItemDto,
   GetStocksResponse,
   UpdateStockResponse,
   TransferStockResponse,

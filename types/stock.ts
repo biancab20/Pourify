@@ -1,52 +1,42 @@
-import type { PaginatedResponse } from "@/types/api";
+import type { ODataList } from "@/types/odata";
 
 export type StockItem = {
-  stockId: string; // Changed from number to string (UUID)
-  storagePlaceId: string; // Changed from number to string (UUID)
-  productId: string; // Changed from number to string (UUID)
+  stockId: string; 
+  storagePlaceId: string; 
+  productId: string; 
   volume: number;
-  lastUpdatedAt?: string; // Made optional since API response doesn't show it
 };
 
-// Add this type for the raw API response
-export type ApiStocksResponse = {
-  "@odata.context": string;
-  value: Array<{
-    StockId: string;
-    StoragePlaceId: string;
-    ProductId: string;
-    Volume: number;
-  }>;
+export type StockItemDto = {
+  StockId: string;
+  StoragePlaceId: string;
+  ProductId: string;
+  Volume: number;
 };
 
-// Update GetStocksResponse based on what you described
-export type GetStocksResponse = {
-  barId: number;
-  name: string;
-  totalVolume: number;
-  items: StockItem[];
-  totalCount: number;
-  // Remove the PaginatedResponse intersection since your API doesn't follow that pattern
-};
+export type GetStocksResponse = ODataList<StockItem>;
+export type GetStockByIdResponse = StockItem;
+export type CreateStockResponse = StockItem;
+export type UpdateStockResponse = StockItem;
 
-export type UpdateStockResponse = {
-  stockId: string; // Changed to string
-  storagePlaceId: string; // Changed to string
-  productId: string; // Changed to string
-  lastUpdatedAt: string;
+/** Transfer */
+export type TransferStockRequest = {
+  fromStockId: string;
+  toStockId: string;
+  volume: number;
 };
 
 export type StockTransferStock = {
-  stockId: string; // Changed to string
-  storagePlaceId: string; // Changed to string
-  productId: string; // Changed to string
+  stockId: string;
+  storagePlaceId: string;
+  productId: string;
   volume: number;
 };
 
 export type StockLogEntry = {
   stockLogId: number;
-  stockFromId: string; // Changed to string
-  stockToId: string; // Changed to string
+  stockFromId: string;
+  stockToId: string;
   modification: number;
   volume: number;
   logDate: string;
@@ -56,11 +46,4 @@ export type TransferStockResponse = {
   fromStock: StockTransferStock;
   toStock: StockTransferStock;
   stockLogEntry: StockLogEntry;
-};
-
-// Add this type for transfer request payload
-export type TransferStockRequest = {
-  fromStockId: string;
-  toStockId: string;
-  volume: number;
 };

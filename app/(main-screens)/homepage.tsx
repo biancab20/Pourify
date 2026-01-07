@@ -19,7 +19,6 @@ import GradientButton from "@/components/shared/GradientButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
 import { useBars } from "@/hooks/useLocations";
-import { Bar } from "@/types/locations"; 
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,7 +28,7 @@ export default function HomeScreen() {
 
   const { data: barsData, isLoading, error } = useBars();
   
-  const bars = barsData?.items || [];
+  const bars = barsData?.value || [];
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -176,7 +175,7 @@ export default function HomeScreen() {
             </Text>
           ) : (
             <View style={styles.cardsRow}>
-              {bars.map((bar: Bar) => (
+              {bars.map((bar) => (
                 <Pressable
                   key={bar.barId}
                   onPress={() =>

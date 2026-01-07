@@ -1,13 +1,17 @@
-// types/locations.ts
-import type { PaginatedResponse } from "./api";
+import type { ODataList } from "@/types/odata";
 
 export type Bar = {
-  barId: string;  // Changed from number to string to match GUID
+  barId: string; 
   name: string;
 };
 
-export type GetBarsResponse = PaginatedResponse<Bar>;
+export type BarDto = {
+  BarId: string;
+  BarName: string;
+};
 
+export type GetBarsResponse = ODataList<Bar>;
+export type GetBarByIdResponse = Bar;
+export type CreateBarResponse = Bar;
 export type UpdateBarResponse = Bar;
-
-export type DeleteBarResponse = void;
+export type DeleteBarResponse = { value: boolean };

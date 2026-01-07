@@ -1,4 +1,4 @@
-import { PaginatedResponse } from "@/types/api";
+import type { ODataList } from "@/types/odata";
 
 export type ProductType = "KEG" | "WINE" | "BOX" | "UNIT" | "BOTTLE" | string;
 
@@ -7,15 +7,19 @@ export type Product = {
   name: string;
   volume: number;
   type: ProductType;
+  totalVolume?: number;
 };
 
-// GET
-export type GetProductsResponse = PaginatedResponse<Product>;
-
-// UPDATE
-export type UpdateProductResponse = Product & {
-  updatedAt: string;
+export type ProductDto = {
+  ProductId: string;
+  Name: string;
+  Volume: number;
+  Type: string;
+  TotalVolume?: number;
 };
 
-// DELETE: 204 No Content => no response body
+export type GetProductsResponse = ODataList<Product>;
+export type GetProductByIdResponse = Product;
+export type CreateProductResponse = Product;
+export type UpdateProductResponse = void;
 export type DeleteProductResponse = void;

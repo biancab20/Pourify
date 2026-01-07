@@ -1,25 +1,62 @@
-import type { PaginatedResponse } from "./api";
-import type { Product } from "@/types/products";
+import type { ODataList } from "@/types/odata";
 
 export type Photo = { id: string; uri: string };
 
-// Supplier shape inside delivery responses (id, not supplierId)
 export type DeliverySupplier = {
-  id: number;
+  supplierId: string;
   name: string;
-  email: string;
+  contactEmail: string;
+};
+
+export type DeliveryProduct = {
+  productId: string;
+  name: string;
+  volume: number;
+  type: string;
+  totalVolume: number;
+  isDeleted?: boolean; // only OCR currently sends this
 };
 
 export type Delivery = {
-  deliveryNoteId: number;
+  deliveryNoteId: string;
   deliveryDate: string;
+
   supplier: DeliverySupplier;
-  products: Product[];
-  deliveryNotePictureId: string;
-  deliveryPilePictureId: string;
+  products: DeliveryProduct[];
+
+  deliveryNotePictureIds: string[];
+  deliveryPilePictureId: string | null;
 };
 
-export type DeliveryOcrResponse = Delivery;
+/** ---------------- OCR endpoint (NOT OData) ----------------
+ * OCR returns an ARRAY of deliveries 
+ */
+export type DeliveryOcrResponse = Delivery[];
 
-// /getDeliveries returns a list
-export type GetDeliveriesResponse = PaginatedResponse<Delivery>;
+/** ---------------- Deliveries endpoint (OData + PascalCase DTOs) ---------------- */
+export type DeliverySupplierDto = {
+  SupplierId: string;
+  Name: string;
+  ContactEmail: string;
+};
+
+export type DeliveryProductDto = {
+  ProductId: string;
+  Name: string;
+  Volume: number;
+  Type: string;
+  TotalVolume: number;
+};
+
+export type DeliveryDto = {
+  DeliveryNoteId: string;
+  DeliveryDate: string;
+  DeliveryNotePictureIds: string[];
+  DeliveryPilePictureId: string | null;
+
+  Products: DeliveryProductDto[];
+  Supplier: DeliverySupplierDto;
+};
+
+/** GET /delivery?$expand=products,supplier */
+export type GetDeliveriesResponse = ODataList<Delivery>;

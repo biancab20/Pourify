@@ -9,7 +9,6 @@ import { Icon } from "@/components/icons/Icon";
 import { useAppTheme } from "@/stores/app-theme-context";
 import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
 import { ConfigRow } from "@/components/ui/ConfigRow";
-
 import { useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateBar } from "@/hooks/useLocations";
 import { useCreateProduct } from "@/hooks/useProducts";
@@ -203,10 +202,10 @@ function useEntityConfig(
     row: {
       leftIconName: "wine-outline",
       title: (p: LocalProduct) => p.name,
-      rightLabel: (p: LocalProduct) => `${p.volume} mL • ${p.type}`,
+      rightLabel: (p: LocalProduct) => `${p.volume} L • ${p.type}`,
       keyExtractor: (p: LocalProduct) => p.productId,
       onPress: (p: LocalProduct) =>
-        Alert.alert("Product", `${p.name}\n${p.volume} mL • ${p.type}`),
+        Alert.alert("Product", `${p.name}\n${p.volume} L • ${p.type}`),
     },
   };
 }
@@ -385,8 +384,8 @@ export default function AddEntityScreen() {
                         ? "number"
                         : "text"
                     }
-                    min={f.key === "volume" ? 1 : undefined}
-                    decimal={f.key === "volume" ? false : undefined}
+                    min={f.key === "volume" ? 0 : undefined}
+                    decimal={f.key === "volume" ? true : undefined}
                     accessibilityLabel={f.label}
                   />
                 </View>

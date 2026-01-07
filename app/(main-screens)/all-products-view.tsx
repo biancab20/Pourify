@@ -31,9 +31,9 @@ export default function AllProducts() {
   const { data: productsData } = useProducts();
   const { data: stocksData, isLoading: stocksLoading } = useStocks();
 
-  const bars = useMemo(() => barsData?.items || [], [barsData]);
-  const products = useMemo(() => productsData?.items || [], [productsData]);
-  const stocks = useMemo(() => stocksData?.items || [], [stocksData]);
+const bars = useMemo(() => barsData?.value ?? [], [barsData?.value]);
+const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
+const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
 
   // Init bar from params
   useEffect(() => {
