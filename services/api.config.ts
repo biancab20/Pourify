@@ -7,11 +7,18 @@ const extra = Constants.expoConfig?.extra as
 const OCR_URL = extra?.ocrProcessDeliveryNoteUrl;
 const BASE_URL = "https://pourify-api.apps.inholland-minor.openshift.eu/api";
 
+const AUTH_TOKEN_URL =
+  "https://pourify-auth.apps.inholland-minor.openshift.eu/realms/pourify/protocol/openid-connect/token";
+
 if (!OCR_URL) {
   throw new Error("Missing env: EXPO_PUBLIC_OCR_PROCESS_DELIVERY_NOTE_URL");
 }
 
 export const API = {
+  auth: {
+    token: AUTH_TOKEN_URL,
+    clientId: "app",
+  },
   ocr: {
     processDeliveryNote: OCR_URL,
   },
@@ -35,6 +42,6 @@ export const API = {
     getSuppliers: `${BASE_URL}/supplier`,
     updateSupplier: `${BASE_URL}/supplier`,
     deleteSupplier: `${BASE_URL}/supplier`,
-    createSupplier: `${BASE_URL}/supplier`
+    createSupplier: `${BASE_URL}/supplier`,
   },
 } as const;

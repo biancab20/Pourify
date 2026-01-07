@@ -8,6 +8,7 @@ import type {
   ApiStocksResponse, // Added
 } from "@/types/stock";
 import type { ApiError } from "@/services/api.errors";
+import { authedFetch } from "@/utils/authed-fetch";
 
 /**
  * Transform API response to our application format
@@ -35,7 +36,7 @@ export async function getStocks(
       ).toString()
     : "";
 
-  const res = await fetch(`${API.stock.getStocks}${query}`, {
+  const res = await authedFetch(`${API.stock.getStocks}${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -94,7 +95,7 @@ export async function updateStock(
     LastUpdatedAt: payload.lastUpdatedAt,
   };
 
-  const res = await fetch(`${API.stock.updateStock}/${stockId}`, {
+  const res = await authedFetch(`${API.stock.updateStock}/${stockId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -147,7 +148,7 @@ export async function transferStock(
     Volume: payload.volume,
   };
 
-  const res = await fetch(API.stock.transferStock, {
+  const res = await authedFetch(API.stock.transferStock, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

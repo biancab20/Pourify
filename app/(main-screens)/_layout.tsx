@@ -1,9 +1,22 @@
 import { useAppTheme } from "@/stores/app-theme-context";
-import { Stack } from "expo-router";
+import { useAuthStore } from "@/stores/auth-store";
+import { router, Stack } from "expo-router";
+import { useEffect } from "react";
 
 export default function MainScreensLayout() {
   const { theme } = useAppTheme();
   const { colors } = theme;
+
+  const status = useAuthStore((s) => s.status);
+
+  useEffect(() => {
+    if (status === "signedOut") {
+      router.replace("/"); // or "/(auth)/login" depending on your routes
+    }
+  }, [status]);
+
+  // Optional: while loading, render nothing (or a splash)
+  if (status === "loading") return null;
   return (
     <Stack
       screenOptions={{

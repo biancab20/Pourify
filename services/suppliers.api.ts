@@ -7,6 +7,7 @@ import type {
   DeleteSupplierResponse,
 } from "@/types/suppliers";
 import type { ApiError } from "@/services/api.errors";
+import { authedFetch } from "@/utils/authed-fetch";
 
 // OData shapes from your backend
 type ODataList<T> = {
@@ -52,7 +53,7 @@ export async function getSuppliers(
       ).toString()
     : "";
 
-  const res = await fetch(`${API.suppliers.getSuppliers}${query}`, {
+  const res = await authedFetch(`${API.suppliers.getSuppliers}${query}`, {
     method: "GET",
     headers: { Accept: "application/json" },
   });
@@ -84,7 +85,7 @@ export async function createSupplier(payload: {
   name: string;
   email: string;
 }): Promise<CreateSupplierResponse> {
-  const res = await fetch(API.suppliers.createSupplier, {
+  const res = await authedFetch(API.suppliers.createSupplier, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -119,7 +120,7 @@ export async function updateSupplier(
   if (payload.name !== undefined) apiPayload.Name = payload.name;
   if (payload.email !== undefined) apiPayload.Email = payload.email;
 
-  const res = await fetch(`${API.suppliers.updateSupplier}/${supplierId}`, {
+  const res = await authedFetch(`${API.suppliers.updateSupplier}/${supplierId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -150,7 +151,7 @@ export async function updateSupplier(
 export async function deleteSupplier(
   supplierId: string
 ): Promise<DeleteSupplierResponse> {
-  const res = await fetch(`${API.suppliers.deleteSupplier}/${supplierId}`, {
+  const res = await authedFetch(`${API.suppliers.deleteSupplier}/${supplierId}`, {
     method: "DELETE",
     headers: { Accept: "application/json" },
   });

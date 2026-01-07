@@ -5,6 +5,8 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useTanStackQueryDevTools } from "@rozenite/tanstack-query-plugin";
+import { useAuthStore } from "@/stores/auth-store";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +20,11 @@ const queryClient = new QueryClient({
 function RootStack() {
   const { theme } = useAppTheme();
   const { colors } = theme;
+  const bootstrap = useAuthStore((s) => s.bootstrap);
+
+  useEffect(() => {
+    bootstrap();
+  }, [bootstrap]);
 
   return (
     <Stack

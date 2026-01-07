@@ -1,5 +1,6 @@
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
+import { authedFetch } from "@/utils/authed-fetch";
 import type {
   Bar,
   DeleteBarResponse,
@@ -20,11 +21,9 @@ export async function getBars(
       ).toString()
     : "";
 
-  const res = await fetch(`${API.locations.getBars}${query}`, {
+  const res = await authedFetch(`${API.locations.getBars}${query}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
   });
 
   const text = await res.text();
@@ -72,15 +71,13 @@ export async function getBars(
  * (Create new location)
  */
 export async function createBar(payload: { name: string }): Promise<Bar> {
-  const res = await fetch(`${API.locations.updateBar}`, {
+  const res = await authedFetch(`${API.locations.updateBar}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({
-      BarName: payload.name,
-    }),
+    body: JSON.stringify({ BarName: payload.name }),
   });
 
   const text = await res.text();
@@ -116,17 +113,13 @@ export async function updateBar(
   barId: string, // Changed from number to string
   payload: Partial<Bar>
 ): Promise<UpdateBarResponse> {
-  const res = await fetch(`${API.locations.updateBar}/${barId}`, {
+  const res = await authedFetch(`${API.locations.updateBar}/${barId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    // Transform from camelCase to PascalCase for API
-    body: JSON.stringify({
-      BarName: payload.name,
-      // Add other fields as needed
-    }),
+    body: JSON.stringify({ BarName: payload.name }),
   });
 
   const text = await res.text();
@@ -161,11 +154,9 @@ export async function updateBar(
  * 204 No Content
  */
 export async function deleteBar(barId: string): Promise<DeleteBarResponse> {
-  const res = await fetch(`${API.locations.deleteBar}/${barId}`, {
+  const res = await authedFetch(`${API.locations.deleteBar}/${barId}`, {
     method: "DELETE",
-    headers: {
-      Accept: "application/json",
-    },
+    headers: { Accept: "application/json" },
   });
 
   if (!res.ok) {

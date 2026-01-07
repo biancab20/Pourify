@@ -6,6 +6,7 @@ import type {
   DeleteProductResponse,
 } from "@/types/products";
 import type { ApiError } from "@/services/api.errors";
+import { authedFetch } from "@/utils/authed-fetch";
 
 /**
  * GET /products
@@ -20,7 +21,7 @@ export async function getProducts(
       ).toString()
     : "";
 
-  const res = await fetch(`${API.products.getProducts}${query}`, {
+  const res = await authedFetch(`${API.products.getProducts}${query}`, {
     method: "GET",
     headers: { Accept: "application/json" },
   });
@@ -69,13 +70,12 @@ export async function createProduct(payload: {
   volume: number;
   type: string;
 }): Promise<Product> {
-  const res = await fetch(`${API.products.updateProduct}`, {
+  const res = await authedFetch(`${API.products.updateProduct}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    // ✅ align with API casing you receive (Name, Volume, Type)
     body: JSON.stringify({
       Name: payload.name,
       Volume: payload.volume,
@@ -118,7 +118,7 @@ export async function updateProduct(
   productId: string,
   payload: Partial<Product>
 ): Promise<UpdateProductResponse> {
-  const res = await fetch(`${API.products.updateProduct}/${productId}`, {
+  const res = await authedFetch(`${API.products.updateProduct}/${productId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -167,7 +167,7 @@ export async function updateProduct(
 export async function deleteProduct(
   productId: string
 ): Promise<DeleteProductResponse> {
-  const res = await fetch(`${API.products.deleteProduct}/${productId}`, {
+  const res = await authedFetch(`${API.products.deleteProduct}/${productId}`, {
     method: "DELETE",
     headers: { Accept: "application/json" },
   });
