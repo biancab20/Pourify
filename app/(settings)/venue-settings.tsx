@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,11 +9,13 @@ import { ConfigRow } from "@/components/ui/ConfigRow";
 import type { Supplier } from "@/types";
 import type { Bar as ApiBar } from "@/types/locations";
 import type { Product as ApiProduct } from "@/types/products";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
+
+import { getStoredString } from "@/utils/storage";
 
 /** ✅ Local-only bars (old naming mistake) */
 type StaticBar = {
@@ -33,7 +35,29 @@ export default function VenueSettings() {
   const router = useRouter();
   const { theme } = useAppTheme();
 
-  // ✅  local list (empty)
+  const [receiverEmail, setReceiverEmailState] = useState<string | null>(null);
+
+  // ✅ Reload receiverEmail whenever this screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      (async () => {
+        try {
+          const v = await getStoredString("receiverEmail");
+          if (active) setReceiverEmailState(v);
+        } catch {
+          if (active) setReceiverEmailState(null);
+        }
+      })();
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
+  // ✅ local list (empty)
   const [staticBars, setStaticBars] = useState<StaticBar[]>([]);
 
   // ✅ API bars (real stock locations)
@@ -56,10 +80,7 @@ export default function VenueSettings() {
     isRefetching: isProductsRefetching,
   } = useProducts();
 
-  const products = useMemo(
-    () => productsData?.value ?? [],
-    [productsData?.value]
-  );
+  const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
 
   // ✅ Suppliers API
   const {
@@ -70,10 +91,7 @@ export default function VenueSettings() {
     isRefetching: isSuppliersRefetching,
   } = useSuppliers();
 
-  const suppliers = useMemo(
-    () => suppliersData?.value ?? [],
-    [suppliersData?.value]
-  );
+  const suppliers = useMemo(() => suppliersData?.value ?? [], [suppliersData?.value]);
 
   const addStaticBar = () => {
     setStaticBars((prev) => [
@@ -128,14 +146,22 @@ export default function VenueSettings() {
     });
   };
 
+  const onEditReceiverEmail = () => {
+    router.push({
+      pathname: "/(settings)/[entity]/edit-field",
+      params: {
+        entity: "settings",
+        fieldKey: "receiverEmail",
+      },
+    });
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      <View
-        style={[styles.header, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -152,7 +178,6 @@ export default function VenueSettings() {
           Hachi bar Settings
         </Text>
 
-        {/* 1) Old local/static bars list */}
         <ConfigSectionCard<StaticBar>
           title="Bars"
           items={staticBars}
@@ -169,7 +194,6 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* 2) API bars list (stock locations) */}
         <ConfigSectionCard<ApiBar>
           title="Stock locations within your venue"
           items={apiBars}
@@ -180,9 +204,7 @@ export default function VenueSettings() {
           loadingText="Loading stock locations..."
           errorMessage={
             apiBarsError
-              ? `Could not load stock locations: ${getErrorMessage(
-                  apiBarsError
-                )}`
+              ? `Could not load stock locations: ${getErrorMessage(apiBarsError)}`
               : null
           }
           onRetry={() => refetchApiBars()}
@@ -197,7 +219,6 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* 3) Products (API) */}
         <ConfigSectionCard<ApiProduct>
           title="Products"
           items={products}
@@ -207,9 +228,7 @@ export default function VenueSettings() {
           isLoading={isProductsLoading}
           loadingText="Loading products..."
           errorMessage={
-            productsError
-              ? `Could not load products: ${getErrorMessage(productsError)}`
-              : null
+            productsError ? `Could not load products: ${getErrorMessage(productsError)}` : null
           }
           onRetry={() => refetchProducts()}
           isRetrying={isProductsRefetching}
@@ -224,7 +243,6 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* 4) Suppliers */}
         <ConfigSectionCard<Supplier>
           title="Suppliers"
           items={suppliers}
@@ -234,9 +252,7 @@ export default function VenueSettings() {
           isLoading={isSuppliersLoading}
           loadingText="Loading suppliers..."
           errorMessage={
-            suppliersError
-              ? `Error loading suppliers: ${getErrorMessage(suppliersError)}`
-              : null
+            suppliersError ? `Error loading suppliers: ${getErrorMessage(suppliersError)}` : null
           }
           onRetry={() => refetchSuppliers()}
           isRetrying={isSuppliersRefetching}
@@ -250,7 +266,6 @@ export default function VenueSettings() {
           )}
         />
 
-        {/* 5) Editable venue settings */}
         <EditableSectionCard
           title="Venue settings"
           rows={[
@@ -274,6 +289,13 @@ export default function VenueSettings() {
               value: "30 mL",
               onEditPress: () => console.log("Edit shot size"),
               editA11yLabel: "Edit venue shot size",
+            },
+            {
+              id: "receiverEmail",
+              title: "Receiver email",
+              value: receiverEmail ?? "Not set",
+              onEditPress: onEditReceiverEmail,
+              editA11yLabel: "Edit receiver email",
             },
             {
               id: "location",
