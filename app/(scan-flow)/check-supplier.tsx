@@ -1,8 +1,6 @@
 import {
   View,
   StyleSheet,
-  Image,
-  Pressable,
   ScrollView,
   Alert,
 } from "react-native";
@@ -33,7 +31,7 @@ function safeParsePhotos(value: unknown): Photo[] {
   }
 }
 
-export default function PictureOverview() {
+export default function CheckSupplier() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
@@ -135,7 +133,7 @@ export default function PictureOverview() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background , paddingHorizontal: 16 }}>
       {/* Header */}
        <Text
                 variant="gradient"
@@ -184,7 +182,6 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     marginTop: 24,
-    paddingHorizontal: 16,
     paddingBottom: 24,
   },
   editableCardStyle: {

@@ -115,7 +115,7 @@ export default function ScanNewDelivery() {
     }
     try {
       const data = await processDeliveryNote.mutateAsync({ kind: "photos", photos });
-      router.push({ pathname: "/(scan-flow)/picture-overview", params: { photos: JSON.stringify(photos), ocrData: JSON.stringify(data) } });
+      router.push({ pathname: "/(scan-flow)/check-supplier", params: { photos: JSON.stringify(photos), ocrData: JSON.stringify(data) } });
     } catch (e: any) {
       Alert.alert("Upload failed", e?.message ?? "Unknown error");
     }
@@ -128,7 +128,7 @@ export default function ScanNewDelivery() {
       const data = await processDeliveryNote.mutateAsync({ kind: "file", file: { uri: file.uri, name: file.name, mimeType: file.mimeType } });
 
       router.push({
-        pathname: "/(scan-flow)/picture-overview",
+        pathname: "/(scan-flow)/check-supplier",
         params: { photos: JSON.stringify(photos), files: JSON.stringify(files), ocrData: JSON.stringify(data), sourceType: "file" },
       });
     } catch (e: any) {
