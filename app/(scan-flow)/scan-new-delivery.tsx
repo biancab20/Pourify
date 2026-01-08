@@ -1,7 +1,8 @@
-import { View, Alert, Linking, Pressable } from "react-native";
+import { View, Alert, Linking, Pressable, Modal, TouchableOpacity } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CameraView } from "expo-camera";
+import { Ionicons } from "@expo/vector-icons";
 
 import Header from "@/components/scanDelivery/Header";
 import CameraSection from "@/components/scanDelivery/CameraSection";
@@ -16,7 +17,7 @@ import { makeId } from "@/utils/ids";
 import { toPhotosFromAssets, toPickedFile } from "@/utils/upload";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import {Text} from "@/components/shared/Text";
+import { Text } from "@/components/shared/Text";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export type PickedFile = {
@@ -40,6 +41,7 @@ export default function ScanNewDelivery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [files, setFiles] = useState<PickedFile[]>([]);
   const [uploadMode, setUploadMode] = useState<UploadMode>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const isBusy = processDeliveryNote.isPending;
   const canProceed =
@@ -168,24 +170,84 @@ export default function ScanNewDelivery() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 16 }}>
-     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-  <View style={{ flex: 1 }}>
-    <Header title="Scan delivery note" />
-  </View>
-  <Pressable
-    onPress={() => router.push("/(scan-flow)/manual-delivery")}
-    style={{
-      padding: 12,
-      borderRadius: 8,
-      backgroundColor: theme.palette.pink, 
-      marginLeft: 12,
-    }}
-  >
-    <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600" }}>
-      Manual
-    </Text>
-  </Pressable>
-</View>
+      {/* Header with clickable title and close button */}
+      <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 16, position: "relative" }}>
+        {/* Close button in top right corner */}
+        <Pressable
+          onPress={() => router.back()} // Navigates back to main page
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 12,
+            padding: 8,
+            zIndex: 10,
+          }}
+        >
+          <Ionicons name="close" size={24} color={theme.colors.text} />
+        </Pressable>
+
+        {/* Centered title with dropdown */}
+        <Pressable
+          onPress={() => setShowDropdown(true)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 12,
+          }}
+        >
+          <Text style={{ color: theme.palette.yellow, fontSize: 20, fontWeight: "700", textAlign: "center" }}>
+            Scan delivery note
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={theme.palette.yellow} style={{ marginLeft: 8 }} />
+        </Pressable>
+      </View>
+
+      {/* Dropdown Modal - FIXED VERSION */}
+      <Modal
+        visible={showDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDropdown(false)}
+      >
+        {/* Fixed layout: TouchableOpacity only around the dropdown, not covering entire screen */}
+        <View style={{ flex: 1 }}>
+          {/* This TouchableOpacity only covers the area around the dropdown */}
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setShowDropdown(false)}
+          >
+            {/* Empty space above dropdown */}
+            <View style={{ height: 60 }} />
+            
+            {/* Dropdown content - NOT wrapped in TouchableOpacity */}
+            <View style={{ 
+              backgroundColor: theme.colors.background, 
+              paddingVertical: 8,
+            }}>
+              <Pressable
+                onPress={() => {
+                  setShowDropdown(false);
+                  router.push("/(scan-flow)/manual-delivery");
+                }}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  paddingVertical: 8,
+                  paddingHorizontal: 8,
+                }}
+              >
+                <Text style={{ color: theme.palette.yellow, fontSize: 20, fontWeight: "700" }}>
+                  Manual delivery
+                </Text>
+              </Pressable>
+            </View>
+            
+            {/* Empty space below dropdown */}
+            <View style={{ flex: 1 }} />
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
       {hasCameraPermission ? (
         <>
