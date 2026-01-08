@@ -1,46 +1,134 @@
+// app/(main-screens)/edit-stock.tsx
+
 import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/ui/InputBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+
+import { useStocks, useUpdateStock } from "@/hooks/useStock";
 
 export default function EditStock() {
   const { theme } = useAppTheme();
   const { colors } = theme;
+  const router = useRouter();
+  const params = useLocalSearchParams();
 
-  // For number input, the callback receives a number or empty string
-  const handleNumberInput = (value: string | number) => {
-    console.log("Number entered:", value);
-    console.log("Type:", typeof value);
-    // You can handle the number value here
-    if (value !== "") {
-      const numericValue = typeof value === 'number' ? value : parseFloat(value as string);
-      console.log("Numeric value:", numericValue);
-    }
+  /* -----------------------------
+     Params from previous screen
+  ------------------------------ */
+  const productId = params.productId as string;
+  const barId = params.barId as string;
+  const productVolume = Number(params.productVolume); // litres per unit (keg/bottle)
+  const initialBottleCount = Number(params.currentStock ?? 0);
+
+  /* -----------------------------
+     Local state
+  ------------------------------ */
+  const [unitCount, setUnitCount] = useState<number>(initialBottleCount);
+
+  /* -----------------------------
+     Data & mutations
+  ------------------------------ */
+  const { data: stocksData, isLoading } = useStocks();
+  const updateStockMutation = useUpdateStock();
+
+  /* -----------------------------
+     Find the correct stock item
+  ------------------------------ */
+  const stockItem = useMemo(() => {
+    return stocksData?.value.find(
+      stock =>
+        stock.productId === productId &&
+        stock.storagePlaceId === barId
+    );
+  }, [stocksData, productId, barId]);
+
+  /* -----------------------------
+     Calculate leftovers
+     (THIS IS THE FIX)
+  ------------------------------ */
+  const unitVolume = productVolume; // 50L for keg, 0.75L for bottle, etc
+
+  const currentTotalVolume = stockItem?.volume ?? 0;
+
+  const currentFullUnits = Math.floor(currentTotalVolume / unitVolume);
+  const leftoverVolume =
+    currentTotalVolume - currentFullUnits * unitVolume;
+
+  /* -----------------------------
+     Handle submit
+  ------------------------------ */
+  const handleAdjustStock = () => {
+    if (!stockItem) return;
+
+    const newVolume =
+      leftoverVolume + unitCount * unitVolume;
+
+    updateStockMutation.mutate({
+      stockId: stockItem.stockId,
+      data: {
+        volume: newVolume,
+      },
+    });
   };
 
+  /* -----------------------------
+     Navigate back on success
+  ------------------------------ */
+  useEffect(() => {
+    if (updateStockMutation.isSuccess) {
+      router.back();
+    }
+  }, [updateStockMutation.isSuccess, router]);
+
+  /* -----------------------------
+     Render
+  ------------------------------ */
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      {/* Info Text */}
+      {/* Info text */}
       <Text style={[styles.infoText, { color: colors.text }]}>
-        You are trying to adjust the quantity of Aperol bottles. Please input
-        the amount of full bottles that you see.
+        Adjust the number of full units.
+        Any remaining opened unit will be preserved automatically.
       </Text>
 
-      {/* Number Input - Only allows numbers */}
+      {/* Unit input */}
       <SearchBar
-        type="number" 
-        onSearch={handleNumberInput}
-        placeholder=""
-        initialValue=""
-        min={0}  
-        decimal={false}  // No decimals for bottle count
+        type="number"
+        initialValue={unitCount.toString()}
+        min={0}
+        decimal={false}
+        onSearch={(value) => {
+          if (value === "") {
+            setUnitCount(0);
+          } else {
+            setUnitCount(
+              typeof value === "number" ? value : Number(value)
+            );
+          }
+        }}
       />
 
+      {/* Leftover indicator
+      {leftoverVolume > 0 && (
+        <Text style={{ color: colors.text, marginTop: 12 }}>
+          Open unit remaining: {leftoverVolume.toFixed(1)} L
+        </Text>
+      )} */}
+
+      {/* Adjust button */}
       <Pressable
-        onPress={() => console.log("Adjust stock")}
+        onPress={handleAdjustStock}
+        disabled={
+          updateStockMutation.isPending ||
+          isLoading ||
+          !stockItem
+        }
         style={styles.adjustButton}
       >
         <LinearGradient
@@ -52,15 +140,22 @@ export default function EditStock() {
             borderRadius: 24,
             alignItems: "center",
             justifyContent: "center",
+            opacity:
+              updateStockMutation.isPending || !stockItem ? 0.6 : 1,
           }}
         >
-          <Text style={styles.buttonText}>Adjust</Text>
+          <Text style={styles.buttonText}>
+            {updateStockMutation.isPending ? "Saving..." : "Adjust"}
+          </Text>
         </LinearGradient>
       </Pressable>
     </ScrollView>
   );
 }
 
+/* -----------------------------
+   Styles
+------------------------------ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

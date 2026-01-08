@@ -13,6 +13,19 @@ import { useStocks } from "@/hooks/useStock";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { StockItem } from "@/types/stock";
 
+
+//make product name title case, e.g. Beer keg -> Beer Keg
+const formatProductName = (name: string) => {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .split(" ")
+    .map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join(" ");
+};
+
 export default function AllProducts() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -21,7 +34,10 @@ export default function AllProducts() {
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBar, setSelectedBar] = useState<{ id: string | null; name: string }>({
+  const [selectedBar, setSelectedBar] = useState<{
+    id: string | null;
+    name: string;
+  }>({
     id: null,
     name: "General Stock",
   });
@@ -31,39 +47,44 @@ export default function AllProducts() {
   const { data: productsData } = useProducts();
   const { data: stocksData, isLoading: stocksLoading } = useStocks();
 
-const bars = useMemo(() => barsData?.value ?? [], [barsData?.value]);
-const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
-const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
+  const bars = useMemo(() => barsData?.value ?? [], [barsData?.value]);
+  const products = useMemo(
+    () => productsData?.value ?? [],
+    [productsData?.value]
+  );
+  const stocks = useMemo(
+    () => stocksData?.value ?? [],
+    [stocksData?.value]
+  );
 
   // Init bar from params
   useEffect(() => {
     const barId = Array.isArray(params.barId) ? params.barId[0] : params.barId;
-    const barName = Array.isArray(params.barName) ? params.barName[0] : params.barName;
+    const barName = Array.isArray(params.barName)
+      ? params.barName[0]
+      : params.barName;
 
     if (barId && barName) {
       setSelectedBar({ id: barId, name: barName });
     }
   }, [params.barId, params.barName]);
 
-  // ✅ CORE FIXED LOGIC
+  // Filter + sort stock
   const filteredStocks = useMemo(() => {
     if (!products.length) return [];
 
     return products
       .map(product => {
-        // All stock entries for this product
         let productStocks = stocks.filter(
           (stock: StockItem) => stock.productId === product.productId
         );
 
-        // Filter by bar if selected
         if (selectedBar.id) {
           productStocks = productStocks.filter(
             stock => stock.storagePlaceId === selectedBar.id
           );
         }
 
-        // Sum ALL storage places in that bar
         const totalVolume = productStocks.reduce(
           (sum, stock) => sum + stock.volume,
           0
@@ -80,16 +101,27 @@ const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
           productName: product.name,
           productType: product.type,
           productVolume: product.volume,
-          volume: totalVolume, // ✅ correct per bar
+          volume: totalVolume,
           bottleCount,
+          isOutOfStock: totalVolume === 0,
         };
       })
       .filter(stock =>
         searchQuery
-          ? stock.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            stock.productType.toLowerCase().includes(searchQuery.toLowerCase())
+          ? stock.productName
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            stock.productType
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())
           : true
-      );
+      )
+      .sort((a, b) => {
+        if (a.isOutOfStock !== b.isOutOfStock) {
+          return a.isOutOfStock ? 1 : -1;
+        }
+        return a.productName.localeCompare(b.productName);
+      });
   }, [products, stocks, selectedBar, searchQuery]);
 
   const handleSearch = (text: string | number) =>
@@ -157,16 +189,46 @@ const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
                 }
               >
                 <View style={styles.productInfo}>
-                  <Text style={[styles.productName, { color: theme.colors.cardText }]}>
-                    {stock.productName}
+                  <Text
+                    style={[
+                      styles.productName,
+                      { color: theme.colors.cardText },
+                    ]}
+                  >
+                    {formatProductName(stock.productName)}
                   </Text>
-                  <Text style={[styles.productDetails, { color: theme.colors.cardText }]}>
-                    {stock.volume}L • {stock.bottleCount} Bottles
-                  </Text>
+
+                  {stock.isOutOfStock ? (
+                    <Text
+                      style={[
+                        styles.productDetails,
+                        {
+                          color: theme.colors.cardText,
+                          opacity: 0.6,
+                        },
+                      ]}
+                    >
+                      Out of Stock
+                    </Text>
+                  ) : (
+                    <Text
+                      style={[
+                        styles.productDetails,
+                        { color: theme.colors.cardText },
+                      ]}
+                    >
+                      {stock.volume}L • {stock.bottleCount} Bottles
+                    </Text>
+                  )}
                 </View>
 
-                <Text style={{ color: theme.palette.pink, fontWeight: "600" }}>
-                  {stock.productType} &gt;
+                <Text
+                  style={{
+                    color: theme.palette.pink,
+                    fontWeight: "600",
+                  }}
+                >
+                  {stock.productType.toUpperCase()} &gt;
                 </Text>
               </Pressable>
             ))}
