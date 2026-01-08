@@ -2,8 +2,8 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { Stack } from "expo-router";
 
 export default function SettingsLayout() {
-    const { theme } = useAppTheme();
-    const { colors } = theme;
+  const { theme } = useAppTheme();
+  const { colors } = theme;
   return (
     <Stack
       screenOptions={{
@@ -14,8 +14,15 @@ export default function SettingsLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="venue-settings" options={{ headerTitle: "" }}/>
-      <Stack.Screen name="[entity]/add" options={{ headerShown: true, headerTitle: "" }} />
+      <Stack.Screen name="venue-settings" options={{ headerTitle: "" }} />
+      <Stack.Screen
+        name="[entity]/add"
+        options={{ headerShown: true, headerTitle: "" }}
+      />
+      <Stack.Screen
+        name="[entity]/edit"
+        options={{ headerShown: true, headerTitle: "" }}
+      />
     </Stack>
   );
 }

@@ -1,10 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -39,7 +33,7 @@ export default function VenueSettings() {
   const router = useRouter();
   const { theme } = useAppTheme();
 
-  // ✅ Keep the old local list (empty)
+  // ✅  local list (empty)
   const [staticBars, setStaticBars] = useState<StaticBar[]>([]);
 
   // ✅ API bars (real stock locations)
@@ -62,7 +56,10 @@ export default function VenueSettings() {
     isRefetching: isProductsRefetching,
   } = useProducts();
 
-  const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
+  const products = useMemo(
+    () => productsData?.value ?? [],
+    [productsData?.value]
+  );
 
   // ✅ Suppliers API
   const {
@@ -73,7 +70,10 @@ export default function VenueSettings() {
     isRefetching: isSuppliersRefetching,
   } = useSuppliers();
 
-  const suppliers = useMemo(() => suppliersData?.value ?? [], [suppliersData?.value]);
+  const suppliers = useMemo(
+    () => suppliersData?.value ?? [],
+    [suppliersData?.value]
+  );
 
   const addStaticBar = () => {
     setStaticBars((prev) => [
@@ -107,12 +107,25 @@ export default function VenueSettings() {
     Alert.alert("Open static bar", `Static bar ID: ${barId}`);
   };
 
-  const openApiBar = (barId: string) => {
-    Alert.alert("Open location", `Location ID: ${barId}`);
+  const openSupplier = (supplierId: string) => {
+    router.push({
+      pathname: "/(settings)/[entity]/edit",
+      params: { entity: "suppliers", id: supplierId, venueName: "Hachi bar" },
+    });
   };
 
   const openProduct = (productId: string) => {
-    Alert.alert("Open product", `Product ID: ${productId}`);
+    router.push({
+      pathname: "/(settings)/[entity]/edit",
+      params: { entity: "products", id: productId, venueName: "Hachi bar" },
+    });
+  };
+
+  const openApiBar = (barId: string) => {
+    router.push({
+      pathname: "/(settings)/[entity]/edit",
+      params: { entity: "locations", id: barId, venueName: "Hachi bar" },
+    });
   };
 
   return (
@@ -120,7 +133,9 @@ export default function VenueSettings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -164,7 +179,11 @@ export default function VenueSettings() {
           isLoading={isApiBarsLoading}
           loadingText="Loading stock locations..."
           errorMessage={
-            apiBarsError ? `Could not load stock locations: ${getErrorMessage(apiBarsError)}` : null
+            apiBarsError
+              ? `Could not load stock locations: ${getErrorMessage(
+                  apiBarsError
+                )}`
+              : null
           }
           onRetry={() => refetchApiBars()}
           isRetrying={isApiBarsRefetching}
@@ -188,7 +207,9 @@ export default function VenueSettings() {
           isLoading={isProductsLoading}
           loadingText="Loading products..."
           errorMessage={
-            productsError ? `Could not load products: ${getErrorMessage(productsError)}` : null
+            productsError
+              ? `Could not load products: ${getErrorMessage(productsError)}`
+              : null
           }
           onRetry={() => refetchProducts()}
           isRetrying={isProductsRefetching}
@@ -213,7 +234,9 @@ export default function VenueSettings() {
           isLoading={isSuppliersLoading}
           loadingText="Loading suppliers..."
           errorMessage={
-            suppliersError ? `Error loading suppliers: ${getErrorMessage(suppliersError)}` : null
+            suppliersError
+              ? `Error loading suppliers: ${getErrorMessage(suppliersError)}`
+              : null
           }
           onRetry={() => refetchSuppliers()}
           isRetrying={isSuppliersRefetching}
@@ -222,7 +245,7 @@ export default function VenueSettings() {
             <ConfigRow
               title={item.name}
               leftIconName="people-outline"
-              onPress={() => Alert.alert("Open Supplier", item.supplierId)}
+              onPress={() => openSupplier(item.supplierId)}
             />
           )}
         />
