@@ -23,6 +23,11 @@ export default function SettingsLayout() {
         name="[entity]/edit"
         options={{ headerShown: true, headerTitle: "" }}
       />
+      <Stack.Screen
+        name="[entity]/edit-field"
+        options={{ headerShown: true, headerTitle: "" }}
+      />
     </Stack>
+    
   );
 }

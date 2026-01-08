@@ -1,19 +1,18 @@
-import React, { useMemo, useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
+import React, { useMemo } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useAppTheme } from "@/stores/app-theme-context";
-import { Text } from "@/components/shared/Text";
-import { Icon } from "@/components/icons/Icon";
+import SingleFieldEditScreen, {
+  SelectOption,
+} from "@/components/ui/SingleFieldEditScreen";
 
-import FormInput from "@/components/ui/FormInput";
-import GradientButton from "@/components/shared/GradientButton";
+import { useSupplier, useUpdateSupplier } from "@/hooks/useSuppliers";
+import { useProduct, useUpdateProduct } from "@/hooks/useProducts";
+import { useBar, useUpdateBar } from "@/hooks/useLocations";
 
 type EntityKey = "products" | "suppliers" | "locations";
 type FieldKey = "name" | "email" | "volume" | "type";
 
-const PRODUCT_TYPE_OPTIONS = [
+const PRODUCT_TYPE_OPTIONS: SelectOption[] = [
   { label: "Keg", value: "KEG" },
   { label: "Wine", value: "WINE" },
   { label: "Box", value: "BOX" },
@@ -21,217 +20,190 @@ const PRODUCT_TYPE_OPTIONS = [
   { label: "Bottle", value: "BOTTLE" },
 ];
 
-function getFieldLabel(entity: EntityKey, fieldKey: FieldKey) {
-  if (entity === "locations" && fieldKey === "name") return "Location name";
-  if (entity === "suppliers" && fieldKey === "name") return "Supplier name";
-  if (entity === "suppliers" && fieldKey === "email") return "Email";
-  if (entity === "products" && fieldKey === "name") return "Product name";
-  if (entity === "products" && fieldKey === "volume") return "Volume (L)";
-  if (entity === "products" && fieldKey === "type") return "Type";
-  return "Edit field";
+function getErrorMessage(err: unknown): string {
+  if (!err) return "Unknown error";
+  if (typeof err === "object" && err && "message" in err)
+    return String((err as any).message);
+  return "Unknown error";
 }
 
-function getFieldTitle(entity: EntityKey, fieldKey: FieldKey) {
-  // gradient title for the page
-  const base =
-    entity === "suppliers" ? "Supplier" : entity === "products" ? "Product" : "Stock location";
-  const label = getFieldLabel(entity, fieldKey);
-  return `${base}: ${label}`;
-}
-
-export default function EditEntityFieldScreen() {
+export default function EditEntityFieldRoute() {
   const router = useRouter();
-  const { theme } = useAppTheme();
 
   const params = useLocalSearchParams<{
     entity?: string;
     id?: string;
     fieldKey?: string;
-    value?: string;
   }>();
 
   const entity = (params.entity ?? "products") as EntityKey;
   const id = params.id ?? "";
   const fieldKey = (params.fieldKey ?? "name") as FieldKey;
 
-  // initial value passed from previous screen (string)
-  const initialValue = params.value ?? "";
+  // fetch by id (source of truth)
+  const supplierQuery = useSupplier(entity === "suppliers" ? id : "");
+  const productQuery = useProduct(entity === "products" ? id : "");
+  const barQuery = useBar(entity === "locations" ? id : "");
 
-  // Single field state
-  const [value, setValue] = useState<string>(initialValue);
-  const [isSaving, setIsSaving] = useState(false);
+  const activeQuery =
+    entity === "suppliers"
+      ? supplierQuery
+      : entity === "products"
+      ? productQuery
+      : barQuery;
 
-  const label = useMemo(() => getFieldLabel(entity, fieldKey), [entity, fieldKey]);
-  const title = useMemo(() => getFieldTitle(entity, fieldKey), [entity, fieldKey]);
+  const item: any = activeQuery.data ?? null;
 
-  const isSelect = entity === "products" && fieldKey === "type";
-  const selectOptions = PRODUCT_TYPE_OPTIONS;
+  // update hooks
+  const updateSupplier = useUpdateSupplier();
+  const updateProduct = useUpdateProduct();
+  const updateBar = useUpdateBar();
 
-  const currentSelectLabel = useMemo(() => {
-    if (!isSelect) return "";
-    return selectOptions.find((o) => o.value === value)?.label ?? "Select";
-  }, [isSelect, selectOptions, value]);
+  const isSaving =
+    (entity === "suppliers" && updateSupplier.isPending) ||
+    (entity === "products" && updateProduct.isPending) ||
+    (entity === "locations" && updateBar.isPending);
 
-  const validate = () => {
-    const trimmed = value.trim();
+  const label = useMemo(() => {
+    if (entity === "locations" && fieldKey === "name") return "Location name";
+    if (entity === "suppliers" && fieldKey === "name") return "Supplier name";
+    if (entity === "suppliers" && fieldKey === "email") return "Email";
+    if (entity === "products" && fieldKey === "name") return "Product name";
+    if (entity === "products" && fieldKey === "volume") return "Volume (L)";
+    if (entity === "products" && fieldKey === "type") return "Type";
+    return "Edit field";
+  }, [entity, fieldKey]);
+
+  const title = useMemo(() => {
+    const base =
+      entity === "suppliers"
+        ? "Supplier"
+        : entity === "products"
+        ? "Product"
+        : "Stock location";
+    return `${base}: ${label}`;
+  }, [entity, label]);
+
+  const fieldType = useMemo<"text" | "email" | "number" | "select">(() => {
+    if (fieldKey === "email") return "email";
+    if (fieldKey === "volume") return "number";
+    if (fieldKey === "type") return "select";
+    return "text";
+  }, [fieldKey]);
+
+  const options = useMemo(
+    () => (fieldType === "select" ? PRODUCT_TYPE_OPTIONS : undefined),
+    [fieldType]
+  );
+
+  const initialValue = useMemo(() => {
+    if (!item) return "";
+    if (fieldKey === "name") return item.name ?? "";
+    if (fieldKey === "email") return item.email ?? "";
+    if (fieldKey === "volume") return item.volume == null ? "" : String(item.volume);
+    if (fieldKey === "type") return item.type ?? "";
+    return "";
+  }, [fieldKey, item]);
+
+  const validate = (v: string) => {
+    const trimmed = v.trim();
 
     if (fieldKey === "name") {
       if (!trimmed) return `Please enter a ${label.toLowerCase()}.`;
       return null;
     }
-
     if (fieldKey === "email") {
       if (!trimmed) return "Please enter an email.";
       if (!trimmed.includes("@")) return "Please enter a valid email.";
       return null;
     }
-
     if (fieldKey === "volume") {
       if (!trimmed) return "Please enter a volume.";
-      const vol = Number(trimmed);
-      if (!Number.isFinite(vol) || vol <= 0) return "Please enter a valid volume.";
+      const n = Number(trimmed);
+      if (!Number.isFinite(n) || n <= 0) return "Please enter a valid volume.";
       return null;
     }
-
     if (fieldKey === "type") {
-      if (!value) return "Please select a type.";
+      if (!v) return "Please select a type.";
       return null;
     }
-
     return null;
   };
 
-  const onSave = async () => {
-    if (!id) return Alert.alert("Missing id", "No entity id was provided.");
-    const msg = validate();
-    if (msg) return Alert.alert("Missing info", msg);
+  const errorMessage = activeQuery.error
+    ? `Could not load ${entity.slice(0, -1)}: ${getErrorMessage(activeQuery.error)}`
+    : !id
+    ? "Missing id"
+    : null;
 
-    try {
-      setIsSaving(true);
+  const onSave = async (newValue: string) => {
+    if (!id) throw new Error("Missing id");
 
-      // ✅ TODO: plug your update mutations here
-      // Examples (depending on your hooks):
-      // if (entity === "locations" && fieldKey === "name") await updateBar.mutateAsync({ barId: id, name: value.trim() })
-      // if (entity === "suppliers" && fieldKey === "name") await updateSupplier.mutateAsync({ supplierId: id, name: value.trim() })
-      // if (entity === "suppliers" && fieldKey === "email") await updateSupplier.mutateAsync({ supplierId: id, email: value.trim() })
-      // if (entity === "products" && fieldKey === "name") await updateProduct.mutateAsync({ productId: id, name: value.trim() })
-      // if (entity === "products" && fieldKey === "volume") await updateProduct.mutateAsync({ productId: id, volume: Number(value) })
-      // if (entity === "products" && fieldKey === "type") await updateProduct.mutateAsync({ productId: id, type: value })
-
-      console.log("UPDATE FIELD", { entity, id, fieldKey, value });
-
-      router.back();
-    } catch (e: any) {
-      Alert.alert("Save failed", e?.message ?? "Unknown error");
-    } finally {
-      setIsSaving(false);
+    // Build a Partial<Domain> data payload
+    if (entity === "locations") {
+      if (fieldKey !== "name") throw new Error("Unsupported field for location");
+      await updateBar.mutateAsync({ barId: id, data: { name: newValue.trim() } });
     }
+
+    if (entity === "suppliers") {
+      if (fieldKey === "name") {
+        await updateSupplier.mutateAsync({
+          supplierId: id,
+          data: { name: newValue.trim() },
+        });
+      } else if (fieldKey === "email") {
+        await updateSupplier.mutateAsync({
+          supplierId: id,
+          data: { email: newValue.trim() },
+        });
+      } else {
+        throw new Error("Unsupported field for supplier");
+      }
+    }
+
+    if (entity === "products") {
+      if (fieldKey === "name") {
+        await updateProduct.mutateAsync({
+          productId: id,
+          data: { name: newValue.trim() },
+        });
+      } else if (fieldKey === "volume") {
+        const n = Number(newValue);
+        if (!Number.isFinite(n) || n <= 0) throw new Error("Invalid volume");
+        await updateProduct.mutateAsync({
+          productId: id,
+          data: { volume: n },
+        });
+      } else if (fieldKey === "type") {
+        await updateProduct.mutateAsync({
+          productId: id,
+          data: { type: newValue },
+        });
+      } else {
+        throw new Error("Unsupported field for product");
+      }
+    }
+
+    router.back();
   };
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["top", "bottom"]}
-    >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Pressable
-          style={styles.closeButton}
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-        >
-          <Icon name="exit" size={32} color={theme.colors.icon} />
-        </Pressable>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text variant="gradient" gradientName="paloma" style={styles.title}>
-          {title}
-        </Text>
-
-        <View style={styles.formCard}>
-          <Text style={[styles.label, { color: theme.colors.text }]}>{label}</Text>
-
-          {!isSelect ? (
-            <FormInput
-              value={value}
-              onChange={(v) => setValue(String(v))}
-              placeholder={label}
-              type={
-                fieldKey === "email"
-                  ? "email"
-                  : fieldKey === "volume"
-                  ? "number"
-                  : "text"
-              }
-              min={fieldKey === "volume" ? 0 : undefined}
-              decimal={fieldKey === "volume" ? true : undefined}
-              accessibilityLabel={label}
-            />
-          ) : (
-            <Pressable
-              onPress={() => {
-                const idx = Math.max(
-                  0,
-                  selectOptions.findIndex((o) => o.value === value)
-                );
-                const next = (idx + 1) % selectOptions.length;
-                setValue(selectOptions[next].value);
-              }}
-              style={[styles.selectPill, { backgroundColor: theme.colors.background }]}
-              accessibilityRole="button"
-              accessibilityLabel={`Change ${label}`}
-            >
-              <Text style={{ color: theme.colors.text }}>{currentSelectLabel}</Text>
-              <Icon name="settings" size={18} color={theme.colors.icon} />
-            </Pressable>
-          )}
-        </View>
-
-        <GradientButton
-          text={isSaving ? "Saving..." : "Save"}
-          onPress={onSave}
-          gradientName="paloma"
-          disabled={isSaving}
-          style={{ marginTop: 18 }}
-        />
-
-        {isSaving ? (
-          <View style={{ marginTop: 12, alignItems: "center" }}>
-            <ActivityIndicator color={theme.colors.icon} />
-          </View>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+    <SingleFieldEditScreen
+      mode="entity"
+      title={title}
+      label={label}
+      fieldType={fieldType}
+      options={options}
+      initialValue={initialValue}
+      validate={validate}
+      onSave={onSave}
+      isLoading={activeQuery.isLoading}
+      isRefetching={activeQuery.isRefetching}
+      errorMessage={errorMessage}
+      onRetry={() => activeQuery.refetch()}
+      onClose={() => router.back()}
+      saveLabel="Save"
+      isSaving={isSaving}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    height: 56,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingHorizontal: 16,
-  },
-  closeButton: {
-    minWidth: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  content: { paddingHorizontal: 16, paddingBottom: 24 },
-  title: { fontSize: 40, fontWeight: "700", marginBottom: 14 },
-
-  formCard: { gap: 10, paddingBottom: 10 },
-  label: { fontSize: 13 },
-
-  selectPill: {
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-});
