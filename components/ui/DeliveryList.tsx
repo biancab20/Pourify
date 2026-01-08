@@ -1,9 +1,10 @@
 import React from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/ui/InputBox";
 import ListItem from "@/components/ui/ListItem";
 import { useAppTheme } from "@/stores/app-theme-context";
+import { Ionicons } from "@expo/vector-icons";
 
 export type DeliveryItem = {
   id: string;
@@ -43,9 +44,11 @@ const DeliveryList = ({
   removedIds = [],
 }: DeliveryListProps) => {
   const { theme } = useAppTheme();
-  const { colors } = theme;
+  const { colors, palette } = theme;
   const [searchQuery, setSearchQuery] = React.useState("");
   const [localRemovedIds, setLocalRemovedIds] = React.useState<string[]>(removedIds);
+  const [isSelectMode, setIsSelectMode] = React.useState(false);
+  const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
 
   // Filter out removed items
   const activeDeliveries = React.useMemo(() => {
@@ -70,10 +73,63 @@ const DeliveryList = ({
   const handleSwipeComplete = (id: string) => {
     setLocalRemovedIds(prev => [...prev, id]);
     onSwipeComplete?.(id);
+    // Remove from selection if selected
+    if (selectedItems.has(id)) {
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
+    }
   };
 
   const handleItemPress = (item: DeliveryItem) => {
     onItemPress?.(item);
+  };
+
+  const handleLongPress = (item: DeliveryItem) => {
+    // Enable select mode on first long press
+    if (!isSelectMode) {
+      setIsSelectMode(true);
+      setSelectedItems(new Set([item.id]));
+    }
+  };
+
+  const handleSelectPress = (item: DeliveryItem) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(item.id)) {
+        newSet.delete(item.id);
+      } else {
+        newSet.add(item.id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.size === filteredData.length) {
+      // Deselect all
+      setSelectedItems(new Set());
+    } else {
+      // Select all filtered items
+      const allIds = filteredData.map(item => item.id);
+      setSelectedItems(new Set(allIds));
+    }
+  };
+
+  const handleCancelSelect = () => {
+    setIsSelectMode(false);
+    setSelectedItems(new Set());
+  };
+
+  const handleCheckMultiple = () => {
+    // Mark all selected items as completed
+    selectedItems.forEach(id => {
+      handleSwipeComplete(id);
+    });
+    setIsSelectMode(false);
+    setSelectedItems(new Set());
   };
 
   if (loading) {
@@ -86,13 +142,40 @@ const DeliveryList = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Title */}
-      <Text variant="gradient" gradientName="paloma" style={styles.title}>
-        {title}
-      </Text>
+      {/* Header with title or selection controls */}
+      <View style={styles.header}>
+        {isSelectMode ? (
+          <>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={handleSelectAll}
+              accessibilityLabel="Select all"
+              accessibilityRole="button"
+            >
+              <Ionicons name="square-outline" size={24} color={colors.text} />
+              <Text style={[styles.headerButtonText, { color: colors.text, marginLeft: 8 }]}>
+                {selectedItems.size === filteredData.length ? 'Deselect all' : 'Select all'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={handleCancelSelect}
+              accessibilityLabel="Cancel selection"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.headerButtonText, { color: colors.text }]}>Cancel</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text variant="gradient" gradientName="paloma" style={styles.title}>
+            {title}
+          </Text>
+        )}
+      </View>
 
       {/* Search */}
-      {showSearch && (
+      {showSearch && !isSelectMode && (
         <InputBox
           placeholder={searchPlaceholder}
           initialValue=""
@@ -101,7 +184,7 @@ const DeliveryList = ({
       )}
 
       {/* Results count */}
-      {showResultsCount && searchQuery && (
+      {showResultsCount && searchQuery && !isSelectMode && (
         <Text style={[styles.resultsText, { color: colors.text }]}>
           {filteredData.length} result{filteredData.length !== 1 ? "s" : ""}
         </Text>
@@ -130,6 +213,10 @@ const DeliveryList = ({
               delivery={item}
               onSwipeComplete={handleSwipeComplete}
               onPress={() => handleItemPress(item)}
+              onLongPress={() => handleLongPress(item)}
+              onSelectPress={() => handleSelectPress(item)}
+              isSelectMode={isSelectMode}
+              isSelected={selectedItems.has(item.id)}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -138,19 +225,27 @@ const DeliveryList = ({
         />
       )}
 
-      {/* Summary footer */}
-      {filteredData.length > 0 && (
-        <View style={[styles.summaryContainer, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.summaryText, { color: colors.text }]}>
-            {activeDeliveries.length - filteredData.length === 0
-              ? "All items visible"
-              : `${activeDeliveries.length - filteredData.length} item${activeDeliveries.length - filteredData.length !== 1 ? 's' : ''} hidden by search`}
+      {/* Selection mode footer */}
+      {isSelectMode && (
+        <View style={[styles.selectionFooter, { backgroundColor: colors.cardBackground }]}>
+          <Text style={[styles.selectionCount, { color: colors.text }]}>
+            {selectedItems.size} selected
           </Text>
-          <Text style={[styles.completedText, { color: theme.palette.pink }]}>
-            {localRemovedIds.length} item{localRemovedIds.length !== 1 ? 's' : ''} completed
-          </Text>
+          <TouchableOpacity
+            style={[styles.checkMultipleButton, { backgroundColor: palette.pink }]}
+            onPress={handleCheckMultiple}
+            accessibilityLabel="Check multiple items"
+            accessibilityRole="button"
+          >
+            <Ionicons name="checkmark" size={20} color={palette.white} />
+            <Text style={[styles.checkMultipleText, { color: palette.white, marginLeft: 8 }]}>
+              Check multiple
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
+
+      
     </View>
   );
 };
@@ -161,10 +256,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 20,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    marginBottom: 20,
+  },
+  headerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+  headerButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   resultsText: {
     marginTop: 12,
@@ -197,19 +306,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  summaryContainer: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  selectionFooter: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 8,
     marginBottom: 8,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  summaryText: {
-    fontSize: 14,
-    fontWeight: "500",
+  selectionCount: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  checkMultipleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  checkMultipleText: {
+    fontSize: 16,
+    fontWeight: "600",
   },
   completedText: {
     fontSize: 14,

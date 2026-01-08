@@ -4,12 +4,17 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { useRef, useState } from "react";
 import Swipeable from "react-native-gesture-handler/Swipeable";
+// If you have a shared types file, add this:
+export type DeliveryStatus = 'pending' | 'received' | 'damaged' | 'missing' | 'substituted';
 
-type DeliveryItem = {
+export type DeliveryItem = {
   id: string;
   name: string;
   cases: number;
   cans: number;
+  status?: DeliveryStatus;
+  notes?: string;
+  substitutedWith?: string; // For substituted items
 };
 
 type DropdownOption = {
@@ -24,9 +29,22 @@ type Props = {
   onSwipeComplete?: (id: string) => void;
   onRemove?: (id: string) => void;
   onPress?: (item: DeliveryItem) => void;
+  isSelectMode?: boolean;
+  isSelected?: boolean;
+  onLongPress?: (item: DeliveryItem) => void;
+  onSelectPress?: (item: DeliveryItem) => void;
 };
 
-export default function ListItem({ delivery, onSwipeComplete, onRemove, onPress }: Props) {
+export default function ListItem({ 
+  delivery, 
+  onSwipeComplete, 
+  onRemove, 
+  onPress,
+  isSelectMode = false,
+  isSelected = false,
+  onLongPress,
+  onSelectPress
+}: Props) {
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
 
@@ -67,39 +85,55 @@ export default function ListItem({ delivery, onSwipeComplete, onRemove, onPress 
   };
 
   const handleItemPress = () => {
-    if (onPress) {
+    if (isSelectMode && onSelectPress) {
+      onSelectPress(delivery);
+    } else if (onPress) {
       onPress(delivery);
     }
   };
 
-  const renderLeftActions = () => (
-    <TouchableOpacity
-      style={[styles.leftAction, { backgroundColor: palette.green }]}
-      onPress={handleSwipeComplete}
-      accessibilityLabel="Complete delivery"
-      accessibilityRole="button"
-      accessibilityHint="Marks delivery as complete and removes from list"
-    >
-      <Ionicons name="checkmark" size={28} color={palette.black} style={{ marginLeft: 10 }} />
-    </TouchableOpacity>
-  );
+  const handleItemLongPress = () => {
+    if (onLongPress) {
+      onLongPress(delivery);
+    }
+  };
 
-  const renderRightActions = () => (
-    <View style={styles.rightActionsWrapper}>
-      <View style={styles.rightActionsOverlap}>
-        <TouchableOpacity
-          ref={buttonRef}
-          style={[styles.actionButton, styles.actionButtonBehind, { backgroundColor: palette.pink }]}
-          onPress={handleMenuPress}
-          accessibilityLabel="More options"
-          accessibilityRole="button"
-          accessibilityHint="Opens menu with more actions"
-        >
-          <Ionicons name="ellipsis-horizontal" size={22} color={palette.black} />
-        </TouchableOpacity>
+  const renderLeftActions = () => {
+    if (isSelectMode) return null;
+    
+    return (
+      <TouchableOpacity
+        style={[styles.leftAction, { backgroundColor: palette.green }]}
+        onPress={handleSwipeComplete}
+        accessibilityLabel="Complete delivery"
+        accessibilityRole="button"
+        accessibilityHint="Marks delivery as complete and removes from list"
+      >
+        <Ionicons name="checkmark" size={28} color={palette.black} style={{ marginLeft: 10 }} />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderRightActions = () => {
+    if (isSelectMode) return null;
+    
+    return (
+      <View style={styles.rightActionsWrapper}>
+        <View style={styles.rightActionsOverlap}>
+          <TouchableOpacity
+            ref={buttonRef}
+            style={[styles.actionButton, styles.actionButtonBehind, { backgroundColor: palette.pink }]}
+            onPress={handleMenuPress}
+            accessibilityLabel="More options"
+            accessibilityRole="button"
+            accessibilityHint="Opens menu with more actions"
+          >
+            <Ionicons name="ellipsis-horizontal" size={22} color={palette.black} />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   if (!isVisible) return null;
 
@@ -119,14 +153,36 @@ export default function ListItem({ delivery, onSwipeComplete, onRemove, onPress 
             handleSwipeComplete();
           }
         }}
+        enabled={!isSelectMode} // Disable swipe in select mode
       >
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={handleItemPress}
-          disabled={!onPress}
+          onLongPress={handleItemLongPress}
+          delayLongPress={500}
+          disabled={isSelectMode && !onSelectPress}
         >
-          <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
-            <Text style={[styles.title, { color: colors.cardText }]}>{delivery.name}</Text>
+          <View style={[
+            styles.container, 
+            { backgroundColor: colors.cardBackground },
+            isSelectMode && isSelected && styles.selectedContainer
+          ]}>
+            {/* Checkbox for select mode */}
+            {isSelectMode && (
+              <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                {isSelected && (
+                  <Ionicons name="checkmark" size={16} color={palette.white} />
+                )}
+              </View>
+            )}
+
+            <Text style={[
+              styles.title, 
+              { color: colors.cardText },
+              isSelectMode && isSelected && styles.selectedText
+            ]}>
+              {delivery.name}
+            </Text>
 
             <View style={styles.badges}>
               <View style={[styles.badge, { backgroundColor: colors.background }]}>
@@ -204,10 +260,15 @@ const styles = StyleSheet.create({
     opacity: 1,
     transform: [{ scale: 1 }],
   },
+  selectedContainer: {
+  },
   title: {
     fontSize: 16,
     fontWeight: "600",
     maxWidth: "55%",
+  },
+  selectedText: {
+    fontWeight: "700",
   },
   badges: {
     flexDirection: "row",
@@ -286,5 +347,19 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     fontWeight: "500",
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#CCCCCC',
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#4A90E2',
+    borderColor: '#4A90E2',
   },
 });

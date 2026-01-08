@@ -1,12 +1,19 @@
 import React, { useMemo, useState } from "react";
-import {  StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import DeliveryList, { DeliveryItem } from "@/components/ui/DeliveryList";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Button from "@/components/shared/GradientButton";
+import { useAppTheme } from "@/stores/app-theme-context";
+import { Text } from "@/components/shared/Text";  
+import { useRouter } from "expo-router"; // Added import
 
 export default function DeliveryCheck() {
   const queryClient = useQueryClient();
   const [removedIds, setRemovedIds] = useState<string[]>([]);
+  const { theme } = useAppTheme();
+  const { colors, palette } = theme;
+  const router = useRouter(); // Added router
 
   /**
    * Read OCR response from cache
@@ -40,6 +47,14 @@ export default function DeliveryCheck() {
   }, [delivery]);
 
   /**
+   * Check if all items have been completed
+   */
+  const allItemsCompleted = useMemo(() => {
+    if (deliveries.length === 0) return false;
+    return deliveries.every(item => removedIds.includes(item.id));
+  }, [deliveries, removedIds]);
+
+  /**
    * Swipe-to-remove handler
    */
   const handleSwipeComplete = (id: string) => {
@@ -65,9 +80,17 @@ export default function DeliveryCheck() {
     // Navigate to product detail or edit screen
   };
 
+  /**
+   * Handle summary button press
+   */
+  const handleSummaryPress = () => {
+    console.log("Navigating to delivery summary");
+    // Navigation is handled by the Button component
+  };
+
   if (!delivery) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <DeliveryList
           deliveries={[]}
           emptyState={{
@@ -80,26 +103,41 @@ export default function DeliveryCheck() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <DeliveryList
-        deliveries={deliveries}
-        removedIds={removedIds}
-        onSearch={handleSearch}
-        onSwipeComplete={handleSwipeComplete}
-        onItemPress={handleItemPress}
-        emptyState={{
-          title: deliveries.length === 0
-            ? "All deliveries completed! 🎉"
-            : "No deliveries match your search",
-          message: "Scan a new delivery to add more items"
-        }}
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
+        <DeliveryList
+          deliveries={deliveries}
+          removedIds={removedIds}
+          onSearch={handleSearch}
+          onSwipeComplete={handleSwipeComplete}
+          onItemPress={handleItemPress}
+          emptyState={{
+            title: deliveries.length === 0
+              ? "All items in the delivery list are checked. Please go to summary."
+              : "No deliveries match your search",
+            message: "Scan a new delivery to add more items"
+          }}
+        />
+        
+        {/* Summary Button */}
+        <View style={{ padding: 16, backgroundColor: colors.background }}>
+          <Button
+            text="View Delivery Summary"
+            onPress={() => router.push("/delivery-summary")} // Changed to use router.push
+            disabled={!allItemsCompleted}
+            variant="primary"
+          />
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
   },
 });

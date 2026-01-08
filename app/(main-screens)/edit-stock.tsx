@@ -8,7 +8,7 @@ import { Pressable, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 
-import { useStocks, useUpdateStock } from "@/hooks/useStock";
+import { useCreateStock, useStocks, useUpdateStock } from "@/hooks/useStock";
 
 export default function EditStock() {
   const { theme } = useAppTheme();
@@ -22,7 +22,10 @@ export default function EditStock() {
   const productId = params.productId as string;
   const barId = params.barId as string;
   const productVolume = Number(params.productVolume); // litres per unit (keg/bottle)
+  const productName = params.productName as string;
+  const productType = params.productType as string;
   const initialBottleCount = Number(params.currentStock ?? 0);
+  const stockId = params.stockId as string; // Get stockId directly from params
 
   /* -----------------------------
      Local state
@@ -34,55 +37,72 @@ export default function EditStock() {
   ------------------------------ */
   const { data: stocksData, isLoading } = useStocks();
   const updateStockMutation = useUpdateStock();
+  const createStockMutation = useCreateStock();
 
   /* -----------------------------
      Find the correct stock item
   ------------------------------ */
   const stockItem = useMemo(() => {
+    if (stockId) {
+      return stocksData?.value.find(stock => stock.stockId === stockId);
+    }
+    
     return stocksData?.value.find(
       stock =>
         stock.productId === productId &&
         stock.storagePlaceId === barId
     );
-  }, [stocksData, productId, barId]);
+  }, [stocksData, productId, barId, stockId]);
 
   /* -----------------------------
      Calculate leftovers
-     (THIS IS THE FIX)
   ------------------------------ */
-  const unitVolume = productVolume; // 50L for keg, 0.75L for bottle, etc
-
+  const unitVolume = productVolume;
   const currentTotalVolume = stockItem?.volume ?? 0;
-
   const currentFullUnits = Math.floor(currentTotalVolume / unitVolume);
-  const leftoverVolume =
-    currentTotalVolume - currentFullUnits * unitVolume;
+  const leftoverVolume = currentTotalVolume - currentFullUnits * unitVolume;
 
   /* -----------------------------
      Handle submit
   ------------------------------ */
   const handleAdjustStock = () => {
-    if (!stockItem) return;
-
-    const newVolume =
-      leftoverVolume + unitCount * unitVolume;
-
-    updateStockMutation.mutate({
-      stockId: stockItem.stockId,
-      data: {
+    if (stockItem || stockId) {
+      const newVolume = leftoverVolume + unitCount * unitVolume;
+      const targetStockId = stockItem?.stockId || stockId!;
+      
+      updateStockMutation.mutate({
+        stockId: targetStockId,
+        data: {
+          volume: newVolume,
+          productId: stockItem?.productId || productId,
+          storagePlaceId: stockItem?.storagePlaceId || barId,
+        },
+      });
+    } else {
+      const newVolume = unitCount * unitVolume;
+      
+      createStockMutation.mutate({
+        productId,
+        storagePlaceId: barId,
         volume: newVolume,
-      },
-    });
+      });
+    }
   };
 
   /* -----------------------------
      Navigate back on success
   ------------------------------ */
   useEffect(() => {
-    if (updateStockMutation.isSuccess) {
+    if (updateStockMutation.isSuccess || createStockMutation.isSuccess) {
       router.back();
     }
-  }, [updateStockMutation.isSuccess, router]);
+  }, [updateStockMutation.isSuccess, createStockMutation.isSuccess, router]);
+
+  /* -----------------------------
+     Button state
+  ------------------------------ */
+  const isPending = updateStockMutation.isPending || createStockMutation.isPending;
+  const canSubmit = !isPending && !isLoading && productId && barId && unitCount >= 0;
 
   /* -----------------------------
      Render
@@ -91,10 +111,15 @@ export default function EditStock() {
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
     >
+      {/* Adjust stock header */}
+      <Text style={[styles.header, { color: colors.text }]}>
+        Adjust stock
+      </Text>
+
       {/* Info text */}
       <Text style={[styles.infoText, { color: colors.text }]}>
-        Adjust the number of full units.
-        Any remaining opened unit will be preserved automatically.
+        You are trying to adjust the quantity of {productName} {productType}. 
+        Please input the amount of full {productType}s that you see.
       </Text>
 
       {/* Unit input */}
@@ -103,6 +128,7 @@ export default function EditStock() {
         initialValue={unitCount.toString()}
         min={0}
         decimal={false}
+        placeholder="Enter number of units"
         onSearch={(value) => {
           if (value === "") {
             setUnitCount(0);
@@ -114,21 +140,10 @@ export default function EditStock() {
         }}
       />
 
-      {/* Leftover indicator
-      {leftoverVolume > 0 && (
-        <Text style={{ color: colors.text, marginTop: 12 }}>
-          Open unit remaining: {leftoverVolume.toFixed(1)} L
-        </Text>
-      )} */}
-
       {/* Adjust button */}
       <Pressable
         onPress={handleAdjustStock}
-        disabled={
-          updateStockMutation.isPending ||
-          isLoading ||
-          !stockItem
-        }
+        disabled={!canSubmit}
         style={styles.adjustButton}
       >
         <LinearGradient
@@ -140,12 +155,11 @@ export default function EditStock() {
             borderRadius: 24,
             alignItems: "center",
             justifyContent: "center",
-            opacity:
-              updateStockMutation.isPending || !stockItem ? 0.6 : 1,
+            opacity: canSubmit ? 1 : 0.6,
           }}
         >
           <Text style={styles.buttonText}>
-            {updateStockMutation.isPending ? "Saving..." : "Adjust"}
+            {isPending ? "Saving..." : "Adjust"}
           </Text>
         </LinearGradient>
       </Pressable>
@@ -161,6 +175,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 40,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 16,
   },
   infoText: {
     fontSize: 16,
