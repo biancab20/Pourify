@@ -15,7 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
 import { makeId } from "@/utils/ids";
 import { useQueryClient } from "@tanstack/react-query";
-import type {Photo, DeliveryOcrResponse } from "@/types/deliveries";
+import type {Photo, DeliveryOcrResponse, DeliveryProduct } from "@/types/deliveries";
+import EditableSectionCard from "@/components/ui/EditableSectionCard";
 
 function safeParsePhotos(value: unknown): Photo[] {
   if (typeof value !== "string") return [];
@@ -52,6 +53,67 @@ export default function PictureOverview() {
     }
   }, [params.ocrData]);
 
+  // Format date from OCR data
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "No date found";
+    
+    try {
+      // If it's already in a readable format, return as-is
+      if (dateString.includes('/')) return dateString;
+      
+      // Try to parse and format date
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Format volume for products
+  const formatVolume = (volume?: number) => {
+    if (!volume) return "N/A";
+    return `${volume} m³`;
+  };
+
+  // Calculate total volume from products
+  const calculateTotalVolume = () => {
+    if (!ocrData?.products || !ocrData.products.length) return 0;
+    return ocrData.products.reduce((total, product) => total + (product.volume || 0), 0);
+  };
+
+  // Define rows for the EditableSectionCard based on OCR data
+  const infoRows = useMemo(() => [
+    {
+      id: "supplier",
+      title: "Supplier",
+      value: ocrData?.supplier?.name || "Supplier not detected",
+      valueNumberOfLines: 1,
+      onEditPress: () => {
+        Alert.alert("Edit Supplier", "Edit supplier functionality");
+      },
+      showEdit: true,
+      editA11yLabel: "Edit supplier",
+    },
+    {
+      id: "date",
+      title: "Date",
+      value: formatDate(ocrData?.deliveryDate),
+      valueNumberOfLines: 1,
+      onEditPress: () => {
+        Alert.alert("Edit Date", "Edit date functionality");
+      },
+      showEdit: true,
+      editA11yLabel: "Edit date",
+    }
+    // Add more fields as needed
+  ], [ocrData]);
+
   const confirmPhotos = () => {
     if (!ocrData) {
       Alert.alert("No OCR data found");
@@ -59,92 +121,78 @@ export default function PictureOverview() {
     }
 
     queryClient.setQueryData(["deliveries", "latest"], ocrData);
-
     router.replace("/delivery-check");
   };
+
+  // If no OCR data, show error
+  if (!ocrData) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'white', fontSize: 18, marginBottom: 20 }}>No OCR data available</Text>
+        <GradientButton text="Go Back" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Delivery Photos</Text>
-        <Pressable onPress={() => router.back()}>
-          <Icon name="exit" size={28} color={theme.colors.icon} />
-        </Pressable>
-      </View>
+       <Text
+                variant="gradient"
+                gradientName="paloma"
+                style={styles.headerTitle}
+                accessibilityRole="header"
+                accessibilityLabel="Venue name"
+              >
+                Verify Information
+              </Text>
 
-      {/* Photos */}
-      <ScrollView>
-        <View style={styles.grid}>
-          {photos.map((p, i) => (
-            <View key={p.id} style={styles.photoBox}>
-              <Image source={{ uri: p.uri }} style={styles.photo} />
-              <Text style={styles.page}>Page {i + 1}</Text>
-            </View>
-          ))}
+      {/* Subtext */}
+      <Text style={{ color: theme.colors.text }}>
+        Please check if the information is correct.
+      </Text>
+
+      {/* Info Cards - Using EditableSectionCard */}
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.infoContainer}>
+          <EditableSectionCard
+            rows={infoRows}
+            style={styles.editableCardStyle}
+          />
+          
+          
         </View>
       </ScrollView>
 
       {/* Actions */}
       <View style={styles.actions}>
-        <GradientButton
-          text="Confirm & Continue"
-          onPress={confirmPhotos}
-        />
-        <GradientButton
-          text="Add More Photos"
-          variant="secondary"
-          onPress={() =>
-            router.replace({
-              pathname: "/(scan-flow)/scan-new-delivery",
-              params: { existingPhotos: JSON.stringify(photos) },
-            })
-          }
-        />
+        <GradientButton text="Next" onPress={confirmPhotos} />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    height: 56,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    padding: 16,
-  },
-  photoBox: {
-    width: "48%",
-    height: 180,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  photo: {
-    width: "100%",
-    height: "100%",
-  },
-  page: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
+    fontSize: 24,
+    fontWeight: "700",
     color: "white",
-    backgroundColor: "rgba(0,0,0,0.6)",
-    paddingHorizontal: 6,
-    borderRadius: 6,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  infoContainer: {
+    marginTop: 24,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  editableCardStyle: {
+    borderRadius: 12,
   },
   actions: {
     padding: 16,
-    gap: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#333",
   },
 });
