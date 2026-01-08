@@ -12,6 +12,7 @@ export default function ScanFlowLayout() {
       <Stack.Screen name="delivery-check" />
       <Stack.Screen name="supplier-check" />
       <Stack.Screen name="delivery-summary" />
+      <Stack.Screen name="manual-delivery" />
     </Stack>
   );
 }

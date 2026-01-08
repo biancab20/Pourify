@@ -1,4 +1,4 @@
-import { View, Alert, Linking } from "react-native";
+import { View, Alert, Linking, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CameraView } from "expo-camera";
@@ -168,7 +168,24 @@ export default function ScanNewDelivery() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 16 }}>
-      <Header title="Scan delivery note" />
+     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+  <View style={{ flex: 1 }}>
+    <Header title="Scan delivery note" />
+  </View>
+  <Pressable
+    onPress={() => router.push("/(scan-flow)/manual-delivery")}
+    style={{
+      padding: 12,
+      borderRadius: 8,
+      backgroundColor: theme.palette.pink, 
+      marginLeft: 12,
+    }}
+  >
+    <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "600" }}>
+      Manual
+    </Text>
+  </Pressable>
+</View>
 
       {hasCameraPermission ? (
         <>

@@ -5,9 +5,10 @@ import type {
   TransferStockResponse,
   StockItem,
   TransferStockRequest,
+  CreateStockResponse,
 } from "@/types/stock";
 import type { ApiError } from "@/services/api.errors";
-import { getStocks, updateStock, transferStock, getStockById } from "@/services/stock.api";
+import { getStocks, updateStock, transferStock, getStockById, createStock } from "@/services/stock.api";
 
 /**
  * GET stock items (OData list)
@@ -46,6 +47,23 @@ export function useUpdateStock() {
   });
 }
 
+// In your useStock file, add this hook:
+export function useCreateStock() {
+  const queryClient = useQueryClient();
+
+  return useMutation<CreateStockResponse, ApiError, {
+    storagePlaceId: string;
+    productId: string;
+    volume: number;
+  }>({
+    mutationKey: ["stock", "create"],
+    mutationFn: createStock,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
+    },
+  });
+}
+
 /**
  * TRANSFER stock
  */
@@ -59,4 +77,6 @@ export function useTransferStock() {
       queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
     },
   });
+
+  
 }
