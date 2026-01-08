@@ -96,33 +96,31 @@ export function mapDeliveryDto(dto: DeliveryDto): Delivery {
  * OCR already returns camelCase objects, but we still normalize to be safe
  * (ensures missing arrays/nulls don't break the UI).
  */
-export function normalizeOcrDelivery(d: any): Delivery {
+export function normalizeOcrDelivery(dto: any): Delivery {
   return {
-    deliveryNoteId: String(d.deliveryNoteId),
-    deliveryDate: String(d.deliveryDate),
-
+    deliveryNoteId: String(dto?.deliveryNoteId ?? ""),
+    deliveryDate: String(dto?.deliveryDate ?? ""),
     supplier: {
-      supplierId: String(d.supplier?.supplierId ?? ""),
-      name: String(d.supplier?.name ?? ""),
-      contactEmail: String(d.supplier?.contactEmail ?? ""),
+      supplierId: String(dto?.supplier?.supplierId ?? ""),
+      name: String(dto?.supplier?.name ?? ""),
+      contactEmail: String(dto?.supplier?.contactEmail ?? ""),
     },
-
-    products: Array.isArray(d.products)
-      ? d.products.map((p: any) => ({
-          productId: String(p.productId),
-          name: String(p.name ?? ""),
-          volume: Number(p.volume ?? 0),
-          type: String(p.type ?? ""),
-          totalVolume: Number(p.totalVolume ?? 0),
-          isDeleted:
-            p.isDeleted === undefined ? undefined : Boolean(p.isDeleted),
+    products: Array.isArray(dto?.products)
+      ? dto.products.map((p: any) => ({
+          totalVolume: Number(p?.totalVolume ?? 0),
+          productId: String(p?.productId ?? ""),
+          name: String(p?.name ?? ""),
+          volume: Number(p?.volume ?? 0),
+          type: String(p?.type ?? ""),
+          isDeleted: Boolean(p?.isDeleted ?? false),
         }))
       : [],
-
-    deliveryNotePictureIds: Array.isArray(d.deliveryNotePictureIds)
-      ? d.deliveryNotePictureIds.map(String)
+    deliveryNotePictureIds: Array.isArray(dto?.deliveryNotePictureIds)
+      ? dto.deliveryNotePictureIds.map(String)
       : [],
-
-    deliveryPilePictureId: d.deliveryPilePictureId ?? null,
+    deliveryPilePictureId:
+      dto?.deliveryPilePictureId === null || dto?.deliveryPilePictureId === undefined
+        ? null
+        : String(dto.deliveryPilePictureId),
   };
 }

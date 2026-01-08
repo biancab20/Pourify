@@ -31,7 +31,7 @@ export type Delivery = {
 /** ---------------- OCR endpoint (NOT OData) ----------------
  * OCR returns an ARRAY of deliveries 
  */
-export type DeliveryOcrResponse = Delivery[];
+export type DeliveryOcrResponse = Delivery;
 
 /** ---------------- Deliveries endpoint (OData + PascalCase DTOs) ---------------- */
 export type DeliverySupplierDto = {

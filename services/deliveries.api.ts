@@ -1,21 +1,39 @@
 import { API } from "@/services/api.config";
-import type { Photo, DeliveryOcrResponse } from "@/types/deliveries";
 import type { ApiError } from "@/services/api.errors";
+import { authedFetch } from "@/utils/authed-fetch";
 import { guessMimeType } from "@/utils/mime";
+import type { Photo, DeliveryOcrResponse } from "@/types/deliveries";
+import { normalizeOcrDelivery } from "@/utils/api-mappers";
 
 export type PickedFileInput = { uri: string; name?: string; mimeType?: string };
 export type ProcessDeliveryNoteInput =
   | { kind: "photos"; photos: Photo[] }
   | { kind: "file"; file: PickedFileInput };
 
+function toApiError(res: Response, bodyText: string): ApiError {
+  return {
+    message: `Request failed with status ${res.status}`,
+    status: res.status,
+    body: bodyText,
+  };
+}
+
+/**
+ * POST /photo/DeliveryNote
+ * multipart/form-data with field name "KEY"
+ * Response: Delivery-like object (NOT OData)
+ */
 export async function processDeliveryNote(
   input: ProcessDeliveryNoteInput
 ): Promise<DeliveryOcrResponse> {
   const form = new FormData();
 
+  // ✅ backend expects the field name exactly "KEY"
+  const fieldName = "KEY";
+
   if (input.kind === "photos") {
     input.photos.forEach((p, index) => {
-      form.append("files", {
+      form.append(fieldName, {
         uri: p.uri,
         name: `delivery-note-${index + 1}.jpg`,
         type: "image/jpeg",
@@ -23,48 +41,40 @@ export async function processDeliveryNote(
     });
   } else {
     const name = input.file.name ?? "delivery-note";
-    form.append("files", {
+    form.append(fieldName, {
       uri: input.file.uri,
       name,
       type: guessMimeType(name, input.file.mimeType),
     } as any);
   }
 
-  const res = await fetch(API.ocr.processDeliveryNote, {
+  const res = await authedFetch(API.photo.deliveryNote, {
     method: "POST",
-    body: form,
-    headers: { Accept: "application/json" },
+    headers: { Accept: "application/json" }, // ✅ don't set Content-Type for FormData
+    body: form as any,
   });
 
-  const contentType = res.headers.get("content-type") ?? "";
   const text = await res.text();
+  if (!res.ok) throw toApiError(res, text);
 
-  if (!res.ok) {
-    const err: ApiError = {
-      message: `Request failed with status ${res.status}`,
-      status: res.status,
-      body: text,
-    };
-    throw err;
-  }
-
+  const contentType = res.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) {
-    const err: ApiError = {
+    throw {
       message: "Unexpected response type",
       status: res.status,
       body: text,
-    };
-    throw err;
+    } satisfies ApiError;
   }
 
   try {
-    return JSON.parse(text) as DeliveryOcrResponse;
+    const raw = JSON.parse(text);
+    // ✅ single object now
+    return normalizeOcrDelivery(raw);
   } catch {
-    const err: ApiError = {
+    throw {
       message: "Failed to parse JSON response",
       status: res.status,
       body: text,
-    };
-    throw err;
+    } satisfies ApiError;
   }
 }
