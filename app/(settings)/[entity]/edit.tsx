@@ -251,7 +251,7 @@ export default function EditEntityScreen() {
         editA11yLabel: "Edit product type",
       },
     ];
-  }, [entity, item]);
+  }, [entity, item, id, router]);
 
   const renderCenteredState = (title: string, subtitle?: string) => (
     <View style={styles.centerContainer}>

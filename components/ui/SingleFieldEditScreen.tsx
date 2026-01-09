@@ -71,7 +71,9 @@ export default function SingleFieldEditScreen(props: Props) {
 
   const isSaving = props.mode === "entity" ? !!props.isSaving : localSaving;
 
-  const options = props.fieldType === "select" ? props.options ?? [] : [];
+  const options = useMemo(() => {
+    return props.fieldType === "select" ? props.options ?? [] : [];
+  }, [props.fieldType, props.options]);
   const currentSelectLabel = useMemo(() => {
     if (props.fieldType !== "select") return "";
     return options.find((o) => o.value === value)?.label ?? "Select";
