@@ -3,25 +3,24 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useMemo, } from "react";
+import { useMemo } from "react";
 import { Text } from "@/components/shared/Text";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
-import type {DeliveryOcrResponse,} from "@/types/deliveries";
+import type {DeliveryOcrResponse} from "@/types/deliveries";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
-
 
 export default function CheckSupplier() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { theme } = useAppTheme();
+  const { colors } = theme;
   const queryClient = useQueryClient();
-
-  
 
   const ocrData = useMemo<DeliveryOcrResponse | null>(() => {
     if (typeof params.ocrData !== "string") return null;
@@ -53,9 +52,6 @@ export default function CheckSupplier() {
       return dateString;
     }
   };
-
-
-  
 
   // Define rows for the EditableSectionCard based on OCR data
   const infoRows = useMemo(() => [
@@ -97,45 +93,59 @@ export default function CheckSupplier() {
   // If no OCR data, show error
   if (!ocrData) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ color: 'white', fontSize: 18, marginBottom: 20 }}>No OCR data available</Text>
+      <SafeAreaView style={{ 
+        flex: 1, 
+        backgroundColor: colors.background, 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }}>
+        <Text style={{ color: colors.text, fontSize: 18, marginBottom: 20 }}>
+          No OCR data available
+        </Text>
         <GradientButton text="Go Back" onPress={() => router.back()} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background , paddingHorizontal: 16 }}>
-      {/* Header */}
-       <Text
-                variant="gradient"
-                gradientName="paloma"
-                style={styles.headerTitle}
-                accessibilityRole="header"
-                accessibilityLabel="Venue name"
-              >
-                Verify Information
-              </Text>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={Platform.OS === "android" ? ["bottom"] : []}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Text
+          variant="gradient"
+          gradientName="paloma"
+          style={styles.title}
+          accessibilityRole="header"
+        >
+          Verify Information
+        </Text>
 
-      {/* Subtext */}
-      <Text style={{ color: theme.colors.text }}>
-        Please check if the information is correct.
-      </Text>
+        {/* Subtext */}
+        <Text style={[styles.subtitle, { color: colors.text }]}>
+          Please check if the information is correct.
+        </Text>
 
-      {/* Info Cards - Using EditableSectionCard */}
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Info Cards - Using EditableSectionCard */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
             rows={infoRows}
             style={styles.editableCardStyle}
           />
-          
-          
         </View>
+
+        {/* Spacer to push content up */}
+        <View style={styles.spacer} />
       </ScrollView>
 
-      {/* Actions */}
-      <View style={styles.actions}>
+      {/* Actions - Fixed at bottom */}
+      <View style={[styles.actions, { backgroundColor: colors.background }]}>
         <GradientButton text="Next" onPress={confirmPhotos} />
       </View>
     </SafeAreaView>
@@ -143,21 +153,31 @@ export default function CheckSupplier() {
 }
 
 const styles = StyleSheet.create({
-
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "white",
-  },
-  scrollContainer: {
+  container: {
     flex: 1,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  scrollContent: {
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: 20,
   },
   infoContainer: {
-    marginTop: 24,
-    paddingBottom: 24,
+    marginTop: 15,
+    gap: 16,
   },
   editableCardStyle: {
     borderRadius: 12,
+  },
+  spacer: {
+    height: 30,
   },
   actions: {
     padding: 16,
