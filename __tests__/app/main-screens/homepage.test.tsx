@@ -1,9 +1,9 @@
-/* eslint-disable import/first */
-
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 import * as ReactNative from "react-native";
 import { useRouter } from "expo-router";
+
+import HomeScreen from "../../../app/(main-screens)/homepage";
 
 const mockUseBars = jest.fn();
 jest.mock("@/hooks/useLocations", () => ({
@@ -19,8 +19,6 @@ jest.mock("@/components/staticComponents/WideCardStatic", () => {
   return Comp;
 });
 
-import HomeScreen from "../../../app/(main-screens)/homepage";
-
 beforeEach(() => {
   mockUseBars.mockReset();
 
@@ -35,7 +33,11 @@ afterEach(() => {
 
 describe("HomeScreen", () => {
   test("shows loading state for bars", () => {
-    mockUseBars.mockReturnValue({ data: undefined, isLoading: true, error: null });
+    mockUseBars.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+    });
     const { getByText } = render(<HomeScreen />);
     expect(getByText("Loading bars...")).toBeTruthy();
   });
@@ -51,14 +53,23 @@ describe("HomeScreen", () => {
   });
 
   test("shows empty state when no bars found", () => {
-    mockUseBars.mockReturnValue({ data: { value: [] }, isLoading: false, error: null });
+    mockUseBars.mockReturnValue({
+      data: { value: [] },
+      isLoading: false,
+      error: null,
+    });
     const { getByText } = render(<HomeScreen />);
     expect(getByText("No bars found")).toBeTruthy();
   });
 
   test("renders bars list when bars exist", () => {
     mockUseBars.mockReturnValue({
-      data: { value: [{ barId: "bar-1", name: "Main Bar" }, { barId: "bar-2", name: "Upstairs" }] },
+      data: {
+        value: [
+          { barId: "bar-1", name: "Main Bar" },
+          { barId: "bar-2", name: "Upstairs" },
+        ],
+      },
       isLoading: false,
       error: null,
     });
@@ -86,7 +97,11 @@ describe("HomeScreen", () => {
   });
 
   test("top icons navigate to Scan and Settings", () => {
-    mockUseBars.mockReturnValue({ data: { value: [] }, isLoading: false, error: null });
+    mockUseBars.mockReturnValue({
+      data: { value: [] },
+      isLoading: false,
+      error: null,
+    });
 
     const { getByLabelText } = render(<HomeScreen />);
 
