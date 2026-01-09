@@ -1,14 +1,25 @@
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
 import { authedFetch } from "@/utils/authed-fetch";
-import type { Bar, BarDto, DeleteBarResponse, GetBarsResponse, UpdateBarResponse } from "@/types/locations";
+import type {
+  Bar,
+  BarDto,
+  DeleteBarResponse,
+  GetBarsResponse,
+  UpdateBarResponse,
+} from "@/types/locations";
 import type { ODataBoolean, ODataEntity } from "@/types/odata";
-import { parseODataList, toApiError, firstOrThrow } from "@/utils/odata";
+import { parseODataList, toApiError, firstOrThrow } from "@/utils/api-helpers";
 import { mapBarDto } from "@/utils/api-mappers";
 
-export async function getBars(params?: Record<string, string | number>): Promise<GetBarsResponse> {
+export async function getBars(
+  params?: Record<string, string | number>
+): Promise<GetBarsResponse> {
   const query = params
-    ? "?" + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString()
+    ? "?" +
+      new URLSearchParams(
+        Object.entries(params).map(([k, v]) => [k, String(v)])
+      ).toString()
     : "";
 
   const res = await authedFetch(`${API.locations.list}${query}`, {
@@ -26,7 +37,11 @@ export async function getBars(params?: Record<string, string | number>): Promise
       value: data.value.map(mapBarDto),
     };
   } catch {
-    throw { message: "Failed to parse JSON response", status: res.status, body: text } satisfies ApiError;
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
   }
 }
 
@@ -57,7 +72,10 @@ export async function createBar(payload: { name: string }): Promise<Bar> {
   return mapBarDto(data);
 }
 
-export async function updateBar(barId: string, payload: Partial<Bar>): Promise<UpdateBarResponse> {
+export async function updateBar(
+  barId: string,
+  payload: Partial<Bar>
+): Promise<UpdateBarResponse> {
   const res = await authedFetch(API.locations.update(barId), {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },

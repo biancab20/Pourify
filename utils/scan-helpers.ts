@@ -1,6 +1,9 @@
 import type { Photo } from "@/types/deliveries";
 import type { PickedFile } from "@/app/(scan-flow)/scan-new-delivery";
-import { makeId } from "@/utils/ids";
+
+export function makeId() {
+  return `${Date.now()}-${Math.random()}`;
+}
 
 export function toPhotosFromAssets(assets: { uri: string }[]): Photo[] {
   return assets.map((a) => ({ id: makeId(), uri: a.uri }));

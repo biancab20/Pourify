@@ -9,13 +9,18 @@ import type {
 } from "@/types/suppliers";
 import type { ApiError } from "@/services/api.errors";
 import { authedFetch } from "@/utils/authed-fetch";
-import { parseODataList, toApiError, firstOrThrow } from "@/utils/odata";
+import { parseODataList, toApiError, firstOrThrow } from "@/utils/api-helpers";
 import { mapSupplierDto } from "@/utils/api-mappers";
 import type { ODataBoolean, ODataEntity } from "@/types/odata";
 
-export async function getSuppliers(params?: Record<string, string | number>): Promise<GetSuppliersResponse> {
+export async function getSuppliers(
+  params?: Record<string, string | number>
+): Promise<GetSuppliersResponse> {
   const query = params
-    ? "?" + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString()
+    ? "?" +
+      new URLSearchParams(
+        Object.entries(params).map(([k, v]) => [k, String(v)])
+      ).toString()
     : "";
 
   const res = await authedFetch(`${API.suppliers.list}${query}`, {
@@ -33,7 +38,11 @@ export async function getSuppliers(params?: Record<string, string | number>): Pr
       value: data.value.map(mapSupplierDto),
     };
   } catch {
-    throw { message: "Failed to parse JSON response", status: res.status, body: text } satisfies ApiError;
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
   }
 }
 
@@ -50,7 +59,10 @@ export async function getSupplierById(supplierId: string): Promise<Supplier> {
   return mapSupplierDto(firstOrThrow(list, "Supplier"));
 }
 
-export async function createSupplier(payload: { name: string; email: string }): Promise<CreateSupplierResponse> {
+export async function createSupplier(payload: {
+  name: string;
+  email: string;
+}): Promise<CreateSupplierResponse> {
   const res = await authedFetch(API.suppliers.create, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -85,7 +97,9 @@ export async function updateSupplier(
   return mapSupplierDto(data);
 }
 
-export async function deleteSupplier(supplierId: string): Promise<DeleteSupplierResponse> {
+export async function deleteSupplier(
+  supplierId: string
+): Promise<DeleteSupplierResponse> {
   const res = await authedFetch(API.suppliers.delete(supplierId), {
     method: "DELETE",
     headers: { Accept: "application/json" },

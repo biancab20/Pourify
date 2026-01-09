@@ -1,7 +1,7 @@
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
 import { authedFetch } from "@/utils/authed-fetch";
-import { guessMimeType } from "@/utils/mime";
+import { guessMimeType } from "@/utils/api-helpers";
 import type { Photo, DeliveryOcrResponse } from "@/types/deliveries";
 import { normalizeOcrDelivery } from "@/utils/api-mappers";
 
