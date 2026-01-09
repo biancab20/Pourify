@@ -5,31 +5,15 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, } from "react";
 import { Text } from "@/components/shared/Text";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Icon } from "@/components/icons/Icon";
-import { makeId } from "@/utils/ids";
 import { useQueryClient } from "@tanstack/react-query";
-import type {Photo, DeliveryOcrResponse, DeliveryProduct } from "@/types/deliveries";
+import type {DeliveryOcrResponse,} from "@/types/deliveries";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
 
-function safeParsePhotos(value: unknown): Photo[] {
-  if (typeof value !== "string") return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed)
-      ? parsed.map((p) => ({
-          id: p.id ?? makeId(),
-          uri: p.uri,
-        }))
-      : [];
-  } catch {
-    return [];
-  }
-}
 
 export default function CheckSupplier() {
   const router = useRouter();
@@ -37,10 +21,7 @@ export default function CheckSupplier() {
   const { theme } = useAppTheme();
   const queryClient = useQueryClient();
 
-  const photos = useMemo(
-    () => safeParsePhotos(params.photos),
-    [params.photos]
-  );
+  
 
   const ocrData = useMemo<DeliveryOcrResponse | null>(() => {
     if (typeof params.ocrData !== "string") return null;
@@ -73,17 +54,8 @@ export default function CheckSupplier() {
     }
   };
 
-  // Format volume for products
-  const formatVolume = (volume?: number) => {
-    if (!volume) return "N/A";
-    return `${volume} m³`;
-  };
 
-  // Calculate total volume from products
-  const calculateTotalVolume = () => {
-    if (!ocrData?.products || !ocrData.products.length) return 0;
-    return ocrData.products.reduce((total, product) => total + (product.volume || 0), 0);
-  };
+  
 
   // Define rows for the EditableSectionCard based on OCR data
   const infoRows = useMemo(() => [

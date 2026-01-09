@@ -74,7 +74,7 @@ export default function HomeScreen() {
               <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
             <Pressable
-              onPress={() => router.push("/(scan-flow)/supplier-check")}
+              // onPress={() => router.push("/(scan-flow)/supplier-check")}
               accessibilityRole="button"
               accessibilityLabel="More actions"
               accessible={false}
