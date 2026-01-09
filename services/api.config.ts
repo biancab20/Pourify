@@ -1,5 +1,3 @@
-import Constants from "expo-constants";
-
 const BASE_URL = "https://pourify-api.apps.inholland-minor.openshift.eu/api";
 
 const AUTH_TOKEN_URL =
