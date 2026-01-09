@@ -14,14 +14,11 @@ import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
 import { useBars } from "@/hooks/useLocations";
 import { Bar } from "@/types/locations";
 import { useStocks } from "@/hooks/useStock";
-import { useProducts } from "@/hooks/useProducts";
 import BarStockCard from "@/components/ui/BarStockCard";
 import TotalStockSummary from "@/components/ui/TotalStockSummary";
 import InfoCard from "@/components/ui/InfoBox";
 import { StockItem } from "@/types/stock";
-import { Product } from "@/types/products";
 
-type ProductWithStock = Product & { totalVolume: number; bottleCount: number };
 
 export default function ProductDetails() {
   const router = useRouter();
@@ -44,19 +41,11 @@ export default function ProductDetails() {
 
   // Hooks
   const { data: barsData, isLoading: barsLoading } = useBars();
-  const { data: productsData } = useProducts();
   const { data: stocksData, isLoading: stocksLoading } = useStocks();
 
   // Memoized arrays
   const bars = useMemo(() => barsData?.value || [], [barsData?.value]);
   const stocks = useMemo(() => stocksData?.value || [], [stocksData?.value]);
-  const products = useMemo(() => productsData?.value || [], [productsData?.value]);
-
-  // Current product
-  const currentProduct = useMemo(
-    () => products.find(p => p.productId.toString() === productId),
-    [products, productId]
-  );
 
   // Stock per bar for current product
   const productStockByBar = useMemo(() => {

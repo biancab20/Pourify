@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, StyleSheet, View, TouchableOpacity, PlatformColor } from "react-native";
+import { FlatList, StyleSheet, View, TouchableOpacity} from "react-native";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/ui/InputBox";
 import ListItem from "@/components/ui/ListItem";
@@ -255,7 +255,7 @@ const DeliveryList = ({
 
       {/* Selection mode footer */}
       {isSelectMode && (
-        <View style={[styles.selectionFooter]}>
+        <View style={styles.selectionFooter}>
           
           <TouchableOpacity
             style={[styles.checkMultipleButton, { backgroundColor: palette.pink }]}

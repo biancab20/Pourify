@@ -6,7 +6,6 @@ import DeliveryList, { DeliveryItem } from "@/components/ui/DeliveryList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
-import { Text } from "@/components/shared/Text";
 import { useRouter } from "expo-router";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 

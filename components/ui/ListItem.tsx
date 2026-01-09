@@ -107,12 +107,6 @@ export default function ListItem({
         style={[styles.leftAction, { backgroundColor: palette.green }]}
         onPress={handleSwipeComplete}
       >
-        <Ionicons
-          name="checkmark"
-          size={28}
-          color={palette.black}
-          style={{ marginLeft: 10 }}
-        />
       </TouchableOpacity>
     );
   };
