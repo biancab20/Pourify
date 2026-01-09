@@ -1,23 +1,22 @@
-import { View, Alert, Linking, Pressable, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
-import { useState, useRef, useEffect } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { CameraView } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
+import { CameraView } from "expo-camera";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Linking, Modal, Pressable, TouchableOpacity, View } from "react-native";
 
-import Header from "@/components/scanDelivery/Header";
 import CameraSection from "@/components/scanDelivery/CameraSection";
-import PhotoPreview from "@/components/scanDelivery/PhotoPreview";
 import FilePreview from "@/components/scanDelivery/FilePreview";
+import PhotoPreview from "@/components/scanDelivery/PhotoPreview";
 import GradientButton from "@/components/shared/GradientButton";
-import { useAppTheme } from "@/stores/app-theme-context";
+import { Text } from "@/components/shared/Text";
 import { useCameraPermissionFlow } from "@/hooks/useCameraPermissionFlow";
 import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
+import { useAppTheme } from "@/stores/app-theme-context";
 import type { Photo } from "@/types/deliveries";
 import { makeId } from "@/utils/ids";
 import { toPhotosFromAssets, toPickedFile } from "@/utils/upload";
-import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
-import { Text } from "@/components/shared/Text";
+import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export type PickedFile = {
