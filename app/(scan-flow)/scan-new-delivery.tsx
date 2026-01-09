@@ -1,4 +1,4 @@
-import { View, Alert, Linking, Pressable, Modal, TouchableOpacity } from "react-native";
+import { View, Alert, Linking, Pressable, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CameraView } from "expo-camera";
@@ -42,8 +42,9 @@ export default function ScanNewDelivery() {
   const [files, setFiles] = useState<PickedFile[]>([]);
   const [uploadMode, setUploadMode] = useState<UploadMode>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const isBusy = processDeliveryNote.isPending;
+  const isBusy = processDeliveryNote.isPending || isProcessing;
   const canProceed =
     (uploadMode === "images" && photos.length > 0) ||
     (uploadMode === "file" && files.length === 1);
@@ -113,16 +114,22 @@ export default function ScanNewDelivery() {
       Alert.alert("Nothing selected", "Please add photos before proceeding.");
       return;
     }
+    
+    setIsProcessing(true);
     try {
       const data = await processDeliveryNote.mutateAsync({ kind: "photos", photos });
       router.push({ pathname: "/(scan-flow)/check-supplier", params: { photos: JSON.stringify(photos), ocrData: JSON.stringify(data) } });
     } catch (e: any) {
       Alert.alert("Upload failed", e?.message ?? "Unknown error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const uploadFile = async () => {
     if (!(uploadMode === "file" && files.length === 1)) return;
+    
+    setIsProcessing(true);
     try {
       const file = files[0];
       const data = await processDeliveryNote.mutateAsync({ kind: "file", file: { uri: file.uri, name: file.name, mimeType: file.mimeType } });
@@ -134,6 +141,8 @@ export default function ScanNewDelivery() {
     } catch (e: any) {
       console.error("File OCR Error:", e);
       Alert.alert("Upload failed", e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -170,6 +179,48 @@ export default function ScanNewDelivery() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 16 }}>
+      {/* Loading Overlay */}
+      {isProcessing && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}>
+          <View style={{
+            backgroundColor: theme.colors.background,
+            padding: 24,
+            borderRadius: 16,
+            alignItems: 'center',
+            minWidth: 200,
+          }}>
+            <ActivityIndicator size="large" color={theme.palette.yellow} />
+            <Text style={{ 
+              color: theme.colors.text, 
+              fontSize: 16, 
+              fontWeight: '600',
+              marginTop: 16,
+              textAlign: 'center'
+            }}>
+              Processing OCR...
+            </Text>
+            <Text style={{ 
+              color: theme.colors.text, 
+              fontSize: 14,
+              marginTop: 8,
+              textAlign: 'center'
+            }}>
+              Please wait while we read the document
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Header with clickable title and close button */}
       <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 16, position: "relative" }}>
         {/* Close button in top right corner */}
@@ -257,7 +308,11 @@ export default function ScanNewDelivery() {
           {uploadMode === "file" && files.length === 1 && <FilePreview file={files[0]} onRemove={clearFile} isBusy={isBusy} />}
 
           <View style={{ paddingVertical: 16 }}>
-            <GradientButton onPress={uploadMode === "file" ? uploadFile : proceedToOverview} text={uploadMode === "file" ? "Upload" : `Review (${photos.length})`} disabled={!canProceed || isBusy} />
+            <GradientButton 
+              onPress={uploadMode === "file" ? uploadFile : proceedToOverview} 
+              text={uploadMode === "file" ? "Upload" : `Review (${photos.length})`} 
+              disabled={!canProceed || isBusy} 
+            />
           </View>
         </>
       ) : (

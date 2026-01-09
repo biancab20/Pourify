@@ -167,22 +167,28 @@ export default function ListItem({
             { backgroundColor: colors.cardBackground },
             isSelectMode && isSelected && styles.selectedContainer
           ]}>
-            {/* Checkbox for select mode */}
-            {isSelectMode && (
-              <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                {isSelected && (
-                  <Ionicons name="checkmark" size={16} color={palette.white} />
-                )}
-              </View>
-            )}
-
-            <Text style={[
-              styles.title, 
-              { color: colors.cardText },
-              isSelectMode && isSelected && styles.selectedText
+            {/* Main content wrapper */}
+            <View style={[
+              styles.contentWrapper,
+              isSelectMode && styles.contentWrapperWithCheckbox
             ]}>
-              {delivery.name}
-            </Text>
+              {/* Checkbox for select mode */}
+              {isSelectMode && (
+                <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                  {isSelected && (
+                    <Ionicons name="checkmark" size={16} color={palette.white} />
+                  )}
+                </View>
+              )}
+
+              <Text style={[
+                styles.title, 
+                { color: colors.cardText },
+                isSelectMode && isSelected && styles.selectedText
+              ]}>
+                {delivery.name}
+              </Text>
+            </View>
 
             <View style={styles.badges}>
               <View style={[styles.badge, { backgroundColor: colors.background }]}>
@@ -260,19 +266,28 @@ const styles = StyleSheet.create({
     opacity: 1,
     transform: [{ scale: 1 }],
   },
+  contentWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  contentWrapperWithCheckbox: {
+    // This ensures content shifts only enough for the checkbox
+    marginLeft: 0, // No extra margin
+  },
   selectedContainer: {
   },
   title: {
     fontSize: 16,
     fontWeight: "600",
-    maxWidth: "55%",
+    flex: 1,
   },
   selectedText: {
-    fontWeight: "700",
   },
   badges: {
     flexDirection: "row",
     gap: 10,
+    marginLeft: 12, // Keep consistent spacing from title
   },
   badge: {
     borderRadius: 14,
@@ -359,7 +374,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
+    backgroundColor: '#FF77E0',
+    borderColor: '#FF77E0',
   },
 });

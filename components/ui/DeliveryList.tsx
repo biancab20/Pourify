@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
+import { FlatList, StyleSheet, View, TouchableOpacity, PlatformColor } from "react-native";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/ui/InputBox";
 import ListItem from "@/components/ui/ListItem";
@@ -50,10 +50,27 @@ const DeliveryList = ({
   const [isSelectMode, setIsSelectMode] = React.useState(false);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
 
+  // Format item name to title case
+  const formatItemName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Format deliveries with title case names
+  const formattedDeliveries = React.useMemo(() => {
+    return deliveries.map(item => ({
+      ...item,
+      name: formatItemName(item.name)
+    }));
+  }, [deliveries]);
+
   // Filter out removed items
   const activeDeliveries = React.useMemo(() => {
-    return deliveries.filter(item => !localRemovedIds.includes(item.id));
-  }, [deliveries, localRemovedIds]);
+    return formattedDeliveries.filter(item => !localRemovedIds.includes(item.id));
+  }, [formattedDeliveries, localRemovedIds]);
 
   // Filter by search
   const filteredData = React.useMemo(() => {
@@ -146,31 +163,42 @@ const DeliveryList = ({
       <View style={styles.header}>
         {isSelectMode ? (
           <>
+            {/* Left button - Select all/Deselect all */}
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={handleSelectAll}
               accessibilityLabel="Select all"
               accessibilityRole="button"
             >
-              <Ionicons name="square-outline" size={24} color={colors.text} />
-              <Text style={[styles.headerButtonText, { color: colors.text, marginLeft: 8 }]}>
+              <Text style={[styles.headerButtonText, { color: theme.mode === 'dark' ? palette.yellow : palette.pink }]}>
                 {selectedItems.size === filteredData.length ? 'Deselect all' : 'Select all'}
               </Text>
             </TouchableOpacity>
-            
+
+            {/* Centered title - Check List */}
+            <View style={styles.centerTitle}>
+              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
+                Check List
+              </Text>
+            </View>
+
+            {/* Right button - Cancel */}
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={handleCancelSelect}
               accessibilityLabel="Cancel selection"
               accessibilityRole="button"
             >
-              <Text style={[styles.headerButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.headerButtonText, { color: theme.mode === 'dark' ? palette.yellow : palette.pink }]}>Cancel</Text>
             </TouchableOpacity>
           </>
         ) : (
-          <Text variant="gradient" gradientName="paloma" style={styles.title}>
-            {title}
-          </Text>
+          <>
+            {/* Regular mode: Left-aligned title with paloma gradient - NO CENTERING */}
+            <Text variant="gradient" gradientName="paloma" style={styles.title}>
+              {title}
+            </Text>
+          </>
         )}
       </View>
 
@@ -227,10 +255,8 @@ const DeliveryList = ({
 
       {/* Selection mode footer */}
       {isSelectMode && (
-        <View style={[styles.selectionFooter, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.selectionCount, { color: colors.text }]}>
-            {selectedItems.size} selected
-          </Text>
+        <View style={[styles.selectionFooter]}>
+          
           <TouchableOpacity
             style={[styles.checkMultipleButton, { backgroundColor: palette.pink }]}
             onPress={handleCheckMultiple}
@@ -244,8 +270,6 @@ const DeliveryList = ({
           </TouchableOpacity>
         </View>
       )}
-
-      
     </View>
   );
 };
@@ -261,19 +285,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    height: 40, // Fixed height to prevent layout shift
+  },
+  centerTitle: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
+    // Left-aligned for regular mode
   },
   headerButton: {
-    flexDirection: 'row',
+    width: 100, // Fixed width for alignment
     alignItems: 'center',
-    padding: 8,
+    justifyContent: 'center',
   },
   headerButtonText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   resultsText: {
     marginTop: 12,
@@ -307,22 +338,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   selectionFooter: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
-    marginBottom: 8,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  selectionCount: {
-    fontSize: 16,
-    fontWeight: "600",
+    justifyContent: "center",
+    paddingTop: 12,
   },
   checkMultipleButton: {
     flexDirection: 'row',
@@ -333,10 +352,6 @@ const styles = StyleSheet.create({
   },
   checkMultipleText: {
     fontSize: 16,
-    fontWeight: "600",
-  },
-  completedText: {
-    fontSize: 14,
     fontWeight: "600",
   },
 });
