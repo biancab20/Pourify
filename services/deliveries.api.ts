@@ -1,8 +1,16 @@
+// services/deliveries.api.ts
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
 import { authedFetch } from "@/utils/authed-fetch";
 import { guessMimeType } from "@/utils/api-helpers";
-import type { Photo, DeliveryOcrResponse } from "@/types/deliveries";
+import type { 
+  Photo, 
+  DeliveryOcrResponse,
+  DeliveryDto,
+  CreateDeliveryDto,
+  GetDeliveriesResponse,
+  Delivery 
+} from "@/types/deliveries";
 import { normalizeOcrDelivery } from "@/utils/api-mappers";
 
 export type PickedFileInput = { uri: string; name?: string; mimeType?: string };
@@ -28,7 +36,6 @@ export async function processDeliveryNote(
 ): Promise<DeliveryOcrResponse> {
   const form = new FormData();
 
-  // ✅ backend expects the field name exactly "KEY"
   const fieldName = "KEY";
 
   if (input.kind === "photos") {
@@ -50,7 +57,7 @@ export async function processDeliveryNote(
 
   const res = await authedFetch(API.photo.deliveryNote, {
     method: "POST",
-    headers: { Accept: "application/json" }, // ✅ don't set Content-Type for FormData
+    headers: { Accept: "application/json" },
     body: form as any,
   });
 
@@ -68,8 +75,137 @@ export async function processDeliveryNote(
 
   try {
     const raw = JSON.parse(text);
-    // ✅ single object now
     return normalizeOcrDelivery(raw);
+  } catch {
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * POST /delivery
+ * Create a new delivery in the database
+ */
+export async function createDelivery(
+  data: CreateDeliveryDto
+): Promise<DeliveryDto> {
+  console.log("🚀 SENDING DELIVERY TO API:");
+  console.log("URL:", API.deliveries.create);
+  console.log("DATA:", JSON.stringify(data, null, 2));
+  
+  const res = await authedFetch(API.deliveries.create, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  const text = await res.text();
+  console.log("📦 API RESPONSE:");
+  console.log("Status:", res.status);
+  console.log("Headers:", Object.fromEntries(res.headers.entries()));
+  console.log("Body:", text);
+  
+  if (!res.ok) {
+    console.error("❌ API ERROR:", text);
+    throw toApiError(res, text);
+  }
+
+  try {
+    const result = JSON.parse(text);
+    console.log("✅ DELIVERY CREATED SUCCESSFULLY:", result);
+    return result;
+  } catch (error) {
+    console.error("❌ JSON PARSE ERROR:", error);
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * GET /delivery?$expand=products,supplier
+ * Get all deliveries with optional query parameters
+ */
+export async function getDeliveries(
+  params?: Record<string, string | number>
+): Promise<GetDeliveriesResponse> {
+  const queryString = params
+    ? `?${new URLSearchParams(params as Record<string, string>).toString()}`
+    : "";
+    
+  const res = await authedFetch(`${API.deliveries.list}${queryString}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw toApiError(res, text);
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * GET /delivery/{id}?$expand=products,supplier
+ * Get a specific delivery by ID
+ */
+export async function getDeliveryById(deliveryId: string): Promise<Delivery> {
+  const res = await authedFetch(`${API.deliveries.byId(deliveryId)}?$expand=products,supplier`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw toApiError(res, text);
+
+  try {
+    const dto = JSON.parse(text);
+    return dto;
+  } catch {
+    throw {
+      message: "Failed to parse JSON response",
+      status: res.status,
+      body: text,
+    } satisfies ApiError;
+  }
+}
+
+/**
+ * DELETE /delivery/{id}
+ * Delete a delivery by ID
+ */
+export async function deleteDelivery(deliveryId: string): Promise<{ value: boolean }> {
+  const res = await authedFetch(API.deliveries.delete(deliveryId), {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw toApiError(res, text);
+
+  try {
+    return JSON.parse(text);
   } catch {
     throw {
       message: "Failed to parse JSON response",

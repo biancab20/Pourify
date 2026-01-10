@@ -1,3 +1,4 @@
+// types/deliveries.ts
 import type { ODataList } from "@/types/odata";
 
 export type Photo = { id: string; uri: string };
@@ -57,6 +58,27 @@ export type DeliveryDto = {
   Products: DeliveryProductDto[];
   Supplier: DeliverySupplierDto;
 };
+
+/** Delivery status types */
+export type DeliveryStatus = "received" | "damaged" | "missing" | "substituted";
+
+/** For creating deliveries - based on database structure */
+export type CreateDeliveryDto = {
+  DeliveryNoteId: string;
+  DeliveryDate: string;
+  DeliveryNotePictureIds: string[];
+  DeliveryPilePictureId: string | null;
+  Products: Array<{
+    ProductId: string;
+    Status: DeliveryStatus;
+    Volume: number;
+  }>;
+  BarId?: string;
+  SupplierId?: string;
+  Supplier?: DeliverySupplierDto;
+};
+
+export type CreateDeliveryResponse = DeliveryDto;
 
 /** GET /delivery?$expand=products,supplier */
 export type GetDeliveriesResponse = ODataList<Delivery>;

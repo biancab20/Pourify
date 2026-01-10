@@ -1,15 +1,30 @@
-// DeliverySummary.tsx
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "@/components/shared/Text";
-import { useAppTheme } from "@/stores/app-theme-context";
-import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
-import ListItem, { DeliveryItem } from "@/components/ui/ListItem";
+// app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
-import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import InputBox from "@/components/ui/InputBox";
+import { Text } from "@/components/shared/Text";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
+import InputBox from "@/components/ui/InputBox";
+import ListItem, { DeliveryItem } from "@/components/ui/ListItem";
+import { useCreateDelivery } from "@/hooks/useDeliveries";
+import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
+import { useBars } from "@/hooks/useLocations";
+import { useAppTheme } from "@/stores/app-theme-context";
+import type { DeliveryOcrResponse, DeliveryProduct } from "@/types/deliveries";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+// Helper function to convert string to Title Case
+const toTitleCase = (str: string): string => {
+  if (!str) return str;
+  
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 type SectionProps = {
   title: string;
@@ -18,12 +33,10 @@ type SectionProps = {
 };
 
 function Section({ title, items, searchQuery }: SectionProps) {
-  if (items.length === 0) return null;
-
-  // Filter section items by search query
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const filteredItems = useMemo(() => {
+    if (items.length === 0) return [];
     if (!searchQuery.trim()) return items;
+    
     const query = searchQuery.toLowerCase();
     return items.filter(item => {
       const productName = toTitleCase(item.name);
@@ -53,42 +66,45 @@ function Section({ title, items, searchQuery }: SectionProps) {
   );
 }
 
-// Helper function to convert string to Title Case
-const toTitleCase = (str: string): string => {
-  if (!str) return str;
-  
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
 export default function DeliverySummary() {
   const { theme } = useAppTheme();
   const { colors } = theme;
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { getAll } = useDeliveryStatus();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
+  
+  // Get bars for selection
+  const { data: barsData } = useBars();
+  const bars = useMemo(() => barsData?.value || [], [barsData]);
+  
+  // Get the create delivery mutation
+  const createDeliveryMutation = useCreateDelivery();
 
-  // Get OCR data to extract supplier and date
-  const ocrResponse = queryClient.getQueryData<any>(["deliveries", "latest"]) ?? null;
+  // Get OCR data
+  const ocrResponse = queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ?? null;
   
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
-    return Array.isArray(ocrResponse) ? ocrResponse[0] : ocrResponse;
+    return ocrResponse;
   }, [ocrResponse]);
+
+  // Auto-select first bar if available
+  useEffect(() => {
+    if (bars.length > 0 && !selectedBarId) {
+      setSelectedBarId(bars[0].barId);
+    }
+  }, [bars, selectedBarId]);
 
   // Format date from OCR data
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
     
     try {
-      // If it's already in a readable format, return as-is
       if (dateString.includes('/')) return dateString;
       
-      // Try to parse and format date
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
       
@@ -102,18 +118,18 @@ export default function DeliverySummary() {
     }
   };
 
-  // Define rows for the EditableSectionCard based on OCR data
+  // Define rows for the EditableSectionCard
   const infoRows = useMemo(() => [
     {
       id: "supplier",
       title: "Supplier",
-      value: delivery?.supplier?.name || "Supplier not detected",
+      value: "Sligro (Hardcoded)", // Updated to show hardcoded supplier
       valueNumberOfLines: 1,
       onEditPress: () => {
-        Alert.alert("Edit Supplier", "Edit supplier functionality");
+        Alert.alert("Supplier Information", "Supplier is hardcoded to Sligro while backend is being fixed.");
       },
-      showEdit: true,
-      editA11yLabel: "Edit supplier",
+      showEdit: false, // Disable edit since it's hardcoded
+      editA11yLabel: "View supplier info",
     },
     {
       id: "date",
@@ -125,10 +141,38 @@ export default function DeliverySummary() {
       },
       showEdit: true,
       editA11yLabel: "Edit date",
+    },
+    {
+      id: "bar",
+      title: "Bar",
+      value: bars.find(b => b.barId === selectedBarId)?.name || "Select a bar",
+      valueNumberOfLines: 1,
+      onEditPress: () => {
+        if (bars.length > 0) {
+          Alert.alert(
+            "Select Bar",
+            "Choose a bar for this delivery:",
+            [
+              ...bars.map(bar => ({
+                text: bar.name,
+                onPress: () => setSelectedBarId(bar.barId)
+              })),
+              {
+                text: "Cancel",
+                style: "cancel"
+              }
+            ]
+          );
+        } else {
+          Alert.alert("No Bars", "Please create a bar first");
+        }
+      },
+      showEdit: true,
+      editA11yLabel: "Select bar",
     }
-  ], [delivery]);
+  ], [delivery, bars, selectedBarId]);
 
-  // Get all delivery items from useDeliveryStatus and apply Title Case to names
+  // Get all delivery items with their status
   const all = useMemo(() => {
     const items = Object.values(getAll());
     return items.map(item => ({
@@ -137,7 +181,7 @@ export default function DeliverySummary() {
     }));
   }, [getAll]);
 
-  // Categorize all items
+  // Categorize items
   const received = all.filter(i => i.status === "received");
   const damaged = all.filter(i => i.status === "damaged");
   const missing = all.filter(i => i.status === "missing");
@@ -154,10 +198,107 @@ export default function DeliverySummary() {
     ).length;
   }, [all, searchQuery]);
 
+  // Helper function to ensure DeliveryPilePictureId is always a UUID string
+  const getDeliveryPilePictureId = (): string => {
+    const pilePictureId = delivery?.deliveryPilePictureId;
+    
+    // If it's null or undefined, return the zero UUID
+    if (!pilePictureId) {
+      return "00000000-0000-0000-0000-000000000000";
+    }
+    
+    // If it's already a string, return it
+    if (typeof pilePictureId === 'string') {
+      return pilePictureId;
+    }
+    
+    // Otherwise, return the zero UUID as fallback
+    return "00000000-0000-0000-0000-000000000000";
+  };
 
-  const handleSave = () => {
-    // Implement save logic here
-    Alert.alert("Save", "Delivery summary saved successfully!");
+  // Prepare delivery data for saving
+  const prepareDeliveryData = () => {
+    if (!delivery) return null;
+
+    // Create products in the correct format based on your DB schema
+    const products = delivery.products.map((product: DeliveryProduct) => {
+      return {
+        ProductId: product.productId,
+        Name: product.name || `Product ${product.productId}`,
+        Volume: product.volume || 0,
+        Type: product.type,
+        TotalVolume: product.totalVolume || 0,
+      };
+    });
+
+    // Filter out any invalid products
+    const validProducts = products.filter(p => p && p.ProductId);
+
+    // Create delivery data with HARDCODED SUPPLIER
+    const deliveryData: any = {
+      DeliveryNoteId: delivery.deliveryNoteId,
+      DeliveryDate: delivery.deliveryDate,
+      DeliveryNotePictureIds: delivery.deliveryNotePictureIds || [],
+      DeliveryPilePictureId: getDeliveryPilePictureId(),
+      Products: validProducts,
+      // Hardcoded supplier information
+      SupplierId: "118a048f-dcbe-46e3-9e02-e3838f40e628",
+      Name: "Sligro",
+      ContactEmail: "customerservicemidden@sligro.nl"
+    };
+
+    // Try adding optional fields
+    if (selectedBarId) {
+      deliveryData.BarId = selectedBarId;
+    }
+
+    return deliveryData;
+  };
+
+  // Handle actual save
+  const handleSave = async () => {
+    if (!delivery) {
+      Alert.alert("Error", "No delivery data found");
+      return;
+    }
+
+    const deliveryData = prepareDeliveryData();
+    if (!deliveryData) {
+      Alert.alert("Error", "Could not prepare delivery data");
+      return;
+    }
+
+    Alert.alert(
+      "Save Delivery",
+      `Save this delivery with ${deliveryData.Products.length} products?\n\n• Supplier: Sligro (Hardcoded)\n• Bar: ${selectedBarId ? bars.find(b => b.barId === selectedBarId)?.name : 'Not selected'}\n• Date: ${formatDate(deliveryData.DeliveryDate)}`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Save",
+          onPress: async () => {
+            try {
+              await createDeliveryMutation.mutateAsync(deliveryData);
+              
+              // Clear the OCR cache and reset form
+              queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
+              
+              // Navigate to success screen
+              router.push("/(scan-flow)/successful-delivery");
+              
+            } catch (error: any) {
+              Alert.alert(
+                "❌ Error", 
+                `Failed to save delivery:\n\n${error.message || "Unknown error"}`,
+                [{ text: "OK" }]
+              );
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleSearch = (value: string | number) => {
@@ -168,16 +309,13 @@ export default function DeliverySummary() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      {/* Fixed Header Section */}
+      <View style={styles.fixedHeader}>
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           Delivery Summary
         </Text>
-
-        {/* Supplier and Date Info Card - positioned first */}
+        
+        {/* Supplier, Date, and Bar Info Card */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
             rows={infoRows}
@@ -185,12 +323,14 @@ export default function DeliverySummary() {
           />
         </View>
 
-        {/* Search Bar - positioned after supplier info */}
-        <InputBox
-          placeholder="Search items..."
-          initialValue=""
-          onSearch={handleSearch}
-        />
+        {/* Search Bar - Fixed at top */}
+        <View style={styles.searchContainer}>
+          <InputBox
+            placeholder="Search items..."
+            initialValue=""
+            onSearch={handleSearch}
+          />
+        </View>
 
         {/* Search results count */}
         {searchQuery && (
@@ -198,7 +338,14 @@ export default function DeliverySummary() {
             {filteredItemsCount} result{filteredItemsCount !== 1 ? "s" : ""} found
           </Text>
         )}
+      </View>
 
+      {/* Scrollable Content Section */}
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* No results state */}
         {showNoResults ? (
           <View style={styles.emptyState}>
@@ -213,7 +360,6 @@ export default function DeliverySummary() {
             <Section title="Missing" items={missing} searchQuery={searchQuery} />
             <Section title="Substituted" items={substituted} searchQuery={searchQuery} />
             
-            {/* Show empty state when no items at all */}
             {all.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={[styles.emptyText, { color: colors.text }]}>
@@ -227,9 +373,13 @@ export default function DeliverySummary() {
 
       <View style={styles.buttonWrapper}>
         <GradientButton 
-          text="Save" 
+          text={createDeliveryMutation.isPending ? "Saving..." : "Save"}
           onPress={handleSave}
-          disabled={all.length === 0}
+          disabled={
+            all.length === 0 || 
+            createDeliveryMutation.isPending ||
+            !delivery
+          }
         />
       </View>
     </SafeAreaView>
@@ -241,24 +391,41 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  fixedHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    backgroundColor: 'white', // Or your theme background color
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  scrollContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
   scrollContent: {
+    paddingBottom: 20,
+    paddingTop: 16, // Add some space between fixed header and scroll content
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    marginVertical: 16,
+    marginBottom: 16,
   },
   infoContainer: {
-    
+    marginBottom: 16,
+  },
+  searchContainer: {
+    marginBottom: 12,
   },
   editableCardStyle: {
     borderRadius: 12,
   },
   resultsText: {
-    marginTop: 12,
+    marginTop: 8,
     marginBottom: 16,
     textAlign: "center",
     fontWeight: "500",
+    fontSize: 14,
   },
   section: {
     marginBottom: 32,
@@ -270,6 +437,9 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: 'white',
   },
   emptyState: {
     padding: 40,
