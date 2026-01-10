@@ -13,7 +13,7 @@ import { useCameraPermissionFlow } from "@/hooks/useCameraPermissionFlow";
 import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
 import { useAppTheme } from "@/stores/app-theme-context";
 import type { Photo } from "@/types/deliveries";
-import { toPhotosFromAssets, toPickedFile, makeId } from "@/utils/scan-helpers";
+import { makeId, toPhotosFromAssets, toPickedFile } from "@/utils/scan-helpers";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
