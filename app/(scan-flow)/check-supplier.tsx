@@ -1,6 +1,6 @@
 import { View, StyleSheet, Alert, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Text } from "@/components/shared/Text";
 import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -10,6 +10,25 @@ import type { DeliveryOcrResponse } from "@/types/deliveries";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 import { openEditField } from "@/utils/open-edit-field";
+import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
+
+function confirmYesNo(
+  title: string,
+  message: string,
+  yesText = "Yes",
+  noText = "No"
+) {
+  return new Promise<boolean>((resolve) => {
+    Alert.alert(title, message, [
+      { text: noText, style: "cancel", onPress: () => resolve(false) },
+      { text: yesText, onPress: () => resolve(true) },
+    ]);
+  });
+}
+
+function normalizeName(s: string) {
+  return s.trim().toLowerCase();
+}
 
 export default function CheckSupplier() {
   const router = useRouter();
@@ -18,7 +37,7 @@ export default function CheckSupplier() {
   const { colors } = theme;
   const queryClient = useQueryClient();
 
-  const ocrData = useMemo<DeliveryOcrResponse | null>(() => {
+  const parsedOcrData = useMemo<DeliveryOcrResponse | null>(() => {
     if (typeof params.ocrData !== "string") return null;
     try {
       return JSON.parse(params.ocrData);
@@ -27,18 +46,29 @@ export default function CheckSupplier() {
     }
   }, [params.ocrData]);
 
-  // Format date from OCR data
+  // ✅ Create a local draft you can edit
+  const [draft, setDraft] = useState<DeliveryOcrResponse | null>(parsedOcrData);
+
+  useEffect(() => {
+    setDraft(parsedOcrData);
+  }, [parsedOcrData]);
+
+  // ✅ Suppliers list for validation
+  const suppliersQuery = useSuppliers();
+  const suppliers = useMemo(
+    () => suppliersQuery.data?.value ?? [],
+    [suppliersQuery.data]
+  );
+
+  // ✅ Mutations (only needed for the “add supplier” flow)
+  const createSupplier = useCreateSupplier();
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
-
     try {
-      // If it's already in a readable format, return as-is
       if (dateString.includes("/")) return dateString;
-
-      // Try to parse and format date
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -49,48 +79,116 @@ export default function CheckSupplier() {
     }
   };
 
-  // Define rows for the EditableSectionCard based on OCR data
+  const onEditSupplier = useCallback(() => {
+    if (!draft) return;
+
+    openEditField(router, {
+      title: "Delivery: Supplier",
+      description:
+        "Confirm who delivered this order. This is used for reporting delivery issues.",
+      label: "Supplier name",
+      fieldType: "text",
+      placeholder: "e.g. Big Drinks BV",
+      initialValue: draft.supplier?.name ?? "",
+      onSave: async (newNameRaw) => {
+        const name = newNameRaw.trim();
+        if (!name) throw new Error("Please enter a supplier name.");
+
+        if (!suppliersQuery.data && !suppliersQuery.isLoading) {
+          await suppliersQuery.refetch();
+        }
+
+        const exists = suppliers.some(
+          (s: any) => normalizeName(s.name) === normalizeName(name)
+        );
+
+        setDraft((prev) =>
+          prev
+            ? {
+                ...prev,
+                supplier: {
+                  ...prev.supplier,
+                  name,
+                },
+              }
+            : prev
+        );
+
+        if (exists) return;
+
+        const shouldAdd = await confirmYesNo(
+          "Supplier not found",
+          `“${name}” is not in your supplier list. Would you like to add it now?`,
+          "Add",
+          "No"
+        );
+
+        if (!shouldAdd) return;
+
+        const email = String(draft?.supplier?.contactEmail ?? "").trim();
+
+        await createSupplier.mutateAsync({
+          name,
+          email,
+        });
+      },
+    });
+  }, [draft, router, suppliers, suppliersQuery, createSupplier]);
+
+  const onEditDate = useCallback(() => {
+    if (!draft) return;
+
+    openEditField(router, {
+      title: "Delivery: Date",
+      description: "Confirm the delivery date shown on the delivery note.",
+      label: "Date",
+      fieldType: "text",
+      placeholder: "YYYY-MM-DD or DD/MM/YYYY",
+      initialValue: formatDate(draft.deliveryDate),
+      onSave: async (newDate) => {
+        const v = newDate.trim();
+        if (!v) throw new Error("Please enter a date.");
+
+        setDraft((prev) => (prev ? { ...prev, deliveryDate: v } : prev));
+      },
+    });
+  }, [draft, router]);
+
   const infoRows = useMemo(
     () => [
       {
         id: "supplier",
         title: "Supplier",
-        value: ocrData?.supplier?.name || "Supplier not detected",
+        value: draft?.supplier?.name || "Supplier not detected",
         valueNumberOfLines: 1,
-        onEditPress: () => {
-          Alert.alert("Edit Supplier", "Edit supplier functionality");
-        },
+        onEditPress: onEditSupplier,
         showEdit: true,
         editA11yLabel: "Edit supplier",
       },
       {
         id: "date",
         title: "Date",
-        value: formatDate(ocrData?.deliveryDate),
+        value: formatDate(draft?.deliveryDate),
         valueNumberOfLines: 1,
-        onEditPress: () => {
-          Alert.alert("Edit Date", "Edit date functionality");
-        },
+        onEditPress: onEditDate,
         showEdit: true,
         editA11yLabel: "Edit date",
       },
-      // Add more fields as needed
     ],
-    [ocrData]
+    [draft, onEditSupplier, onEditDate]
   );
 
   const confirmPhotos = () => {
-    if (!ocrData) {
+    if (!draft) {
       Alert.alert("No OCR data found");
       return;
     }
 
-    queryClient.setQueryData(["deliveries", "latest"], ocrData);
+    queryClient.setQueryData(["deliveries", "latest"], draft);
     router.replace("/delivery-check");
   };
 
-  // If no OCR data, show error
-  if (!ocrData) {
+  if (!draft) {
     return (
       <SafeAreaView
         style={{
@@ -107,91 +205,7 @@ export default function CheckSupplier() {
       </SafeAreaView>
     );
   }
-  function confirmAsync(title: string, message: string) {
-    return new Promise<boolean>((resolve) => {
-      Alert.alert(title, message, [
-        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-        { text: "Add", onPress: () => resolve(true) },
-      ]);
-    });
-  }
-  openEditField(router, {
-    title: "Delivery: Supplier",
-    description:
-      "Confirm who delivered this order. This is used for reporting issues.",
-    label: "Supplier name",
-    fieldType: "text",
-    initialValue: ocrData.supplier.name,
-    placeholder: "e.g. Big Drinks BV",
-    onSave: async (newName) => {
-      const name = newName.trim();
-      if (!name) throw new Error("Please enter a supplier name.");
 
-      const existing = suppliers.find(
-        (s) => s.name.trim().toLowerCase() === name.toLowerCase()
-      );
-
-      if (existing) {
-        // Just select it / set it
-        setDelivery((d) => ({
-          ...d,
-          supplierId: existing.supplierId,
-          supplierName: existing.name,
-        }));
-        return true; // ✅ close editor
-      }
-
-      // Not found → ask to add
-      const shouldAdd = await confirmAsync(
-        "Add supplier?",
-        `“${name}” is not in your supplier list. Do you want to add it now?`
-      );
-
-      if (!shouldAdd) {
-        // keep the typed value in your delivery (optional) but don't add supplier
-        setDelivery((d) => ({ ...d, supplierId: "", supplierName: name }));
-        return true; // or false if you want them to keep editing
-      }
-
-      // Create supplier (use your existing hook/mutation from this screen)
-      const created = await createSupplier.mutateAsync({
-        name,
-        email: "", // can be empty for now, or do later
-      });
-
-      // Make sure created returns supplierId; adapt to your API response
-      setDelivery((d) => ({
-        ...d,
-        supplierId: created.supplierId,
-        supplierName: name,
-      }));
-
-      // Optional: chain to email editor immediately
-      openEditField(router, {
-        title: "Supplier: Email",
-        description: "Add an email now or you can do it later in settings.",
-        label: "Email",
-        fieldType: "email",
-        initialValue: "",
-        placeholder: "orders@supplier.com",
-        onSave: async (email) => {
-          const trimmed = email.trim();
-          if (trimmed && !trimmed.includes("@"))
-            throw new Error("Please enter a valid email.");
-
-          // if your API requires full update, send name too
-          await updateSupplier.mutateAsync({
-            supplierId: created.supplierId,
-            data: { name, email: trimmed },
-          });
-
-          return true;
-        },
-      });
-
-      return true; // ✅ close the supplier-name editor
-    },
-  });
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
@@ -200,8 +214,8 @@ export default function CheckSupplier() {
       {Platform.OS === "android" && (
         <AndroidCustomNavigation onBack={router.back} paddingHorizontal={10} />
       )}
+
       <View style={styles.container}>
-        {/* Header */}
         <Text
           variant="gradient"
           gradientName="paloma"
@@ -211,12 +225,10 @@ export default function CheckSupplier() {
           Verify Information
         </Text>
 
-        {/* Subtext */}
         <Text style={[styles.subtitle, { color: colors.text }]}>
           Please check if the information is correct.
         </Text>
 
-        {/* Info Cards - Using EditableSectionCard */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
             rows={infoRows}
@@ -224,11 +236,9 @@ export default function CheckSupplier() {
           />
         </View>
 
-        {/* Spacer to push content up */}
         <View style={styles.spacer} />
       </View>
 
-      {/* Actions - Fixed at bottom */}
       <View style={[styles.actions, { backgroundColor: colors.background }]}>
         <GradientButton text="Next" onPress={confirmPhotos} />
       </View>
@@ -237,30 +247,11 @@ export default function CheckSupplier() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  infoContainer: {
-    marginTop: 15,
-    gap: 16,
-  },
-  editableCardStyle: {
-    borderRadius: 12,
-  },
-  spacer: {
-    height: 30,
-  },
-  actions: {
-    padding: 16,
-  },
+  container: { flex: 1, paddingHorizontal: 16 },
+  title: { fontSize: 32, fontWeight: "700", marginBottom: 8 },
+  subtitle: { fontSize: 16, marginBottom: 20 },
+  infoContainer: { marginTop: 15, gap: 16 },
+  editableCardStyle: { borderRadius: 12 },
+  spacer: { height: 30 },
+  actions: { padding: 16 },
 });

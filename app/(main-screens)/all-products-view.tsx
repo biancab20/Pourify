@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: { fontSize: 32, fontWeight: "700" },
-  productsList: { marginTop: 20, gap: 12 },
+  productsList: { marginTop: 20, gap: 12, paddingBottom: 50 },
   productButton: {
     padding: 16,
     borderRadius: 12,

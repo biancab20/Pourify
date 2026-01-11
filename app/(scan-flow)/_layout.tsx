@@ -26,10 +26,22 @@ export default function ScanFlowLayout() {
         name="delivery-check"
         options={{ title: "", headerShown: false }}
       />
-      <Stack.Screen name="delivery-summary" />
-      <Stack.Screen name="manual-delivery" />
-      <Stack.Screen name="add-delivery-item" />
-      <Stack.Screen name="successful-delivery" options={{ title: "", headerShown: false }}/>
+      <Stack.Screen
+        name="delivery-summary"
+        options={{ title: "", headerShown: false }}
+      />
+      <Stack.Screen
+        name="manual-delivery"
+        options={{ title: "", headerShown: false }}
+      />
+      <Stack.Screen
+        name="add-delivery-item"
+        options={{ title: "", headerShown: false }}
+      />
+      <Stack.Screen
+        name="successful-delivery"
+        options={{ title: "", headerShown: false }}
+      />
     </Stack>
   );
 }

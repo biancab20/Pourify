@@ -15,7 +15,7 @@ export type DeliveryProduct = {
   volume: number;
   type: string;
   totalVolume: number;
-  isDeleted?: boolean; // only OCR currently sends this
+  isDeleted?: boolean;
 };
 
 export type Delivery = {
@@ -62,7 +62,7 @@ export type DeliveryDto = {
 /** Delivery status types */
 export type DeliveryStatus = "received" | "damaged" | "missing" | "substituted";
 
-/** For creating deliveries - based on database structure */
+/** For creating deliveries */
 export type CreateDeliveryDto = {
   DeliveryNoteId: string;
   DeliveryDate: string;
