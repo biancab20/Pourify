@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import SingleFieldEditScreen, {
   SelectOption,
-} from "@/components/dynamic/SingleFieldEditScreen";
+} from "@/components/screenComponents/SingleFieldEditScreen";
 
 import { useSupplier, useUpdateSupplier } from "@/hooks/useSuppliers";
 import { useProduct, useUpdateProduct } from "@/hooks/useProducts";
@@ -309,6 +309,7 @@ export default function EditEntityFieldRoute() {
       }
 
       if (!trimmed && !settingsField.allowEmpty) return "Please enter a value.";
+
       return null;
     };
 
@@ -317,13 +318,18 @@ export default function EditEntityFieldRoute() {
       await saveSettingsFieldValue(settingsField, newValue);
       router.back();
     };
-
+    const description =
+      settingsField?.key === "receiverEmail" ||
+      String(fieldKey) === "receiverEmail"
+        ? "When a new delivery comes in, if something is wrong, we’ll send an email explaining which items were not as expected. Who should we notify?"
+        : undefined;
     // Use entity mode UI to show loading/error states
     if (settingsLoading || settingsError) {
       return (
         <SingleFieldEditScreen
           mode="entity"
           title={settingsField?.title ?? "Venue setting"}
+          description={description}
           label={settingsField?.label ?? "Setting"}
           fieldType={settingsField?.fieldType ?? "text"}
           options={settingsField?.options}
@@ -359,6 +365,7 @@ export default function EditEntityFieldRoute() {
       <SingleFieldEditScreen
         mode="static"
         title={settingsField?.title ?? "Venue setting"}
+        description={description}
         label={settingsField?.label ?? "Setting"}
         fieldType={settingsField?.fieldType ?? "text"}
         options={settingsField?.options}

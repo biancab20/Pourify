@@ -1,7 +1,7 @@
 // app/(main-screens)/edit-stock.tsx
 
 import { Text } from "@/components/shared/Text";
-import SearchBar from "@/components/dynamic/InputBox";
+import SearchBar from "@/components/dynamicComponents/InputBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, Pressable, StyleSheet } from "react-native";

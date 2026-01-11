@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 
-import FormInput from "@/components/dynamic/FormInput";
+import FormInput from "@/components/dynamicComponents/FormInput";
 
 // Silence Icon (native-ish)
 jest.mock("@/components/icons/Icon", () => ({

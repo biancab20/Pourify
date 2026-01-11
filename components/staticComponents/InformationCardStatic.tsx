@@ -2,7 +2,7 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import React from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import InfoCard from "../dynamic/InfoBox";
+import InfoCard from "../dynamicComponents/InfoBox";
 import PieChartStatic from "./PieChartStatic";
 
 interface InformationCardStaticProps {

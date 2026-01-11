@@ -4,8 +4,8 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
-import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
-import { ConfigRow } from "@/components/dynamic/ConfigRow";
+import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
 import type { Supplier } from "@/types";
 import type { Bar as ApiBar } from "@/types/locations";
 import type { Product as ApiProduct } from "@/types/products";
@@ -13,7 +13,7 @@ import { useMemo, useState, useCallback } from "react";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
-import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
+import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 
 import { getStoredString } from "@/utils/storage";
 

@@ -2,7 +2,7 @@ import { Text } from "@/components/shared/Text";
 import InformationCard from "@/components/staticComponents/InformationCardStatic";
 import PieChartStatic from "@/components/staticComponents/PieChartStatic";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
-import InfoCard from "@/components/dynamic/InfoBox";
+import InfoCard from "@/components/dynamicComponents/InfoBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { useRouter } from "expo-router";
 import React from "react";

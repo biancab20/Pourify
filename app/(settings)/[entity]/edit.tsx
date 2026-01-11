@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 
-import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
+import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 
 import { useSupplier, useDeleteSupplier } from "@/hooks/useSuppliers";
 import { useProduct, useDeleteProduct } from "@/hooks/useProducts";

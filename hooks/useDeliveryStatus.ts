@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type {
   DeliveryItem,
   DeliveryStatus,
-} from "@/components/dynamic/ListItem";
+} from "@/components/dynamicComponents/ListItem";
 import type { DeliveryStatusState } from "../stores/delivery-status.store";
 
 const QUERY_KEY = ["deliveries", "status"];

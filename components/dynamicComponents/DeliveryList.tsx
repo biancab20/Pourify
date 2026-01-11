@@ -1,8 +1,8 @@
 import React from "react";
 import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/shared/Text";
-import InputBox from "@/components/dynamic/InputBox";
-import ListItem from "@/components/dynamic/ListItem";
+import InputBox from "@/components/dynamicComponents/InputBox";
+import ListItem from "@/components/dynamicComponents/ListItem";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Ionicons } from "@expo/vector-icons";
 

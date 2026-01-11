@@ -8,14 +8,14 @@ import {
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
-import FormInput from "@/components/dynamic/FormInput";
+import FormInput from "@/components/dynamicComponents/FormInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text as CustomText } from "@/components/shared/Text";
 import { Icon } from "@/components/icons/Icon";
 import { useAppTheme } from "@/stores/app-theme-context";
-import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
-import { ConfigRow } from "@/components/dynamic/ConfigRow";
+import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
 import { useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateBar } from "@/hooks/useLocations";
 import { useCreateProduct } from "@/hooks/useProducts";

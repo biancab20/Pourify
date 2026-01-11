@@ -1,9 +1,11 @@
 // app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
-import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
-import InputBox from "@/components/dynamic/InputBox";
-import ListItem, { DeliveryItem } from "@/components/dynamic/ListItem";
+import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
+import InputBox from "@/components/dynamicComponents/InputBox";
+import ListItem, {
+  DeliveryItem,
+} from "@/components/dynamicComponents/ListItem";
 import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";

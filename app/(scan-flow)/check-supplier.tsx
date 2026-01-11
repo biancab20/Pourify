@@ -7,7 +7,7 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DeliveryOcrResponse } from "@/types/deliveries";
-import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
+import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 export default function CheckSupplier() {

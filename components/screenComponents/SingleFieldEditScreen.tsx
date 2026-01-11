@@ -9,14 +9,10 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Text } from "@/components/shared/Text";
-import { Icon } from "@/components/icons/Icon";
-
-import FormInput from "@/components/dynamic/FormInput";
+import FormInput from "@/components/dynamicComponents/FormInput";
 import GradientButton from "@/components/shared/GradientButton";
-
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 type FieldType = "text" | "email" | "number" | "select";
@@ -24,7 +20,8 @@ type FieldType = "text" | "email" | "number" | "select";
 export type SelectOption = { label: string; value: string };
 
 type BaseProps = {
-  title: string; // gradient title
+  title: string;
+  description?: string;
   label: string; // field label
   fieldType: FieldType;
 
@@ -77,11 +74,6 @@ export default function SingleFieldEditScreen(props: Props) {
   const options = useMemo(() => {
     return props.fieldType === "select" ? props.options ?? [] : [];
   }, [props.fieldType, props.options]);
-
-  const currentSelectLabel = useMemo(() => {
-    if (props.fieldType !== "select") return "";
-    return options.find((o) => o.value === value)?.label ?? "Select";
-  }, [options, props.fieldType, value]);
 
   const runValidation = () => {
     if (props.validate) return props.validate(value);
@@ -183,6 +175,11 @@ export default function SingleFieldEditScreen(props: Props) {
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           {props.title}
         </Text>
+        {!!props.description?.trim() && (
+          <Text style={[styles.description, { color: theme.colors.text }]}>
+            {props.description}
+          </Text>
+        )}
 
         {renderError()}
         {renderLoading()}
@@ -211,28 +208,15 @@ export default function SingleFieldEditScreen(props: Props) {
                   accessibilityLabel={props.label}
                 />
               ) : (
-                <Pressable
-                  onPress={() => {
-                    if (options.length === 0) return;
-                    const idx = Math.max(
-                      0,
-                      options.findIndex((o) => o.value === value)
-                    );
-                    const next = (idx + 1) % options.length;
-                    setValue(options[next].value);
-                  }}
-                  style={[
-                    styles.selectPill,
-                    { backgroundColor: theme.colors.background },
-                  ]}
-                  accessibilityRole="button"
+                <FormInput
+                  value={value}
+                  onChange={(v) => setValue(String(v))}
+                  type="select"
+                  placeholder={props.placeholder ?? "Select"}
+                  options={options}
+                  disabled={options.length === 0}
                   accessibilityLabel={`Change ${props.label}`}
-                >
-                  <Text style={{ color: theme.colors.text }}>
-                    {currentSelectLabel}
-                  </Text>
-                  <Icon name="settings" size={18} color={theme.colors.icon} />
-                </Pressable>
+                />
               )}
             </View>
 
@@ -265,16 +249,11 @@ const styles = StyleSheet.create({
 
   formCard: { gap: 10, paddingBottom: 10 },
   label: { fontSize: 13 },
-
-  selectPill: {
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  description: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 14,
   },
-
   centerContainer: {
     flex: 1,
     alignItems: "center",

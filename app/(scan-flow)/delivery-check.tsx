@@ -2,7 +2,9 @@
 import React, { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import DeliveryList, { DeliveryItem } from "@/components/dynamic/DeliveryList";
+import DeliveryList, {
+  DeliveryItem,
+} from "@/components/dynamicComponents/DeliveryList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";

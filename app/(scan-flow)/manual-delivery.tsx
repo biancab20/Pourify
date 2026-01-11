@@ -3,8 +3,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
-import { ConfigRow } from "@/components/dynamic/ConfigRow";
+import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
 import { useState, useEffect } from "react";
 import GradientButton from "@/components/shared/GradientButton";
 
