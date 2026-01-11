@@ -30,7 +30,7 @@ export default function CameraSection({
         </Pressable>
 
         <Pressable
-          style={[styles.captureButton, { backgroundColor: theme.palette.beige, borderColor: theme.palette.white }]}
+          style={[styles.captureButton, { backgroundColor: theme.colors.background, borderColor: theme.colors.cardBackground }]}
           onPress={onTakePicture}
           disabled={isBusy}
         >

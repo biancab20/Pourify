@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#333",
+    // borderTopWidth: StyleSheet.hairlineWidth,
+    // borderTopColor: "#333",
   },
 });

@@ -1,14 +1,14 @@
-import { Ionicons } from "@expo/vector-icons";
 import { CameraView } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Modal, Pressable, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, View } from "react-native";
 
 import CameraSection from "@/components/scanDelivery/CameraSection";
 import FilePreview from "@/components/scanDelivery/FilePreview";
 import PhotoPreview from "@/components/scanDelivery/PhotoPreview";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
+import DropdownNavigation from "@/components/scanDelivery/DropdownNavigation";
 import { useCameraPermissionFlow } from "@/hooks/useCameraPermissionFlow";
 import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -39,10 +39,10 @@ export default function ScanNewDelivery() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [files, setFiles] = useState<PickedFile[]>([]);
   const [uploadMode, setUploadMode] = useState<UploadMode>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
+  const [isProcessing, setIsProcessing] = useState(false);
   const isBusy = processDeliveryNote.isPending || isProcessing;
+
   const canProceed =
     (uploadMode === "images" && photos.length > 0) ||
     (uploadMode === "file" && files.length === 1);
@@ -75,7 +75,10 @@ export default function ScanNewDelivery() {
 
   const pickFiles = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({ multiple: false, copyToCacheDirectory: true });
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: false,
+        copyToCacheDirectory: true,
+      });
       if (result.canceled) return;
 
       const asset = result.assets?.[0];
@@ -94,7 +97,11 @@ export default function ScanNewDelivery() {
   const takePicture = async () => {
     if (!cameraRef.current) return;
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8, exif: true, skipProcessing: false });
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.8,
+        exif: true,
+        skipProcessing: false,
+      });
       if (uploadMode === "file") setFiles([]);
       setUploadMode("images");
       setPhotos((prev) => [...prev, { id: makeId(), uri: photo.uri }]);
@@ -104,19 +111,33 @@ export default function ScanNewDelivery() {
     }
   };
 
-  const removePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id));
-  const clearFile = () => { setFiles([]); setUploadMode(null); };
+  const removePhoto = (id: string) =>
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+
+  const clearFile = () => {
+    setFiles([]);
+    setUploadMode(null);
+  };
 
   const proceedToOverview = async () => {
     if (!(uploadMode === "images" && photos.length > 0)) {
       Alert.alert("Nothing selected", "Please add photos before proceeding.");
       return;
     }
-    
+
     setIsProcessing(true);
     try {
-      const data = await processDeliveryNote.mutateAsync({ kind: "photos", photos });
-      router.push({ pathname: "/(scan-flow)/check-supplier", params: { photos: JSON.stringify(photos), ocrData: JSON.stringify(data) } });
+      const data = await processDeliveryNote.mutateAsync({
+        kind: "photos",
+        photos,
+      });
+      router.push({
+        pathname: "/(scan-flow)/check-supplier",
+        params: {
+          photos: JSON.stringify(photos),
+          ocrData: JSON.stringify(data),
+        },
+      });
     } catch (e: any) {
       Alert.alert("Upload failed", e?.message ?? "Unknown error");
     } finally {
@@ -126,19 +147,30 @@ export default function ScanNewDelivery() {
 
   const uploadFile = async () => {
     if (!(uploadMode === "file" && files.length === 1)) return;
-    
+
     setIsProcessing(true);
     try {
       const file = files[0];
-      const data = await processDeliveryNote.mutateAsync({ kind: "file", file: { uri: file.uri, name: file.name, mimeType: file.mimeType } });
+      const data = await processDeliveryNote.mutateAsync({
+        kind: "file",
+        file: { uri: file.uri, name: file.name, mimeType: file.mimeType },
+      });
 
       router.push({
         pathname: "/(scan-flow)/check-supplier",
-        params: { photos: JSON.stringify(photos), files: JSON.stringify(files), ocrData: JSON.stringify(data), sourceType: "file" },
+        params: {
+          photos: JSON.stringify(photos),
+          files: JSON.stringify(files),
+          ocrData: JSON.stringify(data),
+          sourceType: "file",
+        },
       });
     } catch (e: any) {
       console.error("File OCR Error:", e);
-      Alert.alert("Upload failed", e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e));
+      Alert.alert(
+        "Upload failed",
+        e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -151,10 +183,20 @@ export default function ScanNewDelivery() {
     if (!params.existingPhotos) return;
     try {
       const parsed = JSON.parse(params.existingPhotos as string);
-      const normalized: Photo[] = Array.isArray(parsed) ? parsed.map((p: any) => ({ id: typeof p.id === "string" ? p.id : makeId(), uri: p.uri })) : [];
+      const normalized: Photo[] = Array.isArray(parsed)
+        ? parsed.map((p: any) => ({
+            id: typeof p.id === "string" ? p.id : makeId(),
+            uri: p.uri,
+          }))
+        : [];
       setPhotos(normalized);
-      if (normalized.length > 0) { setUploadMode("images"); setFiles([]); }
-    } catch { console.warn("Invalid existingPhotos param"); }
+      if (normalized.length > 0) {
+        setUploadMode("images");
+        setFiles([]);
+      }
+    } catch {
+      console.warn("Invalid existingPhotos param");
+    }
   }, [params.existingPhotos]);
 
   useEffect(() => {
@@ -162,160 +204,167 @@ export default function ScanNewDelivery() {
     try {
       const parsed = JSON.parse(params.existingFiles as string);
       const normalized: PickedFile[] = Array.isArray(parsed)
-        ? parsed.map((f: any) => ({ id: typeof f.id === "string" ? f.id : makeId(), uri: f.uri, name: f.name, mimeType: f.mimeType }))
+        ? parsed.map((f: any) => ({
+            id: typeof f.id === "string" ? f.id : makeId(),
+            uri: f.uri,
+            name: f.name,
+            mimeType: f.mimeType,
+          }))
         : [];
       setFiles(normalized);
-      if (normalized.length > 0) { setUploadMode("file"); setPhotos([]); }
-    } catch { console.warn("Invalid existingFiles param"); }
+      if (normalized.length > 0) {
+        setUploadMode("file");
+        setPhotos([]);
+      }
+    } catch {
+      console.warn("Invalid existingFiles param");
+    }
   }, [params.existingFiles]);
 
-  if (!permission) return <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}>
-    <Text style={{ color: theme.colors.text }}>Checking camera permissions...</Text></View>;
+  if (!permission)
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <Text style={{ color: theme.colors.text }}>
+          Checking camera permissions...
+        </Text>
+      </View>
+    );
 
   const isDenied = permission.status === "denied" && !hasCameraPermission;
-  const isUndetermined = permission.status === "undetermined" && !hasCameraPermission;
+  const isUndetermined =
+    permission.status === "undetermined" && !hasCameraPermission;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingHorizontal: 16 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: theme.colors.background,
+        paddingHorizontal: 16,
+      }}
+    >
       {/* Loading Overlay */}
       {isProcessing && (
-        <View style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-        }}>
-          <View style={{
-            backgroundColor: theme.colors.background,
-            padding: 24,
-            borderRadius: 16,
-            alignItems: 'center',
-            minWidth: 200,
-          }}>
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: theme.colors.background,
+              padding: 24,
+              borderRadius: 16,
+              alignItems: "center",
+              minWidth: 200,
+            }}
+          >
             <ActivityIndicator size="large" color={theme.palette.yellow} />
-            <Text style={{ 
-              color: theme.colors.text, 
-              fontSize: 16, 
-              fontWeight: '600',
-              marginTop: 16,
-              textAlign: 'center'
-            }}>
+            <Text
+              style={{
+                color: theme.colors.text,
+                fontSize: 16,
+                fontWeight: "600",
+                marginTop: 16,
+                textAlign: "center",
+              }}
+            >
               Processing OCR...
             </Text>
-            <Text style={{ 
-              color: theme.colors.text, 
-              fontSize: 14,
-              marginTop: 8,
-              textAlign: 'center'
-            }}>
+            <Text
+              style={{
+                color: theme.colors.text,
+                fontSize: 14,
+                marginTop: 8,
+                textAlign: "center",
+              }}
+            >
               Please wait while we read the document
             </Text>
           </View>
         </View>
       )}
 
-      {/* Header with clickable title and close button */}
-      <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 16, position: "relative" }}>
-        {/* Close button in top right corner */}
-        <Pressable
-          onPress={() => router.back()} // Navigates back to main page
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 12,
-            padding: 8,
-            zIndex: 10,
-          }}
-        >
-          <Ionicons name="close" size={24} color={theme.colors.text} />
-        </Pressable>
-
-        {/* Centered title with dropdown */}
-        <Pressable
-          onPress={() => setShowDropdown(true)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 12,
-          }}
-        >
-          <Text style={{ color: theme.palette.yellow, fontSize: 20, fontWeight: "700", textAlign: "center" }}>
-            Scan delivery note
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={theme.palette.yellow} style={{ marginLeft: 8 }} />
-        </Pressable>
-      </View>
-
-      {/* Dropdown Modal - FIXED VERSION */}
-      <Modal
-        visible={showDropdown}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDropdown(false)}
-      >
-        {/* Fixed layout: TouchableOpacity only around the dropdown, not covering entire screen */}
-        <View style={{ flex: 1 }}>
-          {/* This TouchableOpacity only covers the area around the dropdown */}
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            activeOpacity={1}
-            onPress={() => setShowDropdown(false)}
-          >
-            {/* Empty space above dropdown */}
-            <View style={{ height: 60 }} />
-            
-            {/* Dropdown content - NOT wrapped in TouchableOpacity */}
-            <View style={{ 
-              backgroundColor: theme.colors.background, 
-              paddingVertical: 8,
-            }}>
-              <Pressable
-                onPress={() => {
-                  setShowDropdown(false);
-                  router.push("/(scan-flow)/manual-delivery");
-                }}
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  paddingVertical: 8,
-                  paddingHorizontal: 8,
-                }}
-              >
-                <Text style={{ color: theme.palette.yellow, fontSize: 20, fontWeight: "700" }}>
-                  Manual delivery
-                </Text>
-              </Pressable>
-            </View>
-            
-            {/* Empty space below dropdown */}
-            <View style={{ flex: 1 }} />
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      {/* ✅ New extracted navigation */}
+      <DropdownNavigation
+        title="Scan delivery note"
+        onClose={() => router.back()}
+        items={[
+          {
+            key: "manual",
+            label: "Manual delivery",
+            onPress: () => router.push("/(scan-flow)/manual-delivery"),
+          },
+        ]}
+        paddingHorizontal={16}
+        headerBottomGap={0}
+      />
 
       {hasCameraPermission ? (
         <>
-          <CameraSection cameraRef={cameraRef} onTakePicture={takePicture} onPickImage={pickFromGallery} onPickFile={pickFiles} isBusy={isBusy} />
+          <CameraSection
+            cameraRef={cameraRef}
+            onTakePicture={takePicture}
+            onPickImage={pickFromGallery}
+            onPickFile={pickFiles}
+            isBusy={isBusy}
+          />
 
-          {uploadMode === "images" && photos.length > 0 && <PhotoPreview photos={photos} onRemove={removePhoto} isBusy={isBusy} />}
-          {uploadMode === "file" && files.length === 1 && <FilePreview file={files[0]} onRemove={clearFile} isBusy={isBusy} />}
+          {uploadMode === "images" && photos.length > 0 && (
+            <PhotoPreview
+              photos={photos}
+              onRemove={removePhoto}
+              isBusy={isBusy}
+            />
+          )}
+
+          {uploadMode === "file" && files.length === 1 && (
+            <FilePreview file={files[0]} onRemove={clearFile} isBusy={isBusy} />
+          )}
 
           <View style={{ paddingVertical: 16 }}>
-            <GradientButton 
-              onPress={uploadMode === "file" ? uploadFile : proceedToOverview} 
-              text={uploadMode === "file" ? "Upload" : `Review (${photos.length})`} 
-              disabled={!canProceed || isBusy} 
+            <GradientButton
+              onPress={uploadMode === "file" ? uploadFile : proceedToOverview}
+              text={
+                uploadMode === "file" ? "Upload" : `Review (${photos.length})`
+              }
+              disabled={!canProceed || isBusy}
             />
           </View>
         </>
       ) : (
-        <View style={{ flex: 1, margin: 16, borderRadius: 12, justifyContent: "center", alignItems: "center", paddingHorizontal: 16, backgroundColor: theme.palette.beige }}>
-          <Text style={{ color: theme.colors.text, fontSize: 16, textAlign: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            margin: 16,
+            borderRadius: 12,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            backgroundColor: theme.palette.beige,
+          }}
+        >
+          <Text
+            style={{
+              color: theme.colors.text,
+              fontSize: 16,
+              textAlign: "center",
+            }}
+          >
             {isDenied
               ? "Camera permission is denied. Turn it on in Settings or choose another method."
               : isUndetermined
@@ -325,8 +374,16 @@ export default function ScanNewDelivery() {
 
           {isDenied && (
             <View style={{ width: "100%", marginTop: 16, gap: 12 }}>
-              <GradientButton onPress={() => Linking.openSettings()} text="Open Settings" />
-              <GradientButton onPress={() => Alert.alert("Not implemented", "Alternative upload flow")} text="Choose another method" />
+              <GradientButton
+                onPress={() => Linking.openSettings()}
+                text="Open Settings"
+              />
+              <GradientButton
+                onPress={() =>
+                  Alert.alert("Not implemented", "Alternative upload flow")
+                }
+                text="Choose another method"
+              />
             </View>
           )}
         </View>

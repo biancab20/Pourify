@@ -7,8 +7,8 @@ export default function ScanFlowLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="scan-new-delivery" />
-      <Stack.Screen name="check-supplier" />
+      <Stack.Screen name="scan-new-delivery" options={{ title: "" }} />
+      <Stack.Screen name="check-supplier" options={{ title: "", headerShown: true }} />
       <Stack.Screen name="delivery-check" />
       <Stack.Screen name="delivery-summary" />
       <Stack.Screen name="manual-delivery" />
