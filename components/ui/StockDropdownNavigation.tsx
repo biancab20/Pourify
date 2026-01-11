@@ -37,7 +37,7 @@ export default function StockDropdownNavigation({
   const dropdownItems = useMemo(
     () => [
       { id: null, name: "General Stock" },
-      ...bars.map(bar => ({ id: bar.barId, name: bar.name })), // bar.barId is string
+      ...bars.map((bar) => ({ id: bar.barId, name: bar.name })), // bar.barId is string
     ],
     [bars]
   );
@@ -57,8 +57,16 @@ export default function StockDropdownNavigation({
     scale.setValue(0.96);
 
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 160, useNativeDriver: true }),
-      Animated.timing(scale, { toValue: 1, duration: 160, useNativeDriver: true }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 160,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 160,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, [showDropdown, opacity, scale]); // Added opacity and scale to dependencies
 
@@ -71,9 +79,10 @@ export default function StockDropdownNavigation({
 
   const closeDropdown = () => setShowDropdown(false);
 
-  const handleSelect = (bar: { id: string | null; name: string }) => { // Updated type here
+  const handleSelect = (bar: { id: string | null; name: string }) => {
+    // Updated type here
     onBarSelect(bar); // update selectedBar in parent
-    closeDropdown();  // close dropdown
+    closeDropdown(); // close dropdown
   };
 
   const menuLeft = anchor?.x ?? 0;
@@ -84,10 +93,16 @@ export default function StockDropdownNavigation({
     <View style={styles.container}>
       <View ref={buttonRef} collapsable={false}>
         <TouchableOpacity
-          style={[styles.dropdownButton, { backgroundColor: colors.cardBackground }]}
+          style={[
+            styles.dropdownButton,
+            { backgroundColor: colors.cardBackground },
+          ]}
           onPress={showDropdown ? closeDropdown : openDropdown}
         >
-          <Text style={[styles.buttonText, { color: colors.text }]} numberOfLines={1}>
+          <Text
+            style={[styles.buttonText, { color: colors.text }]}
+            numberOfLines={1}
+          >
             {selectedBar.name}
           </Text>
           <Ionicons
@@ -104,24 +119,60 @@ export default function StockDropdownNavigation({
           <View style={StyleSheet.absoluteFillObject} />
         </TouchableWithoutFeedback>
 
-        <View style={{ position: "absolute", left: menuLeft, top: menuTop, width: menuWidth }}>
-          <Animated.View style={[styles.menuWrapper, { width: menuWidth, opacity, transform: [{ scale }] }]}>
-            <BlurView intensity={35} tint={theme.isDark ? "dark" : "light"} style={styles.blurCard}>
-              <View style={[styles.glassBorder, { borderColor: theme.isDark ? "#3A3A3A" : "#D0D0D0" }]} />
+        <View
+          style={{
+            position: "absolute",
+            left: menuLeft,
+            top: menuTop,
+            width: menuWidth,
+          }}
+        >
+          <Animated.View
+            style={[
+              styles.menuWrapper,
+              { width: menuWidth, opacity, transform: [{ scale }] },
+            ]}
+          >
+            <BlurView
+              intensity={35}
+              tint={theme.isDark ? "dark" : "light"}
+              style={styles.blurCard}
+            >
+              <View
+                style={[
+                  styles.glassBorder,
+                  { borderColor: theme.isDark ? "#3A3A3A" : "#D0D0D0" },
+                ]}
+              />
 
               <View style={styles.menuContent}>
-                {dropdownItems.map(item => {
+                {dropdownItems.map((item) => {
                   const isSelected = selectedBar.id === item.id;
                   return (
                     <TouchableOpacity
                       key={item.id === null ? "general" : `bar-${item.id}`}
-                      style={[styles.itemRow, isSelected && styles.itemSelectedRow]}
+                      style={[
+                        styles.itemRow,
+                        isSelected && styles.itemSelectedRow,
+                      ]}
                       onPress={() => handleSelect(item)}
                     >
-                      <Text style={[styles.itemText, { color: colors.text }, isSelected && styles.itemSelectedText]}>
+                      <Text
+                        style={[
+                          styles.itemText,
+                          { color: colors.text },
+                          isSelected && styles.itemSelectedText,
+                        ]}
+                      >
                         {item.name}
                       </Text>
-                      {isSelected && <Ionicons name="checkmark" size={18} color={colors.text} />}
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color={colors.text}
+                        />
+                      )}
                     </TouchableOpacity>
                   );
                 })}
@@ -136,15 +187,46 @@ export default function StockDropdownNavigation({
 
 const styles = StyleSheet.create({
   container: { alignSelf: "flex-start" },
-  dropdownButton: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, maxWidth: 320 },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    maxWidth: 320,
+  },
   buttonText: { fontSize: 16, fontWeight: "400", flexShrink: 1 },
   chevron: { marginLeft: 8 },
-  menuWrapper: { borderRadius: 18, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 18, elevation: 12 },
+  menuWrapper: {
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 12,
+  },
   blurCard: { borderRadius: 18, overflow: "hidden" },
-  glassBorder: { ...StyleSheet.absoluteFillObject, borderWidth: 1, borderRadius: 18, opacity: 0.7 },
+  glassBorder: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1,
+    borderRadius: 18,
+    opacity: 0.7,
+  },
   menuContent: { padding: MENU_PADDING },
-  itemRow: { height: ITEM_HEIGHT, borderRadius: 14, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  itemRow: {
+    height: ITEM_HEIGHT,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   itemSelectedRow: { backgroundColor: "rgba(255,255,255,0.08)" },
-  itemText: { fontSize: 16, fontWeight: "500", flexShrink: 1, paddingRight: 10 },
+  itemText: {
+    fontSize: 16,
+    fontWeight: "500",
+    flexShrink: 1,
+    paddingRight: 10,
+  },
   itemSelectedText: { fontWeight: "700" },
 });
