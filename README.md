@@ -1,16 +1,40 @@
-# Welcome to your Expo app 👋
+# Pourify
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Pourify is a front-end mobile application designed to track stock changes in beverage locations. It uses Typescript and React Native, with Expo Go for easy development.
 
-## Get started
+## Authors:
+    - Bianca Burlacu
+    - Aleksandra Bivolarska
 
-1. Install dependencies
+## Features
+
+- **Registration of new deliveries**: Upload and track the latest deliveries to your venue.
+- **OCR delivery note reading**: You can scan/upload a delivery file to create a new delivery.
+- **Stock tracking**: Track what comes in and what comes out in all places where you store beverages within your venue.
+- **Supplier list**: Have all of your suppliers and their contact information directly in your app.
+  
+## Getting started
+
+### Prerequisites
+
+ - Make sure you have installed the Expo Go app on a mobile device.
+
+### Quick Start
+
+1. Download the zip project or clone:
+
+   ```bash
+   git clone https://github.com/biancab20/Pourify.git
+   cd Pourify
+   ```
+
+2. Install dependencies
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Start the app
 
    ```bash
    npx expo start
@@ -21,30 +45,13 @@ In the output, you'll find options to open the app in a
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- [Expo Go](https://expo.dev/go)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Usage
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Scan the QR Code on your phone(IOS) or in the Expo Go app (Android)
+2. Login with the following credentials: username: perro ; password: gato
+3. Navigate through the app:
+    - See the whole stock or the stock of an individual stock room,
+    - Go to settings, add/delete/update products/suppliers/stock rooms,
+    - Register a new delivery: Scan or upload a photo/document, check the items on the list, and save it.
