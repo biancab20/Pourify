@@ -309,12 +309,17 @@ export default function DeliverySummary() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Fixed Header Section */}
-      <View style={styles.fixedHeader}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           Delivery Summary
         </Text>
+
         
+
         {/* Supplier, Date, and Bar Info Card */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
@@ -323,29 +328,20 @@ export default function DeliverySummary() {
           />
         </View>
 
-        {/* Search Bar - Fixed at top */}
-        <View style={styles.searchContainer}>
-          <InputBox
-            placeholder="Search items..."
-            initialValue=""
-            onSearch={handleSearch}
-          />
-        </View>
+        {/* Search Bar */}
+        <InputBox
+          placeholder="Search items..."
+          initialValue=""
+          onSearch={handleSearch}
+        />
 
         {/* Search results count */}
         {searchQuery && (
           <Text style={[styles.resultsText, { color: colors.text }]}>
-            {filteredItemsCount} result{filteredItemsCount !== 1 ? "s" : ""} found
+            
           </Text>
         )}
-      </View>
 
-      {/* Scrollable Content Section */}
-      <ScrollView
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
         {/* No results state */}
         {showNoResults ? (
           <View style={styles.emptyState}>
@@ -387,42 +383,29 @@ export default function DeliverySummary() {
 }
 
 const styles = StyleSheet.create({
-
-  fixedHeader: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    backgroundColor: 'white', // Or your theme background color
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  scrollContainer: {
+  container: {
     flex: 1,
     paddingHorizontal: 16,
   },
   scrollContent: {
     paddingBottom: 20,
-    paddingTop: 16, // Add some space between fixed header and scroll content
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    marginBottom: 16,
-  },
+    marginVertical: 16,
+},
   infoContainer: {
     marginBottom: 16,
-  },
-  searchContainer: {
-    marginBottom: 12,
   },
   editableCardStyle: {
     borderRadius: 12,
   },
   resultsText: {
-    marginTop: 8,
+    marginTop: 12,
     marginBottom: 16,
     textAlign: "center",
     fontWeight: "500",
-    fontSize: 14,
   },
   section: {
     marginBottom: 32,
@@ -434,9 +417,6 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: 'white',
   },
   emptyState: {
     padding: 40,

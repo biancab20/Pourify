@@ -69,6 +69,19 @@ export default function ListItem({
     { id: "4", label: "Substituted", onPress: () => {} },
   ];
 
+  // Calculate units: total volume divided by product volume
+  const calculateUnits = () => {
+    // cases is total volume, cans is product volume
+    if (delivery.cans === 0) return 0;
+    return delivery.cases / delivery.cans;
+  };
+
+  // Format product volume to show 3 decimal places with L
+  const formatProductVolume = () => {
+    // Just format to 3 decimal places and add L
+    return delivery.cans.toFixed(3) + 'L';
+  };
+
   const handleMenuPress = () => {
     if (buttonRef.current) {
       buttonRef.current.measureInWindow((x, y, width, height) => {
@@ -139,6 +152,9 @@ export default function ListItem({
 
   if (!isVisible) return null;
 
+  const units = calculateUnits();
+  const formattedVolume = formatProductVolume();
+
   const Content = (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -153,12 +169,12 @@ export default function ListItem({
           { backgroundColor: colors.cardBackground },
         ]}
       >
-        {/* ✅ CHECKBOX RESTORED */}
+        {/* Checkbox for select mode */}
         {isSelectMode && (
           <View
             style={[
               styles.checkbox,
-              isSelected && styles.checkboxSelected,
+              isSelected && { backgroundColor: palette.pink, borderColor: palette.pink },
             ]}
           >
             {isSelected && (
@@ -171,40 +187,25 @@ export default function ListItem({
           </View>
         )}
 
-        <Text style={[styles.title, { color: colors.cardText }]}>
-          {delivery.name}
-        </Text>
+        <View style={styles.content}>
+          <Text style={[styles.title, { color: colors.cardText }]}>
+            {delivery.name} · {formattedVolume}
+          </Text>
+        </View>
 
-        <View style={styles.badges}>
-          <View
-            style={[styles.badge, { backgroundColor: colors.background }]}
+        <View
+          style={[styles.badge, { backgroundColor: colors.background }]}
+        >
+          <Text
+            style={[styles.badgeValue, { color: colors.text }]}
           >
-            <Text
-              style={[styles.badgeValue, { color: colors.text }]}
-            >
-              {delivery.cases}
-            </Text>
-            <Text
-              style={[styles.badgeLabel, { color: colors.icon }]}
-            >
-              cases
-            </Text>
-          </View>
-
-          <View
-            style={[styles.badge, { backgroundColor: colors.background }]}
+            {units.toFixed(0)}
+          </Text>
+          <Text
+            style={[styles.badgeLabel, { color: colors.icon }]}
           >
-            <Text
-              style={[styles.badgeValue, { color: colors.text }]}
-            >
-              {delivery.cans}
-            </Text>
-            <Text
-              style={[styles.badgeLabel, { color: colors.icon }]}
-            >
-              cans
-            </Text>
-          </View>
+            units
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -289,29 +290,30 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  content: {
+    flex: 1,
+    marginLeft: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: "600",
-    flex: 1,
-  },
-  badges: {
-    flexDirection: "row",
-    gap: 10,
-    marginLeft: 12,
   },
   badge: {
     borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     alignItems: "center",
+    minWidth: 70,
   },
   badgeValue: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
+    marginBottom: 2,
   },
   badgeLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
   },
   checkbox: {
@@ -320,13 +322,8 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 2,
     borderColor: "#CCCCCC",
-    marginRight: 12,
     justifyContent: "center",
     alignItems: "center",
-  },
-  checkboxSelected: {
-    backgroundColor: "#FF77E0",
-    borderColor: "#FF77E0",
   },
   leftAction: {
     flex: 1,

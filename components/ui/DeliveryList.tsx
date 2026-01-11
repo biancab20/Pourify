@@ -81,6 +81,11 @@ const DeliveryList = ({
     );
   }, [activeDeliveries, searchQuery]);
 
+  // Check if all items have been swiped
+  const allItemsSwiped = React.useMemo(() => {
+    return deliveries.length > 0 && localRemovedIds.length === deliveries.length;
+  }, [deliveries.length, localRemovedIds.length]);
+
   const handleSearch = (value: string | number) => {
     const query = value.toString();
     setSearchQuery(query);
@@ -221,15 +226,28 @@ const DeliveryList = ({
       {/* Deliveries list */}
       {filteredData.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={[styles.emptyText, { color: colors.icon }]}>
-            {emptyState?.title || (deliveries.length === 0
-              ? "No deliveries available"
-              : "No deliveries match your search")}
-          </Text>
-          {emptyState?.message && (
-            <Text style={[styles.emptySubtext, { color: colors.icon }]}>
-              {emptyState.message}
-            </Text>
+          {allItemsSwiped ? (
+            <>
+              <Text style={[styles.successTitle, { color: colors.text }]}>
+                Delivery marked successfully!
+              </Text>
+              <Text style={[styles.successMessage, { color: colors.icon }]}>
+                Please continue to delivery summary
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.emptyText, { color: colors.icon }]}>
+                {emptyState?.title || (deliveries.length === 0
+                  ? "No deliveries available"
+                  : "No deliveries match your search")}
+              </Text>
+              {emptyState?.message && (
+                <Text style={[styles.emptySubtext, { color: colors.icon }]}>
+                  {emptyState.message}
+                </Text>
+              )}
+            </>
           )}
         </View>
       ) : (
@@ -353,6 +371,20 @@ const styles = StyleSheet.create({
   checkMultipleText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  successIcon: {
+    marginBottom: 16,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  successMessage: {
+    fontSize: 16,
+    textAlign: "center",
+    opacity: 0.8,
   },
 });
 
