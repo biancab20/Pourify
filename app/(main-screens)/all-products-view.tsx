@@ -1,6 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Text } from "@/components/shared/Text";
@@ -12,7 +18,7 @@ import { useProducts } from "@/hooks/useProducts";
 import { useStocks } from "@/hooks/useStock";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { StockItem } from "@/types/stock";
-
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 //make product name title case, e.g. Beer keg -> Beer Keg
 const formatProductName = (name: string) => {
@@ -20,9 +26,7 @@ const formatProductName = (name: string) => {
   return name
     .toLowerCase()
     .split(" ")
-    .map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    )
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 };
 
@@ -52,10 +56,7 @@ export default function AllProducts() {
     () => productsData?.value ?? [],
     [productsData?.value]
   );
-  const stocks = useMemo(
-    () => stocksData?.value ?? [],
-    [stocksData?.value]
-  );
+  const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
 
   // Init bar from params
   useEffect(() => {
@@ -74,14 +75,14 @@ export default function AllProducts() {
     if (!products.length) return [];
 
     return products
-      .map(product => {
+      .map((product) => {
         let productStocks = stocks.filter(
           (stock: StockItem) => stock.productId === product.productId
         );
 
         if (selectedBar.id) {
           productStocks = productStocks.filter(
-            stock => stock.storagePlaceId === selectedBar.id
+            (stock) => stock.storagePlaceId === selectedBar.id
           );
         }
 
@@ -91,9 +92,7 @@ export default function AllProducts() {
         );
 
         const bottleCount =
-          product.volume > 0
-            ? Math.floor(totalVolume / product.volume)
-            : 0;
+          product.volume > 0 ? Math.floor(totalVolume / product.volume) : 0;
 
         return {
           stockId: `${product.productId}-${selectedBar.id ?? "general"}`,
@@ -106,14 +105,12 @@ export default function AllProducts() {
           isOutOfStock: totalVolume === 0,
         };
       })
-      .filter(stock =>
+      .filter((stock) =>
         searchQuery
           ? stock.productName
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
-            stock.productType
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
+            stock.productType.toLowerCase().includes(searchQuery.toLowerCase())
           : true
       )
       .sort((a, b) => {
@@ -134,8 +131,11 @@ export default function AllProducts() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={Platform.OS === "android" ? ["bottom"] : []}
+      edges={Platform.OS === "android" ? ["bottom", "top"] : []}
     >
+      {Platform.OS === "android" && (
+        <AndroidCustomNavigation onBack={router.back} />
+      )}
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
@@ -163,7 +163,7 @@ export default function AllProducts() {
 
         <View style={styles.productsList}>
           {!stocksLoading &&
-            filteredStocks.map(stock => (
+            filteredStocks.map((stock) => (
               <Pressable
                 key={stock.stockId}
                 style={[

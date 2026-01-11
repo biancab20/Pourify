@@ -2,16 +2,18 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { useAuthStore } from "@/stores/auth-store";
 import { router, Stack } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 
 export default function MainScreensLayout() {
   const { theme } = useAppTheme();
   const { colors } = theme;
+  const isAndroid = Platform.OS === "android";
 
   const status = useAuthStore((s) => s.status);
 
   useEffect(() => {
     if (status === "signedOut") {
-      router.replace("/"); 
+      router.replace("/");
     }
   }, [status]);
 
@@ -19,7 +21,7 @@ export default function MainScreensLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: !isAndroid,
         headerStyle: {
           backgroundColor: colors.background,
         },
@@ -32,6 +34,8 @@ export default function MainScreensLayout() {
       />
       <Stack.Screen name="bar-view" options={{ title: "" }} />
       <Stack.Screen name="all-products-view" options={{ title: "" }} />
+      <Stack.Screen name="product-stock" options={{ title: "" }} />
+      <Stack.Screen name="edit-stock" options={{ title: "" }} />
     </Stack>
   );
 }

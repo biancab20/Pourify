@@ -8,7 +8,7 @@ import FilePreview from "@/components/scanDelivery/FilePreview";
 import PhotoPreview from "@/components/scanDelivery/PhotoPreview";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
-import DropdownNavigation from "@/components/scanDelivery/DropdownNavigation";
+import DropdownNavigation from "@/components/navigation/DropdownNavigation";
 import { useCameraPermissionFlow } from "@/hooks/useCameraPermissionFlow";
 import { useProcessDeliveryNote } from "@/hooks/useDeliveries";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -379,10 +379,8 @@ export default function ScanNewDelivery() {
                 text="Open Settings"
               />
               <GradientButton
-                onPress={() =>
-                  Alert.alert("Not implemented", "Alternative upload flow")
-                }
-                text="Choose another method"
+                onPress={() => router.push("/(scan-flow)/manual-delivery")}
+                text="Add delivery manually"
               />
             </View>
           )}

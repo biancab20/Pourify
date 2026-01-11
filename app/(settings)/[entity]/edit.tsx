@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +19,7 @@ import EditableSectionCard from "@/components/ui/EditableSectionCard";
 import { useSupplier, useDeleteSupplier } from "@/hooks/useSuppliers";
 import { useProduct, useDeleteProduct } from "@/hooks/useProducts";
 import { useBar, useDeleteBar } from "@/hooks/useLocations";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 type EntityKey = "products" | "suppliers" | "locations";
 
@@ -268,6 +270,10 @@ export default function EditEntityScreen() {
       edges={["top", "bottom"]}
     >
       <ScrollView contentContainerStyle={styles.content}>
+        {Platform.OS === "android" && (
+          <AndroidCustomNavigation onBack={router.back} />
+        )}
+
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           {pageTitle}
         </Text>
