@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import DeliveryList, { DeliveryItem } from "@/components/ui/DeliveryList";
+import DeliveryList, { DeliveryItem } from "@/components/dynamic/DeliveryList";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -17,7 +17,8 @@ export default function DeliveryCheck() {
   const { colors } = theme;
   const router = useRouter();
 
-  const ocrResponse = queryClient.getQueryData<any>(["deliveries", "latest"]) ?? null;
+  const ocrResponse =
+    queryClient.getQueryData<any>(["deliveries", "latest"]) ?? null;
 
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
@@ -38,27 +39,34 @@ export default function DeliveryCheck() {
   }, [delivery]);
 
   const allItemsCompleted = useMemo(() => {
-    return deliveries.length > 0 && deliveries.every(d => removedIds.includes(d.id));
+    return (
+      deliveries.length > 0 &&
+      deliveries.every((d) => removedIds.includes(d.id))
+    );
   }, [deliveries, removedIds]);
 
   const handleSwipeComplete = (id: string) => {
-    const item = deliveries.find(d => d.id === id);
+    const item = deliveries.find((d) => d.id === id);
     if (!item) return;
 
     setStatus(item, "received");
-    setRemovedIds(prev => [...prev, id]);
+    setRemovedIds((prev) => [...prev, id]);
   };
 
   if (!delivery) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
         <DeliveryList deliveries={[]} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <DeliveryList
         deliveries={deliveries}
         removedIds={removedIds}

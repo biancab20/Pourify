@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import SingleFieldEditScreen, {
   SelectOption,
-} from "@/components/ui/SingleFieldEditScreen";
+} from "@/components/dynamic/SingleFieldEditScreen";
 
 import { useSupplier, useUpdateSupplier } from "@/hooks/useSuppliers";
 import { useProduct, useUpdateProduct } from "@/hooks/useProducts";
@@ -137,7 +137,9 @@ export default function EditEntityFieldRoute() {
     return `${base}: ${label}`;
   }, [entity, label]);
 
-  const entityFieldType = useMemo<"text" | "email" | "number" | "select">(() => {
+  const entityFieldType = useMemo<
+    "text" | "email" | "number" | "select"
+  >(() => {
     if (fieldKey === "email") return "email";
     if (fieldKey === "volume") return "number";
     if (fieldKey === "type") return "select";
@@ -185,7 +187,9 @@ export default function EditEntityFieldRoute() {
   };
 
   const entityErrorMessage = activeQuery.error
-    ? `Could not load ${entity.slice(0, -1)}: ${getErrorMessage(activeQuery.error)}`
+    ? `Could not load ${entity.slice(0, -1)}: ${getErrorMessage(
+        activeQuery.error
+      )}`
     : !id
     ? "Missing id"
     : null;
@@ -194,7 +198,8 @@ export default function EditEntityFieldRoute() {
     if (!id) throw new Error("Missing id");
 
     if (entity === "locations") {
-      if (fieldKey !== "name") throw new Error("Unsupported field for location");
+      if (fieldKey !== "name")
+        throw new Error("Unsupported field for location");
       await updateBar.mutateAsync({
         barId: id,
         data: { name: newValue.trim() },
@@ -202,19 +207,27 @@ export default function EditEntityFieldRoute() {
     }
 
     if (entity === "suppliers") {
-      if (fieldKey === "name") {
-        await updateSupplier.mutateAsync({
-          supplierId: id,
-          data: { name: newValue.trim() },
-        });
-      } else if (fieldKey === "email") {
-        await updateSupplier.mutateAsync({
-          supplierId: id,
-          data: { email: newValue.trim() },
-        });
-      } else {
-        throw new Error("Unsupported field for supplier");
-      }
+      if (!item) throw new Error("Supplier not loaded yet");
+
+      const currentName = item.name ?? "";
+      const currentEmail = item.email ?? "";
+
+      const nextName = fieldKey === "name" ? newValue.trim() : currentName;
+      const nextEmail = fieldKey === "email" ? newValue.trim() : currentEmail;
+
+      if (!nextName.trim()) throw new Error("Supplier name cannot be empty");
+      if (!nextEmail.trim()) throw new Error("Supplier email cannot be empty");
+
+      await updateSupplier.mutateAsync({
+        supplierId: id,
+        data: {
+          name: nextName,
+          email: nextEmail,
+        },
+      });
+
+      router.back();
+      return;
     }
 
     if (entity === "products") {
@@ -273,13 +286,16 @@ export default function EditEntityFieldRoute() {
       if (settingsField.allowEmpty && !trimmed) return null;
 
       if (settingsField.fieldType === "email") {
-        if (!trimmed && !settingsField.allowEmpty) return "Please enter an email.";
-        if (trimmed && !trimmed.includes("@")) return "Please enter a valid email.";
+        if (!trimmed && !settingsField.allowEmpty)
+          return "Please enter an email.";
+        if (trimmed && !trimmed.includes("@"))
+          return "Please enter a valid email.";
         return null;
       }
 
       if (settingsField.fieldType === "number") {
-        if (!trimmed && !settingsField.allowEmpty) return "Please enter a value.";
+        if (!trimmed && !settingsField.allowEmpty)
+          return "Please enter a value.";
         if (!trimmed) return null;
         const n = Number(trimmed);
         if (!Number.isFinite(n)) return "Please enter a valid number.";
@@ -287,7 +303,8 @@ export default function EditEntityFieldRoute() {
       }
 
       if (settingsField.fieldType === "select") {
-        if (!trimmed && !settingsField.allowEmpty) return "Please select a value.";
+        if (!trimmed && !settingsField.allowEmpty)
+          return "Please select a value.";
         return null;
       }
 

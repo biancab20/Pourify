@@ -3,7 +3,7 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import React from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import InfoCard from "../ui/InfoBox";
+import InfoCard from "./InfoBox";
 import StockPieChart from "./StockPieChart";
 
 interface BarStockCardProps {
@@ -14,12 +14,12 @@ interface BarStockCardProps {
   totalStockAcrossAllBars: number; // Total stock across all bars for comparison
 }
 
-export default function BarStockCard({ 
-  barName, 
-  totalVolume, 
-  bottleCount, 
+export default function BarStockCard({
+  barName,
+  totalVolume,
+  bottleCount,
   productVolume,
-  totalStockAcrossAllBars 
+  totalStockAcrossAllBars,
 }: BarStockCardProps) {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -27,30 +27,28 @@ export default function BarStockCard({
   const circleSize = cardWidth - 26;
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        width: cardWidth,
-        backgroundColor: theme.isDark ? "#000000" : "#FFFFFF"
-      }
-    ]}>
-      <Text style={[styles.title, { color: theme.colors.text }]}>{barName}</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          width: cardWidth,
+          backgroundColor: theme.isDark ? "#000000" : "#FFFFFF",
+        },
+      ]}
+    >
+      <Text style={[styles.title, { color: theme.colors.text }]}>
+        {barName}
+      </Text>
 
-      <StockPieChart 
+      <StockPieChart
         size={circleSize}
         currentStock={totalVolume}
         totalStock={totalStockAcrossAllBars}
         barName={barName}
       />
 
-      <InfoCard 
-        title={`${totalVolume.toFixed(1)}L`} 
-        subtitle="#Litres" 
-      />
-      <InfoCard 
-        title={bottleCount.toString()} 
-        subtitle="#Bottles" 
-      />
+      <InfoCard title={`${totalVolume.toFixed(1)}L`} subtitle="#Litres" />
+      <InfoCard title={bottleCount.toString()} subtitle="#Bottles" />
     </View>
   );
 }

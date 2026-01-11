@@ -4,8 +4,8 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "@/components/icons/Icon";
-import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
-import { ConfigRow } from "@/components/ui/ConfigRow";
+import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamic/ConfigRow";
 import type { Supplier } from "@/types";
 import type { Bar as ApiBar } from "@/types/locations";
 import type { Product as ApiProduct } from "@/types/products";
@@ -13,7 +13,7 @@ import { useMemo, useState, useCallback } from "react";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
-import EditableSectionCard from "@/components/ui/EditableSectionCard";
+import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
 
 import { getStoredString } from "@/utils/storage";
 
@@ -80,7 +80,10 @@ export default function VenueSettings() {
     isRefetching: isProductsRefetching,
   } = useProducts();
 
-  const products = useMemo(() => productsData?.value ?? [], [productsData?.value]);
+  const products = useMemo(
+    () => productsData?.value ?? [],
+    [productsData?.value]
+  );
 
   // ✅ Suppliers API
   const {
@@ -91,7 +94,10 @@ export default function VenueSettings() {
     isRefetching: isSuppliersRefetching,
   } = useSuppliers();
 
-  const suppliers = useMemo(() => suppliersData?.value ?? [], [suppliersData?.value]);
+  const suppliers = useMemo(
+    () => suppliersData?.value ?? [],
+    [suppliersData?.value]
+  );
 
   const addStaticBar = () => {
     setStaticBars((prev) => [
@@ -161,7 +167,9 @@ export default function VenueSettings() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["bottom", "top"]}
     >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
         <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Icon name="exit" size={32} color={theme.colors.icon} />
         </Pressable>
@@ -204,7 +212,9 @@ export default function VenueSettings() {
           loadingText="Loading stock locations..."
           errorMessage={
             apiBarsError
-              ? `Could not load stock locations: ${getErrorMessage(apiBarsError)}`
+              ? `Could not load stock locations: ${getErrorMessage(
+                  apiBarsError
+                )}`
               : null
           }
           onRetry={() => refetchApiBars()}
@@ -228,7 +238,9 @@ export default function VenueSettings() {
           isLoading={isProductsLoading}
           loadingText="Loading products..."
           errorMessage={
-            productsError ? `Could not load products: ${getErrorMessage(productsError)}` : null
+            productsError
+              ? `Could not load products: ${getErrorMessage(productsError)}`
+              : null
           }
           onRetry={() => refetchProducts()}
           isRetrying={isProductsRefetching}
@@ -252,7 +264,9 @@ export default function VenueSettings() {
           isLoading={isSuppliersLoading}
           loadingText="Loading suppliers..."
           errorMessage={
-            suppliersError ? `Error loading suppliers: ${getErrorMessage(suppliersError)}` : null
+            suppliersError
+              ? `Error loading suppliers: ${getErrorMessage(suppliersError)}`
+              : null
           }
           onRetry={() => refetchSuppliers()}
           isRetrying={isSuppliersRefetching}

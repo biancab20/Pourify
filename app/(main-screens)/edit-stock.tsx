@@ -1,7 +1,7 @@
 // app/(main-screens)/edit-stock.tsx
 
 import { Text } from "@/components/shared/Text";
-import SearchBar from "@/components/ui/InputBox";
+import SearchBar from "@/components/dynamic/InputBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, Pressable, StyleSheet } from "react-native";
@@ -115,7 +115,7 @@ export default function EditStock() {
       edges={Platform.OS === "android" ? ["bottom", "top"] : []}
     >
       {Platform.OS === "android" && (
-        <AndroidCustomNavigation onBack={router.back}/>
+        <AndroidCustomNavigation onBack={router.back} />
       )}
       {/* Adjust stock header */}
       <Text style={[styles.header, { color: colors.text }]}>Adjust stock</Text>

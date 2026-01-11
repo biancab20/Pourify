@@ -1,5 +1,5 @@
 // src/utils/settingsFields.ts
-import type { SelectOption } from "@/components/ui/SingleFieldEditScreen";
+import type { SelectOption } from "@/components/dynamic/SingleFieldEditScreen";
 import { getStoredString, setStoredString } from "@/utils/storage";
 
 export type SettingsFieldType = "text" | "email" | "number" | "select";

@@ -1,6 +1,9 @@
 // useDeliveryStatus.ts
 import { useQueryClient } from "@tanstack/react-query";
-import type { DeliveryItem, DeliveryStatus } from "@/components/ui/ListItem";
+import type {
+  DeliveryItem,
+  DeliveryStatus,
+} from "@/components/dynamic/ListItem";
 import type { DeliveryStatusState } from "../stores/delivery-status.store";
 
 const QUERY_KEY = ["deliveries", "status"];

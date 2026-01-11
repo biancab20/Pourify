@@ -1,9 +1,9 @@
 // app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
-import EditableSectionCard from "@/components/ui/EditableSectionCard";
-import InputBox from "@/components/ui/InputBox";
-import ListItem, { DeliveryItem } from "@/components/ui/ListItem";
+import EditableSectionCard from "@/components/dynamic/EditableSectionCard";
+import InputBox from "@/components/dynamic/InputBox";
+import ListItem, { DeliveryItem } from "@/components/dynamic/ListItem";
 import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";
@@ -18,12 +18,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Helper function to convert string to Title Case
 const toTitleCase = (str: string): string => {
   if (!str) return str;
-  
+
   return str
     .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 type SectionProps = {
@@ -36,9 +36,9 @@ function Section({ title, items, searchQuery }: SectionProps) {
   const filteredItems = useMemo(() => {
     if (items.length === 0) return [];
     if (!searchQuery.trim()) return items;
-    
+
     const query = searchQuery.toLowerCase();
-    return items.filter(item => {
+    return items.filter((item) => {
       const productName = toTitleCase(item.name);
       return (
         productName.toLowerCase().includes(query) ||
@@ -52,14 +52,14 @@ function Section({ title, items, searchQuery }: SectionProps) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {filteredItems.map(item => (
-        <ListItem 
-          key={item.id} 
+      {filteredItems.map((item) => (
+        <ListItem
+          key={item.id}
           delivery={{
             ...item,
-            name: toTitleCase(item.name)
-          }} 
-          readOnly 
+            name: toTitleCase(item.name),
+          }}
+          readOnly
         />
       ))}
     </View>
@@ -75,17 +75,19 @@ export default function DeliverySummary() {
   const { getAll } = useDeliveryStatus();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
-  
+
   // Get bars for selection
   const { data: barsData } = useBars();
   const bars = useMemo(() => barsData?.value || [], [barsData]);
-  
+
   // Get the create delivery mutation
   const createDeliveryMutation = useCreateDelivery();
 
   // Get OCR data
-  const ocrResponse = queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ?? null;
-  
+  const ocrResponse =
+    queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
+    null;
+
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
     return ocrResponse;
@@ -101,17 +103,17 @@ export default function DeliverySummary() {
   // Format date from OCR data
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
-    
+
     try {
-      if (dateString.includes('/')) return dateString;
-      
+      if (dateString.includes("/")) return dateString;
+
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       });
     } catch {
       return dateString;
@@ -119,99 +121,103 @@ export default function DeliverySummary() {
   };
 
   // Define rows for the EditableSectionCard
-  const infoRows = useMemo(() => [
-    {
-      id: "supplier",
-      title: "Supplier",
-      value: "Sligro (Hardcoded)", // Updated to show hardcoded supplier
-      valueNumberOfLines: 1,
-      onEditPress: () => {
-        Alert.alert("Supplier Information", "Supplier is hardcoded to Sligro while backend is being fixed.");
-      },
-      showEdit: false, // Disable edit since it's hardcoded
-      editA11yLabel: "View supplier info",
-    },
-    {
-      id: "date",
-      title: "Date",
-      value: formatDate(delivery?.deliveryDate),
-      valueNumberOfLines: 1,
-      onEditPress: () => {
-        Alert.alert("Edit Date", "Edit date functionality");
-      },
-      showEdit: true,
-      editA11yLabel: "Edit date",
-    },
-    {
-      id: "bar",
-      title: "Bar",
-      value: bars.find(b => b.barId === selectedBarId)?.name || "Select a bar",
-      valueNumberOfLines: 1,
-      onEditPress: () => {
-        if (bars.length > 0) {
+  const infoRows = useMemo(
+    () => [
+      {
+        id: "supplier",
+        title: "Supplier",
+        value: "Sligro (Hardcoded)", // Updated to show hardcoded supplier
+        valueNumberOfLines: 1,
+        onEditPress: () => {
           Alert.alert(
-            "Select Bar",
-            "Choose a bar for this delivery:",
-            [
-              ...bars.map(bar => ({
+            "Supplier Information",
+            "Supplier is hardcoded to Sligro while backend is being fixed."
+          );
+        },
+        showEdit: false, // Disable edit since it's hardcoded
+        editA11yLabel: "View supplier info",
+      },
+      {
+        id: "date",
+        title: "Date",
+        value: formatDate(delivery?.deliveryDate),
+        valueNumberOfLines: 1,
+        onEditPress: () => {
+          Alert.alert("Edit Date", "Edit date functionality");
+        },
+        showEdit: true,
+        editA11yLabel: "Edit date",
+      },
+      {
+        id: "bar",
+        title: "Bar",
+        value:
+          bars.find((b) => b.barId === selectedBarId)?.name || "Select a bar",
+        valueNumberOfLines: 1,
+        onEditPress: () => {
+          if (bars.length > 0) {
+            Alert.alert("Select Bar", "Choose a bar for this delivery:", [
+              ...bars.map((bar) => ({
                 text: bar.name,
-                onPress: () => setSelectedBarId(bar.barId)
+                onPress: () => setSelectedBarId(bar.barId),
               })),
               {
                 text: "Cancel",
-                style: "cancel"
-              }
-            ]
-          );
-        } else {
-          Alert.alert("No Bars", "Please create a bar first");
-        }
+                style: "cancel",
+              },
+            ]);
+          } else {
+            Alert.alert("No Bars", "Please create a bar first");
+          }
+        },
+        showEdit: true,
+        editA11yLabel: "Select bar",
       },
-      showEdit: true,
-      editA11yLabel: "Select bar",
-    }
-  ], [delivery, bars, selectedBarId]);
+    ],
+    [delivery, bars, selectedBarId]
+  );
 
   // Get all delivery items with their status
   const all = useMemo(() => {
     const items = Object.values(getAll());
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
-      name: toTitleCase(item.name)
+      name: toTitleCase(item.name),
     }));
   }, [getAll]);
 
   // Categorize items
-  const received = all.filter(i => i.status === "received");
-  const damaged = all.filter(i => i.status === "damaged");
-  const missing = all.filter(i => i.status === "missing");
-  const substituted = all.filter(i => i.status === "substituted");
+  const received = all.filter((i) => i.status === "received");
+  const damaged = all.filter((i) => i.status === "damaged");
+  const missing = all.filter((i) => i.status === "missing");
+  const substituted = all.filter((i) => i.status === "substituted");
 
   // Count filtered items
   const filteredItemsCount = useMemo(() => {
     if (!searchQuery.trim()) return all.length;
-    
+
     const query = searchQuery.toLowerCase();
-    return all.filter(item => 
-      item.name.toLowerCase().includes(query) ||
-      item.id.toLowerCase().includes(query)
+    return all.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query)
     ).length;
   }, [all, searchQuery]);
 
   // Helper function to ensure DeliveryPilePictureId is always a UUID string
   const getDeliveryPilePictureId = (): string => {
     const pilePictureId = delivery?.deliveryPilePictureId;
-    
+
     // If it's null or undefined, return the zero UUID
     if (!pilePictureId) {
       return "00000000-0000-0000-0000-000000000000";
     }
-    
+
     // If it's already a string, return it
-    if (typeof pilePictureId === 'string') {
+    if (typeof pilePictureId === "string") {
       return pilePictureId;
     }
-    
+
     // Otherwise, return the zero UUID as fallback
     return "00000000-0000-0000-0000-000000000000";
   };
@@ -232,7 +238,7 @@ export default function DeliverySummary() {
     });
 
     // Filter out any invalid products
-    const validProducts = products.filter(p => p && p.ProductId);
+    const validProducts = products.filter((p) => p && p.ProductId);
 
     // Create delivery data with HARDCODED SUPPLIER
     const deliveryData: any = {
@@ -244,7 +250,7 @@ export default function DeliverySummary() {
       // Hardcoded supplier information
       SupplierId: "118a048f-dcbe-46e3-9e02-e3838f40e628",
       Name: "Sligro",
-      ContactEmail: "customerservicemidden@sligro.nl"
+      ContactEmail: "customerservicemidden@sligro.nl",
     };
 
     // Try adding optional fields
@@ -270,16 +276,15 @@ export default function DeliverySummary() {
 
     try {
       await createDeliveryMutation.mutateAsync(deliveryData);
-      
+
       // Clear the OCR cache and reset form
       queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
-      
+
       // Navigate to success screen
       router.push("/(scan-flow)/successful-delivery");
-      
     } catch (error: any) {
       Alert.alert(
-        "❌ Error", 
+        "❌ Error",
         `Failed to save delivery:\n\n${error.message || "Unknown error"}`,
         [{ text: "OK" }]
       );
@@ -320,25 +325,39 @@ export default function DeliverySummary() {
 
         {/* Search results count */}
         {searchQuery && (
-          <Text style={[styles.resultsText, { color: colors.text }]}>
-            
-          </Text>
+          <Text style={[styles.resultsText, { color: colors.text }]}></Text>
         )}
 
         {/* No results state */}
         {showNoResults ? (
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, { color: colors.text}]}>
+            <Text style={[styles.emptyText, { color: colors.text }]}>
               No items found for &quot;{searchQuery}&quot;
             </Text>
           </View>
         ) : (
           <>
-            <Section title="Received" items={received} searchQuery={searchQuery} />
-            <Section title="Damaged" items={damaged} searchQuery={searchQuery} />
-            <Section title="Missing" items={missing} searchQuery={searchQuery} />
-            <Section title="Substituted" items={substituted} searchQuery={searchQuery} />
-            
+            <Section
+              title="Received"
+              items={received}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Damaged"
+              items={damaged}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Missing"
+              items={missing}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Substituted"
+              items={substituted}
+              searchQuery={searchQuery}
+            />
+
             {all.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={[styles.emptyText, { color: colors.text }]}>
@@ -351,13 +370,11 @@ export default function DeliverySummary() {
       </ScrollView>
 
       <View style={styles.buttonWrapper}>
-        <GradientButton 
+        <GradientButton
           text={createDeliveryMutation.isPending ? "Saving..." : "Save"}
           onPress={handleSave}
           disabled={
-            all.length === 0 || 
-            createDeliveryMutation.isPending ||
-            !delivery
+            all.length === 0 || createDeliveryMutation.isPending || !delivery
           }
         />
       </View>
@@ -403,7 +420,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,

@@ -2,28 +2,38 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import React from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import InfoCard from "../ui/InfoBox";
+import InfoCard from "../dynamic/InfoBox";
 import PieChartStatic from "./PieChartStatic";
 
 interface InformationCardStaticProps {
   barName: string;
 }
 
-export default function InformationCardStatic({ barName }: InformationCardStaticProps) {
+export default function InformationCardStatic({
+  barName,
+}: InformationCardStaticProps) {
   const { theme } = useAppTheme();
   const { width } = useWindowDimensions();
   const cardWidth = (width - 16 * 2 - 10) / 2;
   const circleSize = cardWidth - 26;
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        width: cardWidth,
-        backgroundColor: theme.isDark ? "#000000" : "#FFFFFF"
-      }
-    ]}>
-      <Text style={[styles.title, { color: theme.colors.text }]} accessibilityRole="text" accessibilityLabel="Bar name">{barName}</Text>
+    <View
+      style={[
+        styles.container,
+        {
+          width: cardWidth,
+          backgroundColor: theme.isDark ? "#000000" : "#FFFFFF",
+        },
+      ]}
+    >
+      <Text
+        style={[styles.title, { color: theme.colors.text }]}
+        accessibilityRole="text"
+        accessibilityLabel="Bar name"
+      >
+        {barName}
+      </Text>
 
       <PieChartStatic size={circleSize} />
 

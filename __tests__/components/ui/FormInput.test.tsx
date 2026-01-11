@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 
-import FormInput from "@/components/ui/FormInput";
+import FormInput from "@/components/dynamic/FormInput";
 
 // Silence Icon (native-ish)
 jest.mock("@/components/icons/Icon", () => ({
@@ -168,12 +168,7 @@ describe("FormInput", () => {
   test("disabled sets TextInput editable=false", () => {
     const onChange = jest.fn();
     const { getByPlaceholderText } = render(
-      <FormInput
-        value="x"
-        onChange={onChange}
-        placeholder="Any"
-        disabled
-      />
+      <FormInput value="x" onChange={onChange} placeholder="Any" disabled />
     );
 
     expect(getByPlaceholderText("Any").props.editable).toBe(false);

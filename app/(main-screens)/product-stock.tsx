@@ -12,17 +12,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CircularChart from "@/components/ui/CircularChart";
-import DatePicker, { Mode } from "@/components/ui/DatePicker";
+import CircularChart from "@/components/dynamic/CircularChart";
+import DatePicker, { Mode } from "@/components/dynamic/DatePicker";
 import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
-import StockDropdownNavigation from "@/components/ui/StockDropdownNavigation";
+import StockDropdownNavigation from "@/components/dynamic/StockDropdownNavigation";
 import { useBars } from "@/hooks/useLocations";
 import { Bar } from "@/types/locations";
 import { useStocks } from "@/hooks/useStock";
-import BarStockCard from "@/components/ui/BarStockCard";
-import TotalStockSummary from "@/components/ui/TotalStockSummary";
-import InfoCard from "@/components/ui/InfoBox";
+import BarStockCard from "@/components/dynamic/BarStockCard";
+import TotalStockSummary from "@/components/dynamic/TotalStockSummary";
+import InfoCard from "@/components/dynamic/InfoBox";
 import { StockItem } from "@/types/stock";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 

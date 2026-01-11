@@ -2,7 +2,7 @@ import { Text } from "@/components/shared/Text";
 import InformationCard from "@/components/staticComponents/InformationCardStatic";
 import PieChartStatic from "@/components/staticComponents/PieChartStatic";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
-import InfoCard from "@/components/ui/InfoBox";
+import InfoCard from "@/components/dynamic/InfoBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -27,7 +27,7 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
 
   const { data: barsData, isLoading, error } = useBars();
-  
+
   const bars = barsData?.value || [];
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -74,7 +74,7 @@ export default function HomeScreen() {
               <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
             <Pressable
-             // onPress={() => router.push("/(scan-flow)/successful-delivery")}
+              // onPress={() => router.push("/(scan-flow)/successful-delivery")}
               accessibilityRole="button"
               accessibilityLabel="More actions"
               accessible={false}
@@ -162,15 +162,21 @@ export default function HomeScreen() {
           </Text>
 
           {isLoading ? (
-            <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+            <Text
+              style={{ color: colors.text, textAlign: "center", marginTop: 20 }}
+            >
               Loading bars...
             </Text>
           ) : error ? (
-            <Text style={{ color: palette.red, textAlign: "center", marginTop: 20 }}>
+            <Text
+              style={{ color: palette.red, textAlign: "center", marginTop: 20 }}
+            >
               Error loading bars
             </Text>
           ) : bars.length === 0 ? (
-            <Text style={{ color: colors.text, textAlign: "center", marginTop: 20 }}>
+            <Text
+              style={{ color: colors.text, textAlign: "center", marginTop: 20 }}
+            >
               No bars found
             </Text>
           ) : (

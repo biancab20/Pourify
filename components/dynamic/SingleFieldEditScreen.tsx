@@ -14,7 +14,7 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { Text } from "@/components/shared/Text";
 import { Icon } from "@/components/icons/Icon";
 
-import FormInput from "@/components/ui/FormInput";
+import FormInput from "@/components/dynamic/FormInput";
 import GradientButton from "@/components/shared/GradientButton";
 
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";

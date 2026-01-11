@@ -1,8 +1,8 @@
 import React from "react";
-import { FlatList, StyleSheet, View, TouchableOpacity} from "react-native";
+import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/shared/Text";
-import InputBox from "@/components/ui/InputBox";
-import ListItem from "@/components/ui/ListItem";
+import InputBox from "@/components/dynamic/InputBox";
+import ListItem from "@/components/dynamic/ListItem";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -46,44 +46,51 @@ const DeliveryList = ({
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [localRemovedIds, setLocalRemovedIds] = React.useState<string[]>(removedIds);
+  const [localRemovedIds, setLocalRemovedIds] =
+    React.useState<string[]>(removedIds);
   const [isSelectMode, setIsSelectMode] = React.useState(false);
-  const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = React.useState<Set<string>>(
+    new Set()
+  );
 
   // Format item name to title case
   const formatItemName = (name: string): string => {
     return name
       .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // Format deliveries with title case names
   const formattedDeliveries = React.useMemo(() => {
-    return deliveries.map(item => ({
+    return deliveries.map((item) => ({
       ...item,
-      name: formatItemName(item.name)
+      name: formatItemName(item.name),
     }));
   }, [deliveries]);
 
   // Filter out removed items
   const activeDeliveries = React.useMemo(() => {
-    return formattedDeliveries.filter(item => !localRemovedIds.includes(item.id));
+    return formattedDeliveries.filter(
+      (item) => !localRemovedIds.includes(item.id)
+    );
   }, [formattedDeliveries, localRemovedIds]);
 
   // Filter by search
   const filteredData = React.useMemo(() => {
     if (!searchQuery.trim()) return activeDeliveries;
     const query = searchQuery.toLowerCase();
-    return activeDeliveries.filter(item =>
+    return activeDeliveries.filter((item) =>
       item.name.toLowerCase().includes(query)
     );
   }, [activeDeliveries, searchQuery]);
 
   // Check if all items have been swiped
   const allItemsSwiped = React.useMemo(() => {
-    return deliveries.length > 0 && localRemovedIds.length === deliveries.length;
+    return (
+      deliveries.length > 0 && localRemovedIds.length === deliveries.length
+    );
   }, [deliveries.length, localRemovedIds.length]);
 
   const handleSearch = (value: string | number) => {
@@ -93,11 +100,11 @@ const DeliveryList = ({
   };
 
   const handleSwipeComplete = (id: string) => {
-    setLocalRemovedIds(prev => [...prev, id]);
+    setLocalRemovedIds((prev) => [...prev, id]);
     onSwipeComplete?.(id);
     // Remove from selection if selected
     if (selectedItems.has(id)) {
-      setSelectedItems(prev => {
+      setSelectedItems((prev) => {
         const newSet = new Set(prev);
         newSet.delete(id);
         return newSet;
@@ -118,7 +125,7 @@ const DeliveryList = ({
   };
 
   const handleSelectPress = (item: DeliveryItem) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(item.id)) {
         newSet.delete(item.id);
@@ -135,7 +142,7 @@ const DeliveryList = ({
       setSelectedItems(new Set());
     } else {
       // Select all filtered items
-      const allIds = filteredData.map(item => item.id);
+      const allIds = filteredData.map((item) => item.id);
       setSelectedItems(new Set(allIds));
     }
   };
@@ -147,7 +154,7 @@ const DeliveryList = ({
 
   const handleCheckMultiple = () => {
     // Mark all selected items as completed
-    selectedItems.forEach(id => {
+    selectedItems.forEach((id) => {
       handleSwipeComplete(id);
     });
     setIsSelectMode(false);
@@ -169,32 +176,54 @@ const DeliveryList = ({
         {isSelectMode ? (
           <>
             {/* Left button - Select all/Deselect all */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.headerButton}
               onPress={handleSelectAll}
               accessibilityLabel="Select all"
               accessibilityRole="button"
             >
-              <Text style={[styles.headerButtonText, { color: theme.mode === 'dark' ? palette.yellow : palette.pink }]}>
-                {selectedItems.size === filteredData.length ? 'Deselect all' : 'Select all'}
+              <Text
+                style={[
+                  styles.headerButtonText,
+                  {
+                    color:
+                      theme.mode === "dark" ? palette.yellow : palette.pink,
+                  },
+                ]}
+              >
+                {selectedItems.size === filteredData.length
+                  ? "Deselect all"
+                  : "Select all"}
               </Text>
             </TouchableOpacity>
 
             {/* Centered title - Check List */}
             <View style={styles.centerTitle}>
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>
+              <Text
+                style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}
+              >
                 Check List
               </Text>
             </View>
 
             {/* Right button - Cancel */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.headerButton}
               onPress={handleCancelSelect}
               accessibilityLabel="Cancel selection"
               accessibilityRole="button"
             >
-              <Text style={[styles.headerButtonText, { color: theme.mode === 'dark' ? palette.yellow : palette.pink }]}>Cancel</Text>
+              <Text
+                style={[
+                  styles.headerButtonText,
+                  {
+                    color:
+                      theme.mode === "dark" ? palette.yellow : palette.pink,
+                  },
+                ]}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -238,9 +267,10 @@ const DeliveryList = ({
           ) : (
             <>
               <Text style={[styles.emptyText, { color: colors.icon }]}>
-                {emptyState?.title || (deliveries.length === 0
-                  ? "No deliveries available"
-                  : "No deliveries match your search")}
+                {emptyState?.title ||
+                  (deliveries.length === 0
+                    ? "No deliveries available"
+                    : "No deliveries match your search")}
               </Text>
               {emptyState?.message && (
                 <Text style={[styles.emptySubtext, { color: colors.icon }]}>
@@ -274,15 +304,22 @@ const DeliveryList = ({
       {/* Selection mode footer */}
       {isSelectMode && (
         <View style={styles.selectionFooter}>
-          
           <TouchableOpacity
-            style={[styles.checkMultipleButton, { backgroundColor: palette.pink }]}
+            style={[
+              styles.checkMultipleButton,
+              { backgroundColor: palette.pink },
+            ]}
             onPress={handleCheckMultiple}
             accessibilityLabel="Check multiple items"
             accessibilityRole="button"
           >
             <Ionicons name="checkmark" size={20} color={palette.white} />
-            <Text style={[styles.checkMultipleText, { color: palette.white, marginLeft: 8 }]}>
+            <Text
+              style={[
+                styles.checkMultipleText,
+                { color: palette.white, marginLeft: 8 },
+              ]}
+            >
               Check multiple
             </Text>
           </TouchableOpacity>
@@ -299,16 +336,16 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
     height: 40, // Fixed height to prevent layout shift
   },
   centerTitle: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     fontSize: 32,
@@ -317,8 +354,8 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     width: 100, // Fixed width for alignment
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerButtonText: {
     fontSize: 16,
@@ -362,8 +399,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   checkMultipleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,

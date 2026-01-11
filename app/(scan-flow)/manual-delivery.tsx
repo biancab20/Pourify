@@ -3,8 +3,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
-import { ConfigRow } from "@/components/ui/ConfigRow";
+import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamic/ConfigRow";
 import { useState, useEffect } from "react";
 import GradientButton from "@/components/shared/GradientButton";
 
@@ -29,11 +29,10 @@ export default function ManualDelivery() {
     selectedProducts?: string;
   }>();
   const { theme } = useAppTheme();
-  
+
   // Local state for delivery
   const [supplier, setSupplier] = useState<LocalDeliverySupplier | null>(null);
   const [products, setProducts] = useState<LocalDeliveryProduct[]>([]);
-  
 
   // Handle params when they come in (e.g., from returning from modal)
   useEffect(() => {
@@ -45,14 +44,16 @@ export default function ManualDelivery() {
         console.error("Failed to parse selected supplier:", error);
       }
     }
-    
+
     if (params.selectedProducts) {
       try {
         const productsData = JSON.parse(params.selectedProducts as string);
         // Add new products, avoiding duplicates
-        setProducts(prev => {
-          const existingIds = new Set(prev.map(p => p.productId));
-          const newProducts = productsData.filter((p: any) => !existingIds.has(p.productId));
+        setProducts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.productId));
+          const newProducts = productsData.filter(
+            (p: any) => !existingIds.has(p.productId)
+          );
           return [...prev, ...newProducts];
         });
       } catch (error) {
@@ -65,48 +66,53 @@ export default function ManualDelivery() {
   const navigateToAddSupplier = () => {
     router.push({
       pathname: "/(scan-flow)/add-delivery-item",
-      params: { 
+      params: {
         entity: "suppliers",
         context: "manual-delivery",
-        existingSupplierIds: supplier ? JSON.stringify([supplier.supplierId]) : JSON.stringify([])
-      }
+        existingSupplierIds: supplier
+          ? JSON.stringify([supplier.supplierId])
+          : JSON.stringify([]),
+      },
     });
   };
 
   // Navigate to add product screen
   const navigateToAddProduct = () => {
     if (!supplier) {
-      Alert.alert("Add supplier first", "Please select a supplier before adding products.");
+      Alert.alert(
+        "Add supplier first",
+        "Please select a supplier before adding products."
+      );
       return;
     }
-    
+
     router.push({
       pathname: "/(scan-flow)/add-delivery-item",
-      params: { 
+      params: {
         entity: "products",
         context: "manual-delivery",
-        existingProductIds: JSON.stringify(products.map(p => p.productId))
-      }
+        existingProductIds: JSON.stringify(products.map((p) => p.productId)),
+      },
     });
   };
 
   // Remove supplier
   const removeSupplier = () => {
     if (!supplier) return;
-    
+
     Alert.alert(
       "Remove Supplier",
       `Are you sure you want to remove ${supplier?.name}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Remove", 
+        {
+          text: "Remove",
           style: "destructive",
           onPress: () => {
             setSupplier(null);
             setProducts([]); // Remove products when supplier is removed
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -118,24 +124,28 @@ export default function ManualDelivery() {
       `Are you sure you want to remove ${productName}?`,
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Remove", 
+        {
+          text: "Remove",
           style: "destructive",
           onPress: () => {
-            setProducts(prev => prev.filter(p => p.productId !== productId));
-          }
-        }
+            setProducts((prev) =>
+              prev.filter((p) => p.productId !== productId)
+            );
+          },
+        },
       ]
     );
   };
 
   // Update product quantity
   const updateProductQuantity = (productId: string, quantity: number) => {
-    setProducts(prev => prev.map(p => 
-      p.productId === productId 
-        ? { ...p, totalVolume: Math.max(1, quantity) }
-        : p
-    ));
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.productId === productId
+          ? { ...p, totalVolume: Math.max(1, quantity) }
+          : p
+      )
+    );
   };
 
   const onProceed = () => {
@@ -143,7 +153,7 @@ export default function ManualDelivery() {
       Alert.alert("Missing supplier", "Please add a supplier first");
       return;
     }
-    
+
     if (products.length === 0) {
       Alert.alert("Missing products", "Please add at least one product");
       return;
@@ -156,19 +166,19 @@ export default function ManualDelivery() {
       supplier: {
         supplierId: supplier.supplierId,
         name: supplier.name,
-        contactEmail: supplier.contactEmail
+        contactEmail: supplier.contactEmail,
       },
-      products: products.map(p => ({
+      products: products.map((p) => ({
         productId: p.productId,
         name: p.name,
         volume: p.volume,
         type: p.type,
         totalVolume: p.totalVolume || p.volume,
-        isDeleted: false
+        isDeleted: false,
       })),
       deliveryNotePictureIds: [],
       deliveryPilePictureId: null,
-      sourceType: "manual"
+      sourceType: "manual",
     };
 
     // Navigate to CheckSupplier screen with manual data
@@ -176,8 +186,8 @@ export default function ManualDelivery() {
       pathname: "/(scan-flow)/check-supplier",
       params: {
         ocrData: JSON.stringify(manualDeliveryData),
-        sourceType: "manual"
-      }
+        sourceType: "manual",
+      },
     });
   };
 
@@ -186,28 +196,26 @@ export default function ManualDelivery() {
   // Calculate total volume
 
   return (
-    <SafeAreaView 
+    <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Pressable 
-          style={styles.closeButton} 
-          onPress={() => router.back()}
-        >
+      <View
+        style={[styles.header, { backgroundColor: theme.colors.background }]}
+      >
+        <Pressable style={styles.closeButton} onPress={() => router.back()}>
           <Text style={{ color: theme.colors.text, fontSize: 16 }}>Close</Text>
         </Pressable>
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           Manual Delivery
         </Text>
-        
-        
+
         {/* Supplier section */}
         <ConfigSectionCard<LocalDeliverySupplier>
           title="Supplier"
@@ -215,28 +223,27 @@ export default function ManualDelivery() {
           emptyText="No supplier added"
           addLabel="Add Supplier"
           onAdd={navigateToAddSupplier}
-          keyExtractor={s => s.supplierId}
+          keyExtractor={(s) => s.supplierId}
           renderItem={({ item }) => (
             <View style={styles.supplierRow}>
               <ConfigRow
                 title={item.name}
                 leftIconName="people-outline"
                 rightLabel={item.contactEmail}
-                onPress={() => Alert.alert(
-                  "Supplier Info",
-                  `${item.name}\n${item.contactEmail || "No email"}`
-                )}
+                onPress={() =>
+                  Alert.alert(
+                    "Supplier Info",
+                    `${item.name}\n${item.contactEmail || "No email"}`
+                  )
+                }
               />
-              <Pressable
-                onPress={removeSupplier}
-                style={styles.removeButton}
-              >
+              <Pressable onPress={removeSupplier} style={styles.removeButton}>
                 <Text style={{ color: theme.colors.text }}>Remove</Text>
               </Pressable>
             </View>
           )}
         />
-        
+
         {/* Products section */}
         <ConfigSectionCard<LocalDeliveryProduct>
           title={`Products (${products.length})`}
@@ -244,7 +251,7 @@ export default function ManualDelivery() {
           emptyText="No products added"
           addLabel="Add Product"
           onAdd={navigateToAddProduct}
-          keyExtractor={p => p.productId}
+          keyExtractor={(p) => p.productId}
           renderItem={({ item }) => (
             <View style={styles.productRow}>
               <View style={styles.productInfo}>
@@ -252,43 +259,89 @@ export default function ManualDelivery() {
                   title={item.name}
                   leftIconName="wine-outline"
                   rightLabel={`${item.type}`}
-                  onPress={() => Alert.alert(
-                    "Product Info",
-                    `${item.name}\n${item.type}\n${item.volume}L per unit`
-                  )}
+                  onPress={() =>
+                    Alert.alert(
+                      "Product Info",
+                      `${item.name}\n${item.type}\n${item.volume}L per unit`
+                    )
+                  }
                 />
                 <View style={styles.productDetails}>
-                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  <Text
+                    style={[styles.detailText, { color: theme.colors.text }]}
+                  >
                     Unit: {item.volume}L
                   </Text>
-                  <Text style={[styles.detailText, { color: theme.colors.text }]}>
+                  <Text
+                    style={[styles.detailText, { color: theme.colors.text }]}
+                  >
                     Total: {item.totalVolume}L
                   </Text>
                 </View>
               </View>
-              
+
               <View style={styles.quantitySection}>
                 <View style={styles.quantityRow}>
                   <View style={styles.quantityControls}>
                     <Pressable
-                      onPress={() => updateProductQuantity(item.productId, item.totalVolume - 1)}
-                      style={[styles.quantityButton, { backgroundColor: theme.colors.cardBackground }]}
+                      onPress={() =>
+                        updateProductQuantity(
+                          item.productId,
+                          item.totalVolume - 1
+                        )
+                      }
+                      style={[
+                        styles.quantityButton,
+                        { backgroundColor: theme.colors.cardBackground },
+                      ]}
                     >
-                      <Text style={[styles.buttonText, { color: theme.colors.text }]}>-</Text>
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          { color: theme.colors.text },
+                        ]}
+                      >
+                        -
+                      </Text>
                     </Pressable>
                     <View style={styles.quantityDisplay}>
-                      <Text style={[styles.quantityValue, { color: theme.colors.text }]}>
+                      <Text
+                        style={[
+                          styles.quantityValue,
+                          { color: theme.colors.text },
+                        ]}
+                      >
                         {item.totalVolume}
                       </Text>
-                      <Text style={[styles.quantityUnit, { color: theme.colors.text }]}>
+                      <Text
+                        style={[
+                          styles.quantityUnit,
+                          { color: theme.colors.text },
+                        ]}
+                      >
                         L
                       </Text>
                     </View>
                     <Pressable
-                      onPress={() => updateProductQuantity(item.productId, item.totalVolume + 1)}
-                      style={[styles.quantityButton, { backgroundColor: theme.colors.cardBackground }]}
+                      onPress={() =>
+                        updateProductQuantity(
+                          item.productId,
+                          item.totalVolume + 1
+                        )
+                      }
+                      style={[
+                        styles.quantityButton,
+                        { backgroundColor: theme.colors.cardBackground },
+                      ]}
                     >
-                      <Text style={[styles.buttonText, { color: theme.colors.text }]}>+</Text>
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          { color: theme.colors.text },
+                        ]}
+                      >
+                        +
+                      </Text>
                     </Pressable>
                   </View>
                   <Pressable
@@ -302,13 +355,15 @@ export default function ManualDelivery() {
             </View>
           )}
         />
-        
-        
-        
+
         {/* Proceed button */}
         <View style={styles.buttonContainer}>
           <GradientButton
-            text={canProceed ? `Review Delivery (${products.length} items)` : "Add Items to Proceed"}
+            text={
+              canProceed
+                ? `Review Delivery (${products.length} items)`
+                : "Add Items to Proceed"
+            }
             onPress={onProceed}
             disabled={!canProceed}
           />

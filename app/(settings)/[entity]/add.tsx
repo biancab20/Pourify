@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Alert, Platform } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  Alert,
+  Platform,
+} from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
-import FormInput from "@/components/ui/FormInput";
+import FormInput from "@/components/dynamic/FormInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text as CustomText } from "@/components/shared/Text";
 import { Icon } from "@/components/icons/Icon";
 import { useAppTheme } from "@/stores/app-theme-context";
-import ConfigSectionCard from "@/components/ui/ConfigSectionCard";
-import { ConfigRow } from "@/components/ui/ConfigRow";
+import ConfigSectionCard from "@/components/dynamic/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamic/ConfigRow";
 import { useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateBar } from "@/hooks/useLocations";
 import { useCreateProduct } from "@/hooks/useProducts";
