@@ -61,7 +61,6 @@ export default function FormInput({
 
   const placeholderColor = theme.isDark ? "#565656" : "#8B8B8B";
 
-  // ✅ always allow clear for this component (since no password type)
   const showClear = value.length > 0 && !disabled;
 
   const keyboardType = useMemo(() => {
@@ -84,39 +83,58 @@ export default function FormInput({
 
   const handleClear = () => onChange("");
 
-  const handleTextChange = (text: string) => {
+  const handleTextChange = (raw: string) => {
     if (type !== "number") {
-      onChange(text);
+      onChange(raw);
       return;
     }
 
-    // NUMBER MODE
+    // allow comma typing, normalize to dot for storage
+    const text = decimal ? raw.replace(",", ".") : raw;
+
+    // Accept intermediate typing states too
     const numericRegex = decimal
-      ? new RegExp(`^-?\\d*\\.?\\d{0,${maxDecimalDigits}}$`)
+      ? new RegExp(`^-?\\d*(\\.\\d{0,${maxDecimalDigits}})?$`)
       : /^-?\d*$/;
 
-    if (text === "" || numericRegex.test(text)) {
-      if (text && text !== "-" && text !== ".") {
-        const numValue = parseFloat(text);
+    if (!numericRegex.test(text)) return;
 
-        if (min !== undefined && numValue < min) {
-          const limited = String(min);
-          onChange(decimal ? parseFloat(limited) : parseInt(limited, 10));
-          return;
-        }
+    onChange(text); // keep as string while typing
+  };
 
-        if (max !== undefined && numValue > max) {
-          const limited = String(max);
-          onChange(decimal ? parseFloat(limited) : parseInt(limited, 10));
-          return;
-        }
-      }
+  const handleBlur = () => {
+    setIsFocused(false);
 
-      if (text === "" || text === "-" || text === ".") {
-        onChange("");
-      } else {
-        onChange(decimal ? parseFloat(text) : parseInt(text, 10));
-      }
+    if (type !== "number") return;
+
+    const normalized = decimal ? value.replace(",", ".").trim() : value.trim();
+
+    if (
+      !normalized ||
+      normalized === "-" ||
+      normalized === "." ||
+      normalized === "-."
+    ) {
+      onChange("");
+      return;
+    }
+
+    const num = Number(normalized);
+    if (!Number.isFinite(num)) {
+      onChange("");
+      return;
+    }
+
+    let clamped = num;
+    if (min !== undefined) clamped = Math.max(clamped, min);
+    if (max !== undefined) clamped = Math.min(clamped, max);
+
+    if (decimal) {
+      const fixed = clamped.toFixed(maxDecimalDigits);
+      const pretty = fixed.replace(/\.?0+$/, "");
+      onChange(pretty);
+    } else {
+      onChange(String(Math.trunc(clamped)));
     }
   };
 
@@ -144,11 +162,11 @@ export default function FormInput({
         editable={!disabled}
         autoFocus={autoFocus}
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onBlur={handleBlur}
         keyboardType={keyboardType}
         inputMode={inputMode as any}
         autoCapitalize={autoCapitalize}
-        autoCorrect={type !== "email"} // optional: keep email clean
+        autoCorrect={type !== "email"} 
         cursorColor={palette.yellow}
         selectionColor={`${palette.yellow}50`}
         style={[
