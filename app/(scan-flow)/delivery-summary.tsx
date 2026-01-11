@@ -255,7 +255,7 @@ export default function DeliverySummary() {
     return deliveryData;
   };
 
-  // Handle actual save
+  // Handle actual save - REMOVED THE ALERT
   const handleSave = async () => {
     if (!delivery) {
       Alert.alert("Error", "No delivery data found");
@@ -268,37 +268,22 @@ export default function DeliverySummary() {
       return;
     }
 
-    Alert.alert(
-      "Save Delivery",
-      `Save this delivery with ${deliveryData.Products.length} products?\n\n• Supplier: Sligro (Hardcoded)\n• Bar: ${selectedBarId ? bars.find(b => b.barId === selectedBarId)?.name : 'Not selected'}\n• Date: ${formatDate(deliveryData.DeliveryDate)}`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Save",
-          onPress: async () => {
-            try {
-              await createDeliveryMutation.mutateAsync(deliveryData);
-              
-              // Clear the OCR cache and reset form
-              queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
-              
-              // Navigate to success screen
-              router.push("/(scan-flow)/successful-delivery");
-              
-            } catch (error: any) {
-              Alert.alert(
-                "❌ Error", 
-                `Failed to save delivery:\n\n${error.message || "Unknown error"}`,
-                [{ text: "OK" }]
-              );
-            }
-          }
-        }
-      ]
-    );
+    try {
+      await createDeliveryMutation.mutateAsync(deliveryData);
+      
+      // Clear the OCR cache and reset form
+      queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
+      
+      // Navigate to success screen
+      router.push("/(scan-flow)/successful-delivery");
+      
+    } catch (error: any) {
+      Alert.alert(
+        "❌ Error", 
+        `Failed to save delivery:\n\n${error.message || "Unknown error"}`,
+        [{ text: "OK" }]
+      );
+    }
   };
 
   const handleSearch = (value: string | number) => {
@@ -317,8 +302,6 @@ export default function DeliverySummary() {
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           Delivery Summary
         </Text>
-
-        
 
         {/* Supplier, Date, and Bar Info Card */}
         <View style={styles.infoContainer}>
@@ -394,7 +377,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "700",
     marginVertical: 16,
-},
+  },
   infoContainer: {
     marginBottom: 16,
   },
