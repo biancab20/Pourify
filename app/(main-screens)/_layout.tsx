@@ -11,11 +11,10 @@ export default function MainScreensLayout() {
 
   useEffect(() => {
     if (status === "signedOut") {
-      router.replace("/"); // or "/(auth)/login" depending on your routes
+      router.replace("/"); 
     }
   }, [status]);
 
-  // Optional: while loading, render nothing (or a splash)
   if (status === "loading") return null;
   return (
     <Stack
