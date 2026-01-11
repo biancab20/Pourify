@@ -4,11 +4,13 @@ import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/ui/InputBox";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Platform, Pressable, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 
 import { useCreateStock, useStocks, useUpdateStock } from "@/hooks/useStock";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 export default function EditStock() {
   const { theme } = useAppTheme();
@@ -44,13 +46,11 @@ export default function EditStock() {
   ------------------------------ */
   const stockItem = useMemo(() => {
     if (stockId) {
-      return stocksData?.value.find(stock => stock.stockId === stockId);
+      return stocksData?.value.find((stock) => stock.stockId === stockId);
     }
-    
+
     return stocksData?.value.find(
-      stock =>
-        stock.productId === productId &&
-        stock.storagePlaceId === barId
+      (stock) => stock.productId === productId && stock.storagePlaceId === barId
     );
   }, [stocksData, productId, barId, stockId]);
 
@@ -69,7 +69,7 @@ export default function EditStock() {
     if (stockItem || stockId) {
       const newVolume = leftoverVolume + unitCount * unitVolume;
       const targetStockId = stockItem?.stockId || stockId!;
-      
+
       updateStockMutation.mutate({
         stockId: targetStockId,
         data: {
@@ -80,7 +80,7 @@ export default function EditStock() {
       });
     } else {
       const newVolume = unitCount * unitVolume;
-      
+
       createStockMutation.mutate({
         productId,
         storagePlaceId: barId,
@@ -101,24 +101,28 @@ export default function EditStock() {
   /* -----------------------------
      Button state
   ------------------------------ */
-  const isPending = updateStockMutation.isPending || createStockMutation.isPending;
-  const canSubmit = !isPending && !isLoading && productId && barId && unitCount >= 0;
+  const isPending =
+    updateStockMutation.isPending || createStockMutation.isPending;
+  const canSubmit =
+    !isPending && !isLoading && productId && barId && unitCount >= 0;
 
   /* -----------------------------
      Render
   ------------------------------ */
   return (
-    <ScrollView
+    <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
+      edges={Platform.OS === "android" ? ["bottom", "top"] : []}
     >
+      {Platform.OS === "android" && (
+        <AndroidCustomNavigation onBack={router.back}/>
+      )}
       {/* Adjust stock header */}
-      <Text style={[styles.header, { color: colors.text }]}>
-        Adjust stock
-      </Text>
+      <Text style={[styles.header, { color: colors.text }]}>Adjust stock</Text>
 
       {/* Info text */}
       <Text style={[styles.infoText, { color: colors.text }]}>
-        You are trying to adjust the quantity of {productName} {productType}. 
+        You are trying to adjust the quantity of {productName} {productType}.
         Please input the amount of full {productType}s that you see.
       </Text>
 
@@ -133,9 +137,7 @@ export default function EditStock() {
           if (value === "") {
             setUnitCount(0);
           } else {
-            setUnitCount(
-              typeof value === "number" ? value : Number(value)
-            );
+            setUnitCount(typeof value === "number" ? value : Number(value));
           }
         }}
       />
@@ -163,7 +165,7 @@ export default function EditStock() {
           </Text>
         </LinearGradient>
       </Pressable>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -174,7 +176,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 40,
   },
   header: {
     fontSize: 24,

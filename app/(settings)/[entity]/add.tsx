@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
+import { View, StyleSheet, Pressable, ScrollView, Alert, Platform } from "react-native";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
 import FormInput from "@/components/ui/FormInput";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +12,7 @@ import { ConfigRow } from "@/components/ui/ConfigRow";
 import { useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateBar } from "@/hooks/useLocations";
 import { useCreateProduct } from "@/hooks/useProducts";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 type EntityKey = "products" | "suppliers" | "locations";
 type FieldType = "text" | "select";
@@ -351,6 +352,9 @@ export default function AddEntityScreen() {
       edges={["top", "bottom"]}
     >
       <ScrollView contentContainerStyle={styles.content}>
+        {Platform.OS === "android" && (
+          <AndroidCustomNavigation onBack={router.back} />
+        )}
         <CustomText
           variant="gradient"
           gradientName="paloma"

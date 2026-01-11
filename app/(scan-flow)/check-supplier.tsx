@@ -1,10 +1,4 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, Alert, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { Text } from "@/components/shared/Text";
@@ -12,8 +6,9 @@ import GradientButton from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
-import type {DeliveryOcrResponse} from "@/types/deliveries";
+import type { DeliveryOcrResponse } from "@/types/deliveries";
 import EditableSectionCard from "@/components/ui/EditableSectionCard";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 export default function CheckSupplier() {
   const router = useRouter();
@@ -34,19 +29,19 @@ export default function CheckSupplier() {
   // Format date from OCR data
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
-    
+
     try {
       // If it's already in a readable format, return as-is
-      if (dateString.includes('/')) return dateString;
-      
+      if (dateString.includes("/")) return dateString;
+
       // Try to parse and format date
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       });
     } catch {
       return dateString;
@@ -54,31 +49,34 @@ export default function CheckSupplier() {
   };
 
   // Define rows for the EditableSectionCard based on OCR data
-  const infoRows = useMemo(() => [
-    {
-      id: "supplier",
-      title: "Supplier",
-      value: ocrData?.supplier?.name || "Supplier not detected",
-      valueNumberOfLines: 1,
-      onEditPress: () => {
-        Alert.alert("Edit Supplier", "Edit supplier functionality");
+  const infoRows = useMemo(
+    () => [
+      {
+        id: "supplier",
+        title: "Supplier",
+        value: ocrData?.supplier?.name || "Supplier not detected",
+        valueNumberOfLines: 1,
+        onEditPress: () => {
+          Alert.alert("Edit Supplier", "Edit supplier functionality");
+        },
+        showEdit: true,
+        editA11yLabel: "Edit supplier",
       },
-      showEdit: true,
-      editA11yLabel: "Edit supplier",
-    },
-    {
-      id: "date",
-      title: "Date",
-      value: formatDate(ocrData?.deliveryDate),
-      valueNumberOfLines: 1,
-      onEditPress: () => {
-        Alert.alert("Edit Date", "Edit date functionality");
+      {
+        id: "date",
+        title: "Date",
+        value: formatDate(ocrData?.deliveryDate),
+        valueNumberOfLines: 1,
+        onEditPress: () => {
+          Alert.alert("Edit Date", "Edit date functionality");
+        },
+        showEdit: true,
+        editA11yLabel: "Edit date",
       },
-      showEdit: true,
-      editA11yLabel: "Edit date",
-    }
-    // Add more fields as needed
-  ], [ocrData]);
+      // Add more fields as needed
+    ],
+    [ocrData]
+  );
 
   const confirmPhotos = () => {
     if (!ocrData) {
@@ -93,12 +91,14 @@ export default function CheckSupplier() {
   // If no OCR data, show error
   if (!ocrData) {
     return (
-      <SafeAreaView style={{ 
-        flex: 1, 
-        backgroundColor: colors.background, 
-        justifyContent: 'center', 
-        alignItems: 'center' 
-      }}>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <Text style={{ color: colors.text, fontSize: 18, marginBottom: 20 }}>
           No OCR data available
         </Text>
@@ -110,13 +110,12 @@ export default function CheckSupplier() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={Platform.OS === "android" ? ["bottom"] : []}
+      edges={Platform.OS === "android" ? ["bottom", "top"] : ["bottom"]}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      {Platform.OS === "android" && (
+        <AndroidCustomNavigation onBack={router.back} paddingHorizontal={10} />
+      )}
+      <View style={styles.container}>
         {/* Header */}
         <Text
           variant="gradient"
@@ -142,7 +141,7 @@ export default function CheckSupplier() {
 
         {/* Spacer to push content up */}
         <View style={styles.spacer} />
-      </ScrollView>
+      </View>
 
       {/* Actions - Fixed at bottom */}
       <View style={[styles.actions, { backgroundColor: colors.background }]}>
@@ -155,10 +154,7 @@ export default function CheckSupplier() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 20,
     paddingHorizontal: 16,
-  },
-  scrollContent: {
   },
   title: {
     fontSize: 32,
@@ -181,7 +177,5 @@ const styles = StyleSheet.create({
   },
   actions: {
     padding: 16,
-    // borderTopWidth: StyleSheet.hairlineWidth,
-    // borderTopColor: "#333",
   },
 });

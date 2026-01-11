@@ -1,23 +1,28 @@
 import { View, StyleSheet, ScrollView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import GraphChartStatic from "@/components/staticComponents/GraphChartStatic";
 import DatePickerStatic from "@/components/staticComponents/DatePickerStatic";
 import GradientButton from "@/components/shared/GradientButton";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 export default function BarView() {
   const { theme } = useAppTheme();
   const { colors } = theme;
   const params = useLocalSearchParams();
   const { barId, barName } = params;
+  const router = useRouter();
 
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}
-      edges={Platform.OS === "android" ? ["bottom"] : []}
+      edges={Platform.OS === "android" ? ["bottom", "top"] : []}
     >
+      {Platform.OS === "android" && (
+        <AndroidCustomNavigation onBack={router.back} />
+      )}
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}

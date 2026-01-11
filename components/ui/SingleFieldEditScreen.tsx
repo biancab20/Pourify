@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,6 +16,8 @@ import { Icon } from "@/components/icons/Icon";
 
 import FormInput from "@/components/ui/FormInput";
 import GradientButton from "@/components/shared/GradientButton";
+
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 type FieldType = "text" | "email" | "number" | "select";
 
@@ -74,6 +77,7 @@ export default function SingleFieldEditScreen(props: Props) {
   const options = useMemo(() => {
     return props.fieldType === "select" ? props.options ?? [] : [];
   }, [props.fieldType, props.options]);
+
   const currentSelectLabel = useMemo(() => {
     if (props.fieldType !== "select") return "";
     return options.find((o) => o.value === value)?.label ?? "Select";
@@ -168,7 +172,14 @@ export default function SingleFieldEditScreen(props: Props) {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        {Platform.OS === "android" && props.onClose ? (
+          <AndroidCustomNavigation onBack={props.onClose} />
+        ) : null}
+
         <Text variant="gradient" gradientName="paloma" style={styles.title}>
           {props.title}
         </Text>
@@ -248,6 +259,8 @@ export default function SingleFieldEditScreen(props: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 24 },
+
+  // add a little spacing so the header doesn't touch the title
   title: { fontSize: 40, fontWeight: "700", marginBottom: 14 },
 
   formCard: { gap: 10, paddingBottom: 10 },
