@@ -178,14 +178,57 @@ export default function CheckSupplier() {
     [draft, onEditSupplier, onEditDate]
   );
 
-  const confirmPhotos = () => {
+  const ensureSupplierExists = async (): Promise<void> => {
+    if (!draft?.supplier?.name) return;
+
+    const name = draft.supplier.name.trim();
+    if (!name) return;
+
+    // make sure list is loaded
+    if (!suppliersQuery.data && !suppliersQuery.isLoading) {
+      await suppliersQuery.refetch();
+    }
+
+    const exists = (suppliersQuery.data?.value ?? suppliers).some(
+      (s: any) => normalizeName(s.name) === normalizeName(name)
+    );
+
+    if (exists) return;
+
+    const shouldAdd = await confirmYesNo(
+      "Supplier not found",
+      `“${name}” is not in your supplier list. Would you like to add it now?`,
+      "Add",
+      "No"
+    );
+
+    if (!shouldAdd) return;
+
+    const email = String(draft?.supplier?.contactEmail ?? "").trim();
+
+    await createSupplier.mutateAsync({
+      name,
+      email,
+    });
+
+    // optional: refresh suppliers cache so later checks see it
+    await suppliersQuery.refetch();
+  };
+
+  const goToNextStep = async () => {
     if (!draft) {
       Alert.alert("No OCR data found");
       return;
     }
 
-    queryClient.setQueryData(["deliveries", "latest"], draft);
-    router.replace("/delivery-check");
+    try {
+      await ensureSupplierExists();
+
+      queryClient.setQueryData(["deliveries", "latest"], draft);
+      router.replace("/delivery-check");
+    } catch (e: any) {
+      Alert.alert("Could not continue", e?.message ?? "Unknown error");
+    }
   };
 
   if (!draft) {
@@ -240,7 +283,7 @@ export default function CheckSupplier() {
       </View>
 
       <View style={[styles.actions, { backgroundColor: colors.background }]}>
-        <GradientButton text="Next" onPress={confirmPhotos} />
+        <GradientButton text="Next" onPress={goToNextStep} />
       </View>
     </SafeAreaView>
   );
