@@ -10,15 +10,21 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { openEditField } from "@/utils/open-edit-field";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
-
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
-
-import { useSupplier, useDeleteSupplier } from "@/hooks/useSuppliers";
-import { useProduct, useDeleteProduct } from "@/hooks/useProducts";
-import { useBar, useDeleteBar } from "@/hooks/useLocations";
+import {
+  useSupplier,
+  useDeleteSupplier,
+  useUpdateSupplier,
+} from "@/hooks/useSuppliers";
+import {
+  useProduct,
+  useDeleteProduct,
+  useUpdateProduct,
+} from "@/hooks/useProducts";
+import { useBar, useDeleteBar, useUpdateBar } from "@/hooks/useLocations";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
 type EntityKey = "products" | "suppliers" | "locations";
@@ -61,10 +67,13 @@ export default function EditEntityScreen() {
   const error = activeQuery.error;
   const refetch = activeQuery.refetch;
 
-  // ✅ Delete mutations
   const deleteSupplier = useDeleteSupplier();
   const deleteProduct = useDeleteProduct();
   const deleteBar = useDeleteBar();
+
+  const updateSupplier = useUpdateSupplier();
+  const updateProduct = useUpdateProduct();
+  const updateBar = useUpdateBar();
 
   const isDeleting =
     deleteSupplier.isPending || deleteProduct.isPending || deleteBar.isPending;
@@ -142,13 +151,21 @@ export default function EditEntityScreen() {
           title: "Location name",
           value: item.name ?? "",
           onEditPress: () =>
-            router.push({
-              pathname: "/(settings)/[entity]/edit-field",
-              params: {
-                entity,
-                id,
-                fieldKey: "name",
-                value: item.name ?? "",
+            openEditField(router, {
+              title: "Stock location: Name",
+              description:
+                "This name is shown in your venue stock locations list.",
+              label: "Location name",
+              fieldType: "text",
+              placeholder: "e.g. Main Bar",
+              initialValue: item.name ?? "",
+              onSave: async (newValue) => {
+                await updateBar.mutateAsync({
+                  barId: id,
+                  data: { name: newValue.trim() },
+                });
+                // optionally refetch detail query if you want instant refresh:
+                // await activeQuery.refetch();
               },
             }),
           editA11yLabel: "Edit location name",
@@ -157,19 +174,32 @@ export default function EditEntityScreen() {
     }
 
     if (entity === "suppliers") {
+      const currentName = item.name ?? "";
+      const currentEmail = (item as any).email ?? "";
+
       return [
         {
           id: "name",
           title: "Supplier name",
-          value: item.name ?? "",
+          value: currentName,
           onEditPress: () =>
-            router.push({
-              pathname: "/(settings)/[entity]/edit-field",
-              params: {
-                entity,
-                id,
-                fieldKey: "name",
-                value: item.name ?? "",
+            openEditField(router, {
+              title: "Supplier: Name",
+              description:
+                "This name is shown in your suppliers list and used to identify deliveries.",
+              label: "Supplier name",
+              fieldType: "text",
+              placeholder: "e.g. Big Drinks BV",
+              initialValue: currentName,
+              onSave: async (newName) => {
+                // ✅ send BOTH fields so backend doesn't wipe the other one
+                await updateSupplier.mutateAsync({
+                  supplierId: id,
+                  data: {
+                    name: newName.trim(),
+                    email: currentEmail, // keep
+                  },
+                });
               },
             }),
           editA11yLabel: "Edit supplier name",
@@ -177,15 +207,24 @@ export default function EditEntityScreen() {
         {
           id: "email",
           title: "Email",
-          value: (item as any).email ?? "",
+          value: currentEmail,
           onEditPress: () =>
-            router.push({
-              pathname: "/(settings)/[entity]/edit-field",
-              params: {
-                entity,
-                id,
-                fieldKey: "email",
-                value: (item as any).email ?? "",
+            openEditField(router, {
+              title: "Supplier: Email",
+              description:
+                "This email can be used to notify the supplier if items were missing or incorrect.",
+              label: "Email",
+              fieldType: "email",
+              placeholder: "orders@supplier.com",
+              initialValue: currentEmail,
+              onSave: async (newEmail) => {
+                await updateSupplier.mutateAsync({
+                  supplierId: id,
+                  data: {
+                    name: currentName, // keep
+                    email: newEmail.trim(),
+                  },
+                });
               },
             }),
           editA11yLabel: "Edit supplier email",
@@ -193,25 +232,45 @@ export default function EditEntityScreen() {
       ];
     }
 
-    const typeValue = (item as any).type ?? "";
-    const volumeValue =
+    // PRODUCTS
+    const currentName = item.name ?? "";
+    const currentVolume =
       (item as any).volume === null || (item as any).volume === undefined
         ? ""
         : String((item as any).volume);
+    const currentType = (item as any).type ?? "";
+
+    const PRODUCT_TYPE_OPTIONS = [
+      { label: "Keg", value: "KEG" },
+      { label: "Wine", value: "WINE" },
+      { label: "Box", value: "BOX" },
+      { label: "Unit", value: "UNIT" },
+      { label: "Bottle", value: "BOTTLE" },
+    ];
 
     return [
       {
         id: "name",
         title: "Product name",
-        value: item.name ?? "",
+        value: currentName,
         onEditPress: () =>
-          router.push({
-            pathname: "/(settings)/[entity]/edit-field",
-            params: {
-              entity,
-              id,
-              fieldKey: "name",
-              value: item.name ?? "",
+          openEditField(router, {
+            title: "Product: Name",
+            description:
+              "This name is shown in your product list and delivery checks.",
+            label: "Product name",
+            fieldType: "text",
+            placeholder: "e.g. Bacardi Rum",
+            initialValue: currentName,
+            onSave: async (newName) => {
+              await updateProduct.mutateAsync({
+                productId: id,
+                data: {
+                  name: newName.trim(),
+                  volume: Number(currentVolume),
+                  type: currentType,
+                },
+              });
             },
           }),
         editA11yLabel: "Edit product name",
@@ -219,19 +278,28 @@ export default function EditEntityScreen() {
       {
         id: "volume",
         title: "Volume (L)",
-        value: volumeValue,
+        value: currentVolume,
         onEditPress: () =>
-          router.push({
-            pathname: "/(settings)/[entity]/edit-field",
-            params: {
-              entity,
-              id,
-              fieldKey: "volume",
-              value:
-                (item as any).volume === null ||
-                (item as any).volume === undefined
-                  ? ""
-                  : String((item as any).volume),
+          openEditField(router, {
+            title: "Product: Volume",
+            description: "Enter the container volume in liters (e.g. 0.25).",
+            label: "Volume (L)",
+            fieldType: "number",
+            placeholder: "e.g. 0.25",
+            initialValue: currentVolume,
+            onSave: async (newVolume) => {
+              const n = Number(String(newVolume).trim());
+              if (!Number.isFinite(n) || n <= 0)
+                throw new Error("Invalid volume");
+
+              await updateProduct.mutateAsync({
+                productId: id,
+                data: {
+                  name: currentName,
+                  volume: n,
+                  type: currentType,
+                },
+              });
             },
           }),
         editA11yLabel: "Edit product volume",
@@ -239,21 +307,30 @@ export default function EditEntityScreen() {
       {
         id: "type",
         title: "Type",
-        value: typeValue,
+        value: currentType,
         onEditPress: () =>
-          router.push({
-            pathname: "/(settings)/[entity]/edit-field",
-            params: {
-              entity,
-              id,
-              fieldKey: "type",
-              value: (item as any).type ?? "",
+          openEditField(router, {
+            title: "Product: Type",
+            description: "Choose the packaging type for this product.",
+            label: "Type",
+            fieldType: "select",
+            initialValue: currentType,
+            options: PRODUCT_TYPE_OPTIONS,
+            onSave: async (newType) => {
+              await updateProduct.mutateAsync({
+                productId: id,
+                data: {
+                  name: currentName,
+                  volume: Number(currentVolume),
+                  type: String(newType),
+                },
+              });
             },
           }),
         editA11yLabel: "Edit product type",
       },
     ];
-  }, [entity, item, id, router]);
+  }, [entity, item, id, router, updateBar, updateSupplier, updateProduct]);
 
   const renderCenteredState = (title: string, subtitle?: string) => (
     <View style={styles.centerContainer}>

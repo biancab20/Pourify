@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { DeliveryOcrResponse } from "@/types/deliveries";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
+import { openEditField } from "@/utils/open-edit-field";
 
 export default function CheckSupplier() {
   const router = useRouter();
@@ -106,7 +107,91 @@ export default function CheckSupplier() {
       </SafeAreaView>
     );
   }
+  function confirmAsync(title: string, message: string) {
+    return new Promise<boolean>((resolve) => {
+      Alert.alert(title, message, [
+        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: "Add", onPress: () => resolve(true) },
+      ]);
+    });
+  }
+  openEditField(router, {
+    title: "Delivery: Supplier",
+    description:
+      "Confirm who delivered this order. This is used for reporting issues.",
+    label: "Supplier name",
+    fieldType: "text",
+    initialValue: ocrData.supplier.name,
+    placeholder: "e.g. Big Drinks BV",
+    onSave: async (newName) => {
+      const name = newName.trim();
+      if (!name) throw new Error("Please enter a supplier name.");
 
+      const existing = suppliers.find(
+        (s) => s.name.trim().toLowerCase() === name.toLowerCase()
+      );
+
+      if (existing) {
+        // Just select it / set it
+        setDelivery((d) => ({
+          ...d,
+          supplierId: existing.supplierId,
+          supplierName: existing.name,
+        }));
+        return true; // ✅ close editor
+      }
+
+      // Not found → ask to add
+      const shouldAdd = await confirmAsync(
+        "Add supplier?",
+        `“${name}” is not in your supplier list. Do you want to add it now?`
+      );
+
+      if (!shouldAdd) {
+        // keep the typed value in your delivery (optional) but don't add supplier
+        setDelivery((d) => ({ ...d, supplierId: "", supplierName: name }));
+        return true; // or false if you want them to keep editing
+      }
+
+      // Create supplier (use your existing hook/mutation from this screen)
+      const created = await createSupplier.mutateAsync({
+        name,
+        email: "", // can be empty for now, or do later
+      });
+
+      // Make sure created returns supplierId; adapt to your API response
+      setDelivery((d) => ({
+        ...d,
+        supplierId: created.supplierId,
+        supplierName: name,
+      }));
+
+      // Optional: chain to email editor immediately
+      openEditField(router, {
+        title: "Supplier: Email",
+        description: "Add an email now or you can do it later in settings.",
+        label: "Email",
+        fieldType: "email",
+        initialValue: "",
+        placeholder: "orders@supplier.com",
+        onSave: async (email) => {
+          const trimmed = email.trim();
+          if (trimmed && !trimmed.includes("@"))
+            throw new Error("Please enter a valid email.");
+
+          // if your API requires full update, send name too
+          await updateSupplier.mutateAsync({
+            supplierId: created.supplierId,
+            data: { name, email: trimmed },
+          });
+
+          return true;
+        },
+      });
+
+      return true; // ✅ close the supplier-name editor
+    },
+  });
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.background }}

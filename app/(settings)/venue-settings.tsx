@@ -14,7 +14,12 @@ import { useSuppliers } from "@/hooks/useSuppliers";
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
-
+import { openEditField } from "@/utils/open-edit-field";
+import {
+  getSettingsField,
+  loadSettingsFieldValue,
+  saveSettingsFieldValue,
+} from "@/utils/settings-fields";
 import { getStoredString } from "@/utils/storage";
 
 /** ✅ Local-only bars (old naming mistake) */
@@ -153,14 +158,32 @@ export default function VenueSettings() {
   };
 
   const onEditReceiverEmail = () => {
-    router.push({
-      pathname: "/(settings)/[entity]/edit-field",
-      params: {
-        entity: "settings",
-        fieldKey: "receiverEmail",
-      },
-    });
-  };
+  const settingsField = getSettingsField("receiverEmail");
+
+  if (!settingsField) {
+    Alert.alert("Unsupported setting", "Receiver email is not configured.");
+    return;
+  }
+
+  openEditField(router, {
+    title: settingsField.title ?? "Receiver email",
+    description:
+      "When a new delivery comes in, if something is wrong, we’ll send an email explaining which items were not as expected. Who should we notify?",
+    label: settingsField.label ?? "Receiver email",
+    fieldType: settingsField.fieldType ?? "email",
+    placeholder: settingsField.placeholder ?? "e.g. manager@hachibar.nl",
+    initialValue: receiverEmail ?? "",
+    options: settingsField.options, // usually undefined for email
+    onSave: async (newValue) => {
+      // ✅ persist using your settings system
+      await saveSettingsFieldValue(settingsField, newValue);
+
+      // ✅ refresh local UI (optional: read back to ensure normalization)
+      const updated = await loadSettingsFieldValue(settingsField);
+      setReceiverEmailState(updated);
+    },
+  });
+};
 
   return (
     <SafeAreaView
