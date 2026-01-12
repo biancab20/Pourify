@@ -1,217 +1,289 @@
-// app/(scan-flow)/add-delivery-item.tsx
-import React, { useState, useMemo } from "react";
-import { View, Pressable, TextInput, FlatList, Alert, StyleSheet } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "@/components/shared/Text";
-import GradientButton from "@/components/shared/GradientButton";
-import { useAppTheme } from "@/stores/app-theme-context";
-import { useSuppliers } from "@/hooks/useSuppliers";
-import { useProducts } from "@/hooks/useProducts";
+import { useRouter } from "expo-router";
 
-type LocalDeliveryProduct = {
+import FormInput from "@/components/dynamicComponents/FormInput";
+import GradientButton from "@/components/shared/GradientButton";
+import { Text as CustomText } from "@/components/shared/Text";
+import { Icon } from "@/components/icons/Icon";
+import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
+import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
+import { useAppTheme } from "@/stores/app-theme-context";
+
+/* ---------------------------------- */
+/* Types                              */
+/* ---------------------------------- */
+
+type Product = {
   productId: string;
   name: string;
   volume: number;
   type: string;
+};
+
+type ManualProduct = {
+  id: string;
+  product: Product;
+  bottles: number;
   totalVolume: number;
 };
 
-type LocalDeliverySupplier = {
-  supplierId: string;
-  name: string;
-  contactEmail?: string;
-};
+/* ---------------------------------- */
+/* MOCK — replace with real hook      */
+/* ---------------------------------- */
 
-// Define the Product type from your hook data
-type ProductType = {
-  productId: string;
-  name: string;
-  volume: number;
-  type: string;
-  totalVolume?: number; // This is optional
-};
+// Replace this with: useProducts(), store selector, or query
+const useProducts = (): Product[] => [
+  { productId: "1", name: "Bacardi Rum", volume: 0.7, type: "BOTTLE" },
+  { productId: "2", name: "Heineken", volume: 0.33, type: "BOTTLE" },
+  { productId: "3", name: "Jack Daniels", volume: 1, type: "BOTTLE" },
+];
 
+/* ---------------------------------- */
+/* Screen                             */
+/* ---------------------------------- */
 
-
-export default function AddDeliveryItem() {
+export default function AddManualDeliveryProductScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ entity?: string }>();
   const { theme } = useAppTheme();
-  const entity = params.entity ?? "suppliers"; // "suppliers" or "products"
 
-  const { data: suppliersData } = useSuppliers();
-  const existingSuppliers = useMemo(() => suppliersData?.value ?? [], [suppliersData?.value]);
+  const products = useProducts();
 
-  const { data: productsData } = useProducts();
-  const existingProducts = useMemo(() => productsData?.value ?? [], [productsData?.value]);
+  const [query, setQuery] = useState("");
+  const [bottles, setBottles] = useState("");
+  const [selectedProduct, setSelectedProduct] =
+    useState<Product | null>(null);
 
-  const [selectedSupplier, setSelectedSupplier] = useState<LocalDeliverySupplier | null>(null);
-  const [productSearch, setProductSearch] = useState("");
-  const [selectedProducts, setSelectedProducts] = useState<LocalDeliveryProduct[]>([]);
+  const [items, setItems] = useState<ManualProduct[]>([]);
 
-  // Transform ProductType to LocalDeliveryProduct
-  const transformProduct = (product: ProductType): LocalDeliveryProduct => ({
-    productId: product.productId,
-    name: product.name,
-    volume: product.volume,
-    type: product.type,
-    totalVolume: product.totalVolume ?? product.volume // Use totalVolume if exists, otherwise use volume
-  });
+  /* ---------------------------------- */
+  /* Autocomplete filter                */
+  /* ---------------------------------- */
 
-  // Filter products for search
-  const productSuggestions = useMemo(() => {
-    if (entity !== "products") return [];
-    if (!productSearch.trim()) return [];
-    const query = productSearch.toLowerCase();
-    return existingProducts
-      .filter(p => p.name.toLowerCase().includes(query))
-      .filter(p => !selectedProducts.some(sp => sp.productId === p.productId))
-      .map(transformProduct);
-  }, [productSearch, existingProducts, selectedProducts, entity]);
-
-  // Add product
-  const addProduct = (product: LocalDeliveryProduct) => {
-    setSelectedProducts(prev => [...prev, { ...product, totalVolume: product.volume }]);
-    setProductSearch("");
-  };
-
-  // Remove product
-  const removeProduct = (productId: string) => {
-    setSelectedProducts(prev => prev.filter(p => p.productId !== productId));
-  };
-
-  // Update product volume
-  const updateVolume = (productId: string, volume: number) => {
-    setSelectedProducts(prev =>
-      prev.map(p => (p.productId === productId ? { ...p, totalVolume: volume } : p))
+  const suggestions = useMemo(() => {
+    if (!query) return [];
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(query.toLowerCase())
     );
+  }, [query, products]);
+
+  /* ---------------------------------- */
+  /* Validation                         */
+  /* ---------------------------------- */
+
+  const validate = () => {
+    if (!selectedProduct)
+      return "Please select a product from the list.";
+
+    const qty = Number(bottles);
+    if (!Number.isInteger(qty) || qty <= 0)
+      return "Please enter a valid number of bottles.";
+
+    return null;
   };
 
-  // Proceed with selected items
-  const onAddSelected = () => {
-    if (entity === "suppliers" && !selectedSupplier) {
-      Alert.alert("Missing supplier", "Please select a supplier");
-      return;
-    }
-    if (entity === "products" && selectedProducts.length === 0) {
-      Alert.alert("No products", "Please add at least one product");
+  /* ---------------------------------- */
+  /* Add product                        */
+  /* ---------------------------------- */
+
+  const onAdd = () => {
+    const error = validate();
+    if (error) {
+      Alert.alert("Missing info", error);
       return;
     }
 
-    router.push({
-      pathname: "/(scan-flow)/manual-delivery",
-      params: {
-        selectedSupplier: JSON.stringify([selectedSupplier]),
-        selectedProducts: JSON.stringify(selectedProducts)
-      }
-    });
+    const qty = Number(bottles);
+    const totalVolume = selectedProduct!.volume * qty;
+
+    setItems((prev) => [
+      {
+        id: `local-${Date.now()}`,
+        product: selectedProduct!,
+        bottles: qty,
+        totalVolume,
+      },
+      ...prev,
+    ]);
+
+    setQuery("");
+    setBottles("");
+    setSelectedProduct(null);
   };
 
-  // Render suppliers
-  if (entity === "suppliers") {
-    return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text variant="gradient" gradientName="paloma" style={styles.title}>
-          Add Supplier
-        </Text>
-        <FlatList
-          data={existingSuppliers}
-          keyExtractor={s => s.supplierId}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => setSelectedSupplier(item)}
-              style={[styles.item, { backgroundColor: theme.colors.cardBackground }]}
-            >
-              <Text style={{ color: theme.colors.text }}>{item.name}</Text>
-            </Pressable>
-          )}
-          ListFooterComponent={
-            selectedSupplier ? (
-              <View style={[styles.selectedItem, { backgroundColor: theme.colors.cardBackground }]}>
-                <Text style={{ color: theme.colors.text }}>{selectedSupplier.name}</Text>
-                <Pressable onPress={() => setSelectedSupplier(null)}>
-                  <Text style={{ color: "red" }}>Remove</Text>
-                </Pressable>
-              </View>
-            ) : undefined
-          }
-        />
-        <GradientButton
-          text="Add Supplier"
-          onPress={onAddSelected}
-          disabled={!selectedSupplier}
-          style={{ marginTop: 16 }}
-        />
-      </SafeAreaView>
-    );
-  }
+  /* ---------------------------------- */
+  /* Save                               */
+  /* ---------------------------------- */
 
-  // Render products
+  const onSave = () => {
+    if (items.length === 0) {
+      Alert.alert("Missing info", "Please add at least one product.");
+      return;
+    }
+
+    /**
+     * Payload example:
+     * items.map(i => ({
+     *   productId: i.product.productId,
+     *   bottles: i.bottles,
+     *   totalVolume: i.totalVolume
+     * }))
+     */
+
+    router.back();
+  };
+
+  /* ---------------------------------- */
+  /* Render                             */
+  /* ---------------------------------- */
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text variant="gradient" gradientName="paloma" style={styles.title}>
-        Add Products
-      </Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      edges={["top", "bottom"]}
+    >
+      <ScrollView contentContainerStyle={styles.content}>
+        <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
+          Add products manually
+        </CustomText>
 
-      <TextInput
-        placeholder="Search product..."
-        value={productSearch}
-        onChangeText={setProductSearch}
-        style={[styles.searchInput, { backgroundColor: theme.colors.cardBackground, color: theme.colors.text }]}
-      />
+        <CustomText style={[styles.subtitle, { color: theme.colors.text }]}>
+          Type the product name and enter the amount of bottles.
+        </CustomText>
 
-      <FlatList
-        data={productSuggestions}
-        keyExtractor={p => p.productId}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => addProduct(item)}
-            style={[styles.item, { backgroundColor: theme.colors.cardBackground }]}
-          >
-            <Text style={{ color: theme.colors.text }}>{item.name} ({item.volume} L)</Text>
-          </Pressable>
-        )}
-        ListFooterComponent={
-          selectedProducts.length > 0 ? (
-            <View>
-              {selectedProducts.map(p => (
-                <View
-                  key={p.productId}
-                  style={[styles.selectedItem, { backgroundColor: theme.colors.cardBackground }]}
-                >
-                  <Text style={{ color: theme.colors.text }}>{p.name}</Text>
-                  <TextInput
-                    keyboardType="numeric"
-                    value={p.totalVolume.toString()}
-                    onChangeText={val => updateVolume(p.productId, parseFloat(val) || 0)}
-                    style={[styles.volumeInput, { borderColor: theme.colors.text, color: theme.colors.text }]}
-                  />
-                  <Pressable onPress={() => removeProduct(p.productId)}>
-                    <Text style={{ color: "red" }}>Remove</Text>
+        {/* ---------------- Form ---------------- */}
+
+        <View style={styles.formCard}>
+          {/* Product name */}
+          <View style={styles.field}>
+            <CustomText style={[styles.label, { color: theme.colors.text }]}>
+              Product
+            </CustomText>
+
+            <FormInput
+              value={query}
+              onChange={(v) => {
+                setQuery(String(v));
+                setSelectedProduct(null);
+              }}
+              placeholder="Start typing product name…"
+            />
+
+            {suggestions.length > 0 && !selectedProduct && (
+              <View
+                style={[
+                  styles.suggestions,
+                  { backgroundColor: theme.colors.background },
+                ]}
+              >
+                {suggestions.slice(0, 5).map((p) => (
+                  <Pressable
+                    key={p.productId}
+                    style={styles.suggestionRow}
+                    onPress={() => {
+                      setQuery(p.name);
+                      setSelectedProduct(p);
+                    }}
+                  >
+                    <CustomText>{p.name}</CustomText>
+                    <CustomText style={{ opacity: 0.6 }}>
+                      {p.volume} L
+                    </CustomText>
                   </Pressable>
-                </View>
-              ))}
-            </View>
-          ) : undefined
-        }
-      />
+                ))}
+              </View>
+            )}
+          </View>
 
-      <GradientButton
-        text="Add Products"
-        onPress={onAddSelected}
-        disabled={selectedProducts.length === 0}
-        style={{ marginTop: 16 }}
-      />
+          {/* Bottles */}
+          <View style={styles.field}>
+            <CustomText style={[styles.label, { color: theme.colors.text }]}>
+              Bottles
+            </CustomText>
+
+            <FormInput
+              value={bottles}
+              onChange={(v) => setBottles(String(v))}
+              placeholder="e.g. 6"
+              type="number"
+              min={1}
+            />
+          </View>
+
+          {/* Calculated volume */}
+          {selectedProduct && bottles && (
+            <CustomText style={{ opacity: 0.7 }}>
+              Total volume:{" "}
+              {Number(bottles) * selectedProduct.volume} L
+            </CustomText>
+          )}
+
+          <GradientButton
+            text="Add product"
+            onPress={onAdd}
+            gradientName="bananaDaiquiri"
+            style={{ marginTop: 8 }}
+          />
+        </View>
+
+        {/* ---------------- List ---------------- */}
+
+        <ConfigSectionCard<ManualProduct>
+          title={`Added products (${items.length})`}
+          items={items}
+          emptyText="No products added yet"
+          keyExtractor={(i) => i.id}
+          renderItem={({ item }) => (
+            <ConfigRow
+              title={item.product.name}
+              leftIconName="cube-outline"
+              rightLabel={`${item.bottles} × ${item.product.volume} L = ${item.totalVolume} L`} />
+          )} addLabel={""} onAdd={function (): void {
+            throw new Error("Function not implemented.");
+          } }        />
+
+        <GradientButton
+          text="Save"
+          onPress={onSave}
+          gradientName="paloma"
+          style={{ marginTop: 18 }}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+/* ---------------------------------- */
+/* Styles                             */
+/* ---------------------------------- */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  title: { fontSize: 28, fontWeight: "700", marginBottom: 16,},
-  item: { padding: 12, borderRadius: 8, marginBottom: 8 },
-  selectedItem: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 8, marginTop: 12 },
-  searchInput: { padding: 12, borderRadius: 8, marginBottom: 8 },
-  volumeInput: { width: 60, height: 36, borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, marginHorizontal: 8 },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingBottom: 24 },
+
+  title: { fontSize: 40, fontWeight: "700", marginTop: 8 },
+  subtitle: { marginTop: 12, fontSize: 16, marginBottom: 16 },
+
+  formCard: { gap: 14, paddingBottom: 20 },
+  field: { gap: 8 },
+  label: { fontSize: 13 },
+
+  suggestions: {
+    borderRadius: 12,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  suggestionRow: {
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 });

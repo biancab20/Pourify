@@ -1,476 +1,357 @@
-import { View, StyleSheet, Pressable, ScrollView, Alert } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Text } from "@/components/shared/Text";
-import { useAppTheme } from "@/stores/app-theme-context";
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+
+import FormInput from "@/components/dynamicComponents/FormInput";
+import GradientButton from "@/components/shared/GradientButton";
+import { Text as CustomText } from "@/components/shared/Text";
+import { Icon } from "@/components/icons/Icon";
 import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
 import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
-import { useState, useEffect } from "react";
-import GradientButton from "@/components/shared/GradientButton";
+import { useAppTheme } from "@/stores/app-theme-context";
 
-type LocalDeliveryProduct = {
+import { useProducts } from "@/hooks/useProducts";
+import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
+
+/* ---------------------------------- */
+/* Types                              */
+/* ---------------------------------- */
+type Product = {
   productId: string;
   name: string;
   volume: number;
   type: string;
+};
+
+type Supplier = {
+  supplierId: string;
+  name: string;
+  email?: string;
+};
+
+type ManualProduct = {
+  id: string;
+  product: Product;
+  bottles: number;
   totalVolume: number;
 };
 
-type LocalDeliverySupplier = {
-  supplierId: string;
-  name: string;
-  contactEmail?: string;
-};
-
-export default function ManualDelivery() {
+/* ---------------------------------- */
+/* Screen                             */
+/* ---------------------------------- */
+export default function ManualDeliveryScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    selectedSupplier?: string;
-    selectedProducts?: string;
-  }>();
   const { theme } = useAppTheme();
 
-  // Local state for delivery
-  const [supplier, setSupplier] = useState<LocalDeliverySupplier | null>(null);
-  const [products, setProducts] = useState<LocalDeliveryProduct[]>([]);
+  /* ---------------------------------- */
+  /* Suppliers                          */
+  /* ---------------------------------- */
+  const { data: suppliersData } = useSuppliers();
+  const createSupplier = useCreateSupplier();
 
-  // Handle params when they come in (e.g., from returning from modal)
-  useEffect(() => {
-    if (params.selectedSupplier) {
-      try {
-        const supplierData = JSON.parse(params.selectedSupplier as string);
-        setSupplier(supplierData[0]); // Get first item from array
-      } catch (error) {
-        console.error("Failed to parse selected supplier:", error);
-      }
+  const [supplierQuery, setSupplierQuery] = useState<string>("");
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+    null
+  );
+
+  const supplierSuggestions = useMemo(() => {
+    const list: Supplier[] = suppliersData?.value ?? [];
+    if (!supplierQuery) return [];
+    return list.filter((s) =>
+      s.name.toLowerCase().includes(supplierQuery.toLowerCase())
+    );
+  }, [supplierQuery, suppliersData]);
+
+  /* ---------------------------------- */
+  /* Products                            */
+  /* ---------------------------------- */
+  const { data: productsData } = useProducts();
+
+  const [productQuery, setProductQuery] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(
+    null
+  );
+  const [bottles, setBottles] = useState<string>("");
+
+  const productSuggestions = useMemo(() => {
+    const list: Product[] = productsData?.value ?? [];
+    if (!productQuery) return [];
+    return list.filter((p) =>
+      p.name.toLowerCase().includes(productQuery.toLowerCase())
+    );
+  }, [productQuery, productsData]);
+
+  const [items, setItems] = useState<ManualProduct[]>([]);
+
+  /* ---------------------------------- */
+  /* Validation                         */
+  /* ---------------------------------- */
+  const validateSupplier = () => {
+    if (!selectedSupplier && !supplierQuery.trim()) {
+      return "Please select or type a supplier name.";
     }
+    return null;
+  };
 
-    if (params.selectedProducts) {
+  const validateProduct = () => {
+    if (!selectedProduct) return "Please select a product from the list.";
+    const qty = Number(bottles);
+    if (!Number.isInteger(qty) || qty <= 0)
+      return "Please enter a valid number of bottles.";
+    return null;
+  };
+
+  /* ---------------------------------- */
+  /* Add product                        */
+  /* ---------------------------------- */
+  const onAddProduct = () => {
+    const error = validateProduct();
+    if (error) return Alert.alert("Missing info", error);
+
+    const qty = Number(bottles);
+    const totalVolume = selectedProduct!.volume * qty;
+
+    setItems((prev) => [
+      {
+        id: `local-${Date.now()}`,
+        product: selectedProduct!,
+        bottles: qty,
+        totalVolume,
+      },
+      ...prev,
+    ]);
+
+    setProductQuery("");
+    setBottles("");
+    setSelectedProduct(null);
+  };
+
+  /* ---------------------------------- */
+  /* Save                               */
+  /* ---------------------------------- */
+  const onSave = async () => {
+    const supplierError = validateSupplier();
+    if (supplierError) return Alert.alert("Missing info", supplierError);
+    if (items.length === 0)
+      return Alert.alert("Missing info", "Please add at least one product.");
+
+    let supplierToSave = selectedSupplier;
+
+    if (!supplierToSave) {
       try {
-        const productsData = JSON.parse(params.selectedProducts as string);
-        // Add new products, avoiding duplicates
-        setProducts((prev) => {
-          const existingIds = new Set(prev.map((p) => p.productId));
-          const newProducts = productsData.filter(
-            (p: any) => !existingIds.has(p.productId)
-          );
-          return [...prev, ...newProducts];
+        const result = await createSupplier.mutateAsync({
+          name: supplierQuery,
+          email: "n/a@example.com", // TEMP: Provide required email
         });
-      } catch (error) {
-        console.error("Failed to parse selected products:", error);
+        supplierToSave = {
+          supplierId: result.supplierId,
+          name: result.name,
+          email: result.email,
+        };
+      } catch (e: any) {
+        return Alert.alert("Error", e?.message || "Failed to create supplier.");
       }
     }
-  }, [params.selectedSupplier, params.selectedProducts]);
 
-  // Navigate to add supplier screen
-  const navigateToAddSupplier = () => {
-    router.push({
-      pathname: "/(scan-flow)/add-delivery-item",
-      params: {
-        entity: "suppliers",
-        context: "manual-delivery",
-        existingSupplierIds: supplier
-          ? JSON.stringify([supplier.supplierId])
-          : JSON.stringify([]),
-      },
-    });
+    const payload = items.map((i) => ({
+      productId: i.product.productId,
+      bottles: i.bottles,
+      totalVolume: i.totalVolume,
+    }));
+
+    console.log("Supplier:", supplierToSave);
+    console.log("Products:", payload);
+
+    router.back();
   };
 
-  // Navigate to add product screen
-  const navigateToAddProduct = () => {
-    if (!supplier) {
-      Alert.alert(
-        "Add supplier first",
-        "Please select a supplier before adding products."
-      );
-      return;
-    }
-
-    router.push({
-      pathname: "/(scan-flow)/add-delivery-item",
-      params: {
-        entity: "products",
-        context: "manual-delivery",
-        existingProductIds: JSON.stringify(products.map((p) => p.productId)),
-      },
-    });
-  };
-
-  // Remove supplier
-  const removeSupplier = () => {
-    if (!supplier) return;
-
-    Alert.alert(
-      "Remove Supplier",
-      `Are you sure you want to remove ${supplier?.name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            setSupplier(null);
-            setProducts([]); // Remove products when supplier is removed
-          },
-        },
-      ]
-    );
-  };
-
-  // Remove product
-  const removeProduct = (productId: string, productName: string) => {
-    Alert.alert(
-      "Remove Product",
-      `Are you sure you want to remove ${productName}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            setProducts((prev) =>
-              prev.filter((p) => p.productId !== productId)
-            );
-          },
-        },
-      ]
-    );
-  };
-
-  // Update product quantity
-  const updateProductQuantity = (productId: string, quantity: number) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.productId === productId
-          ? { ...p, totalVolume: Math.max(1, quantity) }
-          : p
-      )
-    );
-  };
-
-  const onProceed = () => {
-    if (!supplier) {
-      Alert.alert("Missing supplier", "Please add a supplier first");
-      return;
-    }
-
-    if (products.length === 0) {
-      Alert.alert("Missing products", "Please add at least one product");
-      return;
-    }
-
-    // Prepare manual delivery data in OCR response format
-    const manualDeliveryData = {
-      deliveryNoteId: `manual-${Date.now()}`,
-      deliveryDate: new Date().toISOString(),
-      supplier: {
-        supplierId: supplier.supplierId,
-        name: supplier.name,
-        contactEmail: supplier.contactEmail,
-      },
-      products: products.map((p) => ({
-        productId: p.productId,
-        name: p.name,
-        volume: p.volume,
-        type: p.type,
-        totalVolume: p.totalVolume || p.volume,
-        isDeleted: false,
-      })),
-      deliveryNotePictureIds: [],
-      deliveryPilePictureId: null,
-      sourceType: "manual",
-    };
-
-    // Navigate to CheckSupplier screen with manual data
-    router.push({
-      pathname: "/(scan-flow)/check-supplier",
-      params: {
-        ocrData: JSON.stringify(manualDeliveryData),
-        sourceType: "manual",
-      },
-    });
-  };
-
-  const canProceed = supplier && products.length > 0;
-
-  // Calculate total volume
-
+  /* ---------------------------------- */
+  /* Render                             */
+  /* ---------------------------------- */
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={["top", "bottom"]}
     >
-      <View
-        style={[styles.header, { backgroundColor: theme.colors.background }]}
-      >
-        <Pressable style={styles.closeButton} onPress={() => router.back()}>
-          <Text style={{ color: theme.colors.text, fontSize: 16 }}>Close</Text>
-        </Pressable>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text variant="gradient" gradientName="paloma" style={styles.title}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
           Manual Delivery
-        </Text>
+        </CustomText>
 
-        {/* Supplier section */}
-        <ConfigSectionCard<LocalDeliverySupplier>
-          title="Supplier"
-          items={supplier ? [supplier] : []}
-          emptyText="No supplier added"
-          addLabel="Add Supplier"
-          onAdd={navigateToAddSupplier}
-          keyExtractor={(s) => s.supplierId}
-          renderItem={({ item }) => (
-            <View style={styles.supplierRow}>
-              <ConfigRow
-                title={item.name}
-                leftIconName="people-outline"
-                rightLabel={item.contactEmail}
-                onPress={() =>
-                  Alert.alert(
-                    "Supplier Info",
-                    `${item.name}\n${item.contactEmail || "No email"}`
-                  )
+        <CustomText style={[styles.subtitle, { color: theme.colors.text }]}>
+          Select a supplier and add products with bottle counts.
+        </CustomText>
+
+        {/* ---------------- Supplier ---------------- */}
+        <View style={styles.formCard}>
+          <CustomText style={[styles.label, { color: theme.colors.text }]}>
+            Supplier
+          </CustomText>
+
+          {selectedSupplier ? (
+            <Pressable
+              style={[styles.selectPill, { backgroundColor: theme.colors.background }]}
+              onPress={() => setSelectedSupplier(null)}
+            >
+              <CustomText>{selectedSupplier.name}</CustomText>
+              <Icon name="exit" size={18} color={theme.colors.icon} />
+            </Pressable>
+          ) : (
+            <>
+              <FormInput
+                placeholder="Type supplier name…"
+                value={supplierQuery}
+                onChange={(v: string | number) =>
+                  setSupplierQuery(String(v))
                 }
               />
-              <Pressable onPress={removeSupplier} style={styles.removeButton}>
-                <Text style={{ color: theme.colors.text }}>Remove</Text>
-              </Pressable>
+
+              {supplierSuggestions.length > 0 && (
+                <View style={[styles.suggestions, { backgroundColor: theme.colors.background }]}>
+                  {supplierSuggestions.slice(0, 5).map((s) => (
+                    <Pressable
+                      key={s.supplierId}
+                      style={styles.suggestionRow}
+                      onPress={() => {
+                        setSupplierQuery(s.name);
+                        setSelectedSupplier(s);
+                      }}
+                    >
+                      <CustomText>{s.name}</CustomText>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+        </View>
+
+        {/* ---------------- Product ---------------- */}
+        <View style={styles.formCard}>
+          <CustomText style={[styles.label, { color: theme.colors.text }]}>
+            Product
+          </CustomText>
+          <FormInput
+            placeholder="Type product name…"
+            value={productQuery}
+            onChange={(v: string | number) => {
+              setProductQuery(String(v));
+              setSelectedProduct(null);
+            }}
+          />
+
+          {productSuggestions.length > 0 && !selectedProduct && (
+            <View style={[styles.suggestions, { backgroundColor: theme.colors.background }]}>
+              {productSuggestions.slice(0, 5).map((p) => (
+                <Pressable
+                  key={p.productId}
+                  style={styles.suggestionRow}
+                  onPress={() => {
+                    setProductQuery(p.name);
+                    setSelectedProduct(p);
+                  }}
+                >
+                  <CustomText>{p.name}</CustomText>
+                  <CustomText style={{ opacity: 0.6 }}>{p.volume} L</CustomText>
+                </Pressable>
+              ))}
             </View>
           )}
-        />
 
-        {/* Products section */}
-        <ConfigSectionCard<LocalDeliveryProduct>
-          title={`Products (${products.length})`}
-          items={products}
-          emptyText="No products added"
-          addLabel="Add Product"
-          onAdd={navigateToAddProduct}
-          keyExtractor={(p) => p.productId}
-          renderItem={({ item }) => (
-            <View style={styles.productRow}>
-              <View style={styles.productInfo}>
-                <ConfigRow
-                  title={item.name}
-                  leftIconName="wine-outline"
-                  rightLabel={`${item.type}`}
-                  onPress={() =>
-                    Alert.alert(
-                      "Product Info",
-                      `${item.name}\n${item.type}\n${item.volume}L per unit`
-                    )
-                  }
-                />
-                <View style={styles.productDetails}>
-                  <Text
-                    style={[styles.detailText, { color: theme.colors.text }]}
-                  >
-                    Unit: {item.volume}L
-                  </Text>
-                  <Text
-                    style={[styles.detailText, { color: theme.colors.text }]}
-                  >
-                    Total: {item.totalVolume}L
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.field}>
+            <CustomText style={[styles.label, { color: theme.colors.text }]}>
+              Bottles
+            </CustomText>
+            <FormInput
+              value={bottles}
+              onChange={(v: string | number) => setBottles(String(v))}
+              placeholder="e.g. 6"
+              type="number"
+              min={1}
+            />
+          </View>
 
-              <View style={styles.quantitySection}>
-                <View style={styles.quantityRow}>
-                  <View style={styles.quantityControls}>
-                    <Pressable
-                      onPress={() =>
-                        updateProductQuantity(
-                          item.productId,
-                          item.totalVolume - 1
-                        )
-                      }
-                      style={[
-                        styles.quantityButton,
-                        { backgroundColor: theme.colors.cardBackground },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.buttonText,
-                          { color: theme.colors.text },
-                        ]}
-                      >
-                        -
-                      </Text>
-                    </Pressable>
-                    <View style={styles.quantityDisplay}>
-                      <Text
-                        style={[
-                          styles.quantityValue,
-                          { color: theme.colors.text },
-                        ]}
-                      >
-                        {item.totalVolume}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.quantityUnit,
-                          { color: theme.colors.text },
-                        ]}
-                      >
-                        L
-                      </Text>
-                    </View>
-                    <Pressable
-                      onPress={() =>
-                        updateProductQuantity(
-                          item.productId,
-                          item.totalVolume + 1
-                        )
-                      }
-                      style={[
-                        styles.quantityButton,
-                        { backgroundColor: theme.colors.cardBackground },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.buttonText,
-                          { color: theme.colors.text },
-                        ]}
-                      >
-                        +
-                      </Text>
-                    </Pressable>
-                  </View>
-                  <Pressable
-                    onPress={() => removeProduct(item.productId, item.name)}
-                    style={styles.removeButton}
-                  >
-                    <Text style={{ color: theme.colors.text }}>Remove</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
+          {selectedProduct && bottles && (
+            <CustomText style={{ opacity: 0.7 }}>
+              Total volume: {Number(bottles) * selectedProduct.volume} L
+            </CustomText>
           )}
-        />
 
-        {/* Proceed button */}
-        <View style={styles.buttonContainer}>
           <GradientButton
-            text={
-              canProceed
-                ? `Review Delivery (${products.length} items)`
-                : "Add Items to Proceed"
-            }
-            onPress={onProceed}
-            disabled={!canProceed}
+            text="Add Product"
+            onPress={onAddProduct}
+            gradientName="bananaDaiquiri"
+            style={{ marginTop: 8 }}
           />
         </View>
+
+        {/* ---------------- Product List ---------------- */}
+        <ConfigSectionCard<ManualProduct>
+          title={`Added products (${items.length})`}
+          items={items}
+          emptyText="No products added yet"
+          keyExtractor={(i) => i.id}
+          renderItem={({ item }) => (
+            <ConfigRow
+              title={item.product.name}
+              leftIconName="cube-outline"
+              rightLabel={`${item.bottles} × ${item.product.volume} L = ${item.totalVolume} L`}
+            />
+          )}
+          addLabel="Add product"
+          onAdd={onAddProduct}
+        />
+
+        <GradientButton
+          text="Save"
+          onPress={onSave}
+          gradientName="paloma"
+          style={{ marginTop: 18 }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+/* ---------------------------------- */
+/* Styles                             */
+/* ---------------------------------- */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
+  container: { flex: 1 },
+  content: { paddingHorizontal: 16, paddingBottom: 24 },
+
+  title: { fontSize: 40, fontWeight: "700", marginTop: 8 },
+  subtitle: { marginTop: 12, fontSize: 16, marginBottom: 16 },
+
+  formCard: { gap: 14, paddingBottom: 20 },
+  field: { gap: 8 },
+  label: { fontSize: 13 },
+
+  selectPill: {
+    borderRadius: 18,
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-  },
-  closeButton: {
-    padding: 8,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginTop: 8,
-    textAlign: "left",
-  },
-  supplierRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  productRow: {
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0,0,0,0.1)",
-  },
-  productInfo: {
-    flex: 1,
-  },
-  productDetails: {
+    paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingLeft: 40,
-    paddingRight: 16,
-    marginTop: 4,
-  },
-  detailText: {
-    fontSize: 12,
-    opacity: 0.7,
-  },
-  quantitySection: {
-    marginTop: 8,
-    paddingLeft: 40,
-    paddingRight: 16,
-  },
-  quantityRow: {
-    flexDirection: "row",
     alignItems: "center",
+  },
+
+  suggestions: {
+    borderRadius: 12,
+    marginTop: 6,
+    overflow: "hidden",
+  },
+  suggestionRow: {
+    padding: 12,
+    flexDirection: "row",
     justifyContent: "space-between",
-  },
-  quantityControls: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-  },
-  quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  quantityDisplay: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    paddingHorizontal: 12,
-    minWidth: 60,
-    justifyContent: "center",
-  },
-  quantityValue: {
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  quantityUnit: {
-    fontSize: 12,
-    marginLeft: 2,
-    opacity: 0.7,
-  },
-  removeButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
-  buttonContainer: {
-    marginTop: 24,
-    marginHorizontal: 8,
   },
 });
