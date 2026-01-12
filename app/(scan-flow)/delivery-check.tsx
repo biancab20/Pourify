@@ -33,7 +33,7 @@ export default function DeliveryCheck() {
     return delivery.products
       .filter((p: any) => !p.isDeleted)
       .map((p: any, index: number) => ({
-        id: p.productId ?? `product-${index}`,
+        id: `${p.productId ?? "unknown"}-${index}`, //added unique key to prevent from getting an error (sometimes the productId is repeated)
         name: p.name ?? "Unknown product",
         cases: Number(p.totalVolume ?? 0),
         cans: Number(p.volume ?? 0),

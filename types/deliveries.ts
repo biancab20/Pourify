@@ -60,7 +60,7 @@ export type DeliveryDto = {
 };
 
 /** Delivery status types */
-export type DeliveryStatus = "received" | "damaged" | "missing" | "substituted";
+export type DeliveryStatus = "received" | "damaged" | "missing" | "substituted" | "quantity_mismatch";
 
 /** For creating deliveries */
 export type CreateDeliveryDto = {

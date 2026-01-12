@@ -1,7 +1,4 @@
-// delivery-status.store.ts
-// Central place to keep track of per-product delivery status using React Query cache
-
-import type { DeliveryStatus } from "@/components/dynamicComponents/ListItem";
+import { DeliveryStatus } from "@/types/deliveries";
 
 export type DeliveryProductStatus = {
   id: string;

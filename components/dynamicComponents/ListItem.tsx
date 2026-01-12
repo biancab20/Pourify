@@ -4,13 +4,7 @@ import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { useRef, useState } from "react";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-
-export type DeliveryStatus =
-  | "pending"
-  | "received"
-  | "damaged"
-  | "missing"
-  | "substituted";
+import { DeliveryStatus } from "@/types/deliveries";
 
 export type DeliveryItem = {
   id: string;
@@ -79,7 +73,7 @@ export default function ListItem({
   // Format product volume to show 3 decimal places with L
   const formatProductVolume = () => {
     // Just format to 3 decimal places and add L
-    return delivery.cans.toFixed(3) + 'L';
+    return delivery.cans.toFixed(3) + "L";
   };
 
   const handleMenuPress = () => {
@@ -119,8 +113,7 @@ export default function ListItem({
       <TouchableOpacity
         style={[styles.leftAction, { backgroundColor: palette.green }]}
         onPress={handleSwipeComplete}
-      >
-      </TouchableOpacity>
+      ></TouchableOpacity>
     );
   };
 
@@ -164,25 +157,21 @@ export default function ListItem({
       disabled={readOnly}
     >
       <View
-        style={[
-          styles.container,
-          { backgroundColor: colors.cardBackground },
-        ]}
+        style={[styles.container, { backgroundColor: colors.cardBackground }]}
       >
         {/* Checkbox for select mode */}
         {isSelectMode && (
           <View
             style={[
               styles.checkbox,
-              isSelected && { backgroundColor: palette.pink, borderColor: palette.pink },
+              isSelected && {
+                backgroundColor: palette.pink,
+                borderColor: palette.pink,
+              },
             ]}
           >
             {isSelected && (
-              <Ionicons
-                name="checkmark"
-                size={16}
-                color={palette.white}
-              />
+              <Ionicons name="checkmark" size={16} color={palette.white} />
             )}
           </View>
         )}
@@ -193,19 +182,11 @@ export default function ListItem({
           </Text>
         </View>
 
-        <View
-          style={[styles.badge, { backgroundColor: colors.background }]}
-        >
-          <Text
-            style={[styles.badgeValue, { color: colors.text }]}
-          >
+        <View style={[styles.badge, { backgroundColor: colors.background }]}>
+          <Text style={[styles.badgeValue, { color: colors.text }]}>
             {units.toFixed(0)}
           </Text>
-          <Text
-            style={[styles.badgeLabel, { color: colors.icon }]}
-          >
-            units
-          </Text>
+          <Text style={[styles.badgeLabel, { color: colors.icon }]}>units</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -225,9 +206,7 @@ export default function ListItem({
         leftThreshold={100}
         friction={3}
         enabled={!isSelectMode}
-        onSwipeableOpen={(side) =>
-          side === "left" && handleSwipeComplete()
-        }
+        onSwipeableOpen={(side) => side === "left" && handleSwipeComplete()}
       >
         {Content}
       </Swipeable>
@@ -266,12 +245,7 @@ export default function ListItem({
                   setDropdownVisible(false);
                 }}
               >
-                <Text
-                  style={[
-                    styles.dropdownText,
-                    { color: colors.text },
-                  ]}
-                >
+                <Text style={[styles.dropdownText, { color: colors.text }]}>
                   {option.label}
                 </Text>
               </TouchableOpacity>
