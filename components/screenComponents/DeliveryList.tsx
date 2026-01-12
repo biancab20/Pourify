@@ -1,5 +1,11 @@
 import React from "react";
-import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  Modal,
+} from "react-native";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/dynamicComponents/SearchBar";
 import ListItem from "@/components/dynamicComponents/ListItem";
@@ -52,6 +58,16 @@ const DeliveryList = ({
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(
     new Set()
   );
+  const [helpVisible, setHelpVisible] = React.useState(false);
+
+  const shortHint =
+    "Swipe to mark delivered · Long-press to select multiple · Tap to review";
+
+  const helpText =
+    "Swipe the item to the right if it was physically delivered to you.\n\n" +
+    "Long-press a product to select multiple items at the same time. Selected products will be marked as delivered and removed from the list.\n\n" +
+    "You can view everything later in the delivery summary.\n\n" +
+    "Tap a product if something is not as expected.";
 
   // Format item name to title case
   const formatItemName = (name: string): string => {
@@ -227,15 +243,32 @@ const DeliveryList = ({
             </TouchableOpacity>
           </>
         ) : (
-          <>
-            {/* Regular mode: Left-aligned title with paloma gradient - NO CENTERING */}
+          <View style={styles.titleRow}>
             <Text variant="gradient" gradientName="paloma" style={styles.title}>
               {title}
             </Text>
-          </>
+
+            <TouchableOpacity
+              onPress={() => setHelpVisible(true)}
+              accessibilityRole="button"
+              accessibilityLabel="How does this work?"
+              style={styles.infoButton}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={22}
+                color={theme.mode === "dark" ? palette.yellow : palette.pink}
+              />
+            </TouchableOpacity>
+          </View>
         )}
       </View>
-
+      {/* Short hint */}
+      {!isSelectMode && (
+        <Text style={[styles.hintText, { color: colors.icon }]}>
+          {shortHint}
+        </Text>
+      )}
       {/* Search */}
       {showSearch && !isSelectMode && (
         <InputBox
@@ -251,7 +284,23 @@ const DeliveryList = ({
           {filteredData.length} result{filteredData.length !== 1 ? "s" : ""}
         </Text>
       )}
-
+      {/* Column headers */}
+      {filteredData.length > 0 && !isSelectMode && (
+        <View style={styles.columnHeader}>
+          <Text style={[styles.columnHeaderText, { color: colors.icon }]}>
+            Product name · Package volume
+          </Text>
+          <Text
+            style={[
+              styles.columnHeaderText,
+              styles.columnHeaderRight,
+              { color: colors.icon },
+            ]}
+          >
+            Quantity
+          </Text>
+        </View>
+      )}
       {/* Deliveries list */}
       {filteredData.length === 0 ? (
         <View style={styles.emptyState}>
@@ -325,6 +374,43 @@ const DeliveryList = ({
           </TouchableOpacity>
         </View>
       )}
+
+      <Modal
+        visible={helpVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setHelpVisible(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.helpOverlay}
+          onPress={() => setHelpVisible(false)}
+        >
+          <View
+            style={[
+              styles.helpCard,
+              { backgroundColor: colors.cardBackground },
+            ]}
+          >
+            <View style={styles.helpHeader}>
+              <Text style={[styles.helpTitle, { color: colors.text }]}>
+                How it works
+              </Text>
+              <TouchableOpacity
+                onPress={() => setHelpVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close help"
+              >
+                <Ionicons name="close" size={22} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.helpBody, { color: colors.text }]}>
+              {helpText}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -340,7 +426,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
-    height: 40, // Fixed height to prevent layout shift
+    height: 40,
   },
   centerTitle: {
     flex: 1,
@@ -350,7 +436,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "700",
-    // Left-aligned for regular mode
   },
   headerButton: {
     width: 100, // Fixed width for alignment
@@ -420,7 +505,64 @@ const styles = StyleSheet.create({
     textAlign: "center",
     opacity: 0.8,
   },
+  columnHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 20,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+  },
+  columnHeaderText: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    opacity: 0.7,
+  },
+  columnHeaderRight: {
+    textAlign: "right",
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flex: 1,
+  },
+  infoButton: {
+    paddingLeft: 12,
+    paddingVertical: 6,
+  },
+  hintText: {
+    marginTop: -10,
+    marginBottom: 12,
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.85,
+  },
+  helpOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  helpCard: {
+    borderRadius: 18,
+    padding: 16,
+  },
+  helpHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  helpTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  helpBody: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
 });
 
 export default DeliveryList;
-export type { DeliveryListProps };

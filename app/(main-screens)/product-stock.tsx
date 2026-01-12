@@ -16,7 +16,7 @@ import CircularChart from "@/components/dynamicComponents/CircularChart";
 import DatePicker, { Mode } from "@/components/dynamicComponents/DatePicker";
 import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
-import StockDropdownNavigation from "@/components/dynamicComponents/StockDropdownNavigation";
+import StockDropdownNavigation from "@/components/dynamicComponents/StockDropdownLocationPicker";
 import { useBars } from "@/hooks/useLocations";
 import { Bar } from "@/types/locations";
 import { useStocks } from "@/hooks/useStock";

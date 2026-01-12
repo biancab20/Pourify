@@ -286,8 +286,8 @@ export default function ListItem({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
-    padding: 16,
-    marginVertical: 8,
+    padding: 12,
+    marginVertical: 4,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

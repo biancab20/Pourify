@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Text } from "@/components/shared/Text";
 import SearchBar from "@/components/dynamicComponents/SearchBar";
-import StockDropdownNavigation from "@/components/dynamicComponents/StockDropdownNavigation";
+import StockDropdownNavigation from "@/components/dynamicComponents/StockDropdownLocationPicker";
 
 import { useBars } from "@/hooks/useLocations";
 import { useProducts } from "@/hooks/useProducts";

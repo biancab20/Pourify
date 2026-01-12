@@ -26,7 +26,7 @@ const ITEM_HEIGHT = 40;
 const MENU_PADDING = 6;
 const GAP_BELOW_BUTTON = 4;
 
-export default function StockDropdownNavigation({
+export default function StockDropdownLocationPicker({
   bars = [],
   selectedBar,
   onBarSelect,
