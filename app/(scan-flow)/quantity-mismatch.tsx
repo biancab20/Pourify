@@ -17,7 +17,7 @@ type Params = {
   name?: string;
   expectedUnits?: string;
   cases?: string; // totalVolume
-  cans?: string;  // per-unit volume (e.g. 0.2)
+  cans?: string; // per-unit volume (e.g. 0.2)
   unitLabel?: string;
 };
 
@@ -43,7 +43,9 @@ export default function QuantityMismatchScreen() {
   const name = params.name ?? "Unknown product";
 
   const expectedUnitsParam =
-    cansParam > 0 ? casesParam / cansParam : parseNumber(params.expectedUnits, 0);
+    cansParam > 0
+      ? casesParam / cansParam
+      : parseNumber(params.expectedUnits, 0);
 
   const unitLabel = params.unitLabel ?? "Bottles";
 
@@ -115,12 +117,6 @@ export default function QuantityMismatchScreen() {
     router.back();
   };
 
-  // Debug
-  useEffect(() => {
-    console.log("🟨 QM params:", params);
-    console.log("🟨 QM computed:", { casesParam, cansParam, expectedUnitsParam });
-  }, [params, casesParam, cansParam, expectedUnitsParam]);
-
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: colors.background }]}
@@ -133,7 +129,9 @@ export default function QuantityMismatchScreen() {
           accessibilityRole="button"
         >
           <Ionicons name="chevron-back" size={22} color={palette.yellow} />
-          <Text style={{ color: palette.yellow, fontSize: 16, fontWeight: "600" }}>
+          <Text
+            style={{ color: palette.yellow, fontSize: 16, fontWeight: "600" }}
+          >
             Back
           </Text>
         </Pressable>
@@ -148,14 +146,18 @@ export default function QuantityMismatchScreen() {
         </Text>
 
         <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.cardHeader, { color: colors.text }]}>Expected</Text>
+          <Text style={[styles.cardHeader, { color: colors.text }]}>
+            Expected
+          </Text>
           <Text style={[styles.cardValue, { color: colors.text }]}>
             {unitLabel}: {Math.round(expectedUnits)}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.cardHeader, { color: colors.text }]}>Received</Text>
+          <Text style={[styles.cardHeader, { color: colors.text }]}>
+            Received
+          </Text>
 
           <View style={styles.receivedRow}>
             <Text style={[styles.cardValue, { color: colors.text }]}>

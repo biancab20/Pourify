@@ -10,7 +10,7 @@ import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";
 import { useAppTheme } from "@/stores/app-theme-context";
-import type { DeliveryOcrResponse, DeliveryProduct } from "@/types/deliveries";
+import type { CreateDeliveryDto, DeliveryOcrResponse } from "@/types/deliveries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -211,6 +211,15 @@ export default function DeliverySummary() {
   };
 
   // Prepare delivery data for saving
+  const parseLineId = (lineId: string) => {
+    // "7cecd...-1" -> { productId: "7cecd...", index: 1 }
+    const match = lineId.match(/^(.*)-(\d+)$/);
+    if (!match) return { productId: lineId, index: -1 };
+    return { productId: match[1], index: Number(match[2]) };
+  };
+
+  const round3 = (n: number) => Math.round(n * 1000) / 1000;
+
   const prepareDeliveryData = () => {
     if (!delivery) return null;
 
@@ -223,19 +232,50 @@ export default function DeliverySummary() {
       return null;
     }
 
-    // NOTE: right now you're still saving "expected" products.
-    // Later you’ll build Products from statusMap to represent what was received.
-    const products = delivery.products.map((product: DeliveryProduct) => ({
-      ProductId: product.productId,
-      Name: product.name || `Product ${product.productId}`,
-      Volume: product.volume || 0,
-      Type: product.type,
-      TotalVolume: product.totalVolume || 0,
+    // Start from OCR products (expected) but we will override TotalVolume using statusMap (received)
+    const baseProducts = delivery.products ?? [];
+
+    // Build a mutable copy
+    const productsCopy = baseProducts.map((p) => ({
+      ProductId: p.productId,
+      Name: p.name ?? `Product ${p.productId}`,
+      Volume: Number(p.volume ?? 0),
+      Type: p.type ?? "",
+      TotalVolume: Number(p.totalVolume ?? 0),
     }));
 
-    const validProducts = products.filter((p) => p && p.ProductId);
+    // Apply received changes from statusMap
+    const entries = Object.values(statusMap ?? {});
 
-    const deliveryData: any = {
+    entries.forEach((line) => {
+      const { index } = parseLineId(line.id);
+      if (index < 0 || index >= productsCopy.length) return;
+
+      const product = productsCopy[index];
+
+      const packVol =
+        Number.isFinite(Number(product.Volume)) && Number(product.Volume) > 0
+          ? Number(product.Volume)
+          : Number(line.cans ?? 0);
+
+      const receivedUnits =
+        typeof line.receivedUnits === "number" ? line.receivedUnits : undefined;
+
+      if (!receivedUnits || !Number.isFinite(receivedUnits)) return;
+
+      // ✅ this is the actual received total volume in liters
+      const receivedTotal = packVol > 0 ? receivedUnits * packVol : 0;
+
+      product.TotalVolume = round3(receivedTotal);
+
+      // Optional: you can also update Name if you ever rename in UI later
+      // product.Name = line.name ?? product.Name;
+    });
+
+    // Filter invalid
+    const validProducts = productsCopy.filter((p) => p.ProductId);
+
+    const payload: CreateDeliveryDto = {
       DeliveryNoteId: delivery.deliveryNoteId,
       DeliveryDate: delivery.deliveryDate,
       DeliveryNotePictureIds: delivery.deliveryNotePictureIds || [],
@@ -245,17 +285,15 @@ export default function DeliverySummary() {
       SupplierId: supplierId,
       Name: delivery.supplier.name,
       ContactEmail: delivery.supplier.contactEmail,
+
+      ...(selectedBarId ? { BarId: selectedBarId } : {}),
     };
 
-    if (selectedBarId) deliveryData.BarId = selectedBarId;
+    console.log("🟦 EXPECTED (OCR):", delivery);
+    console.log("🟩 RECEIVED (statusMap):", statusMap);
+    console.log("🚀 SENDING payload:", payload);
 
-    // Debug: expected vs received
-    const expected = queryClient.getQueryData(["deliveries", "latest"]);
-    const receivedStore = queryClient.getQueryData(["deliveries", "status"]);
-    console.log("🟦 EXPECTED (OCR):", expected);
-    console.log("🟩 RECEIVED (store):", receivedStore);
-
-    return deliveryData;
+    return payload;
   };
 
   const handleSave = async () => {
