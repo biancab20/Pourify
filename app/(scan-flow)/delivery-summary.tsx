@@ -2,7 +2,7 @@
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
-import InputBox from "@/components/dynamicComponents/InputBox";
+import InputBox from "@/components/dynamicComponents/SearchBar";
 import ListItem, {
   DeliveryItem,
 } from "@/components/dynamicComponents/ListItem";

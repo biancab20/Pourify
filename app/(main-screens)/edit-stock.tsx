@@ -1,7 +1,7 @@
 // app/(main-screens)/edit-stock.tsx
 
 import { Text } from "@/components/shared/Text";
-import SearchBar from "@/components/dynamicComponents/InputBox";
+import FormInput from "@/components/dynamicComponents/FormInput";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, Pressable, StyleSheet } from "react-native";
@@ -27,12 +27,15 @@ export default function EditStock() {
   const productName = params.productName as string;
   const productType = params.productType as string;
   const initialBottleCount = Number(params.currentStock ?? 0);
-  const stockId = params.stockId as string; // Get stockId directly from params
+  const stockId = params.stockId as string;
 
   /* -----------------------------
      Local state
   ------------------------------ */
-  const [unitCount, setUnitCount] = useState<number>(initialBottleCount);
+  // ✅ Keep it as a string while typing (works best with FormInput number behavior)
+  const [unitCountText, setUnitCountText] = useState<string>(
+    String(Math.max(0, initialBottleCount))
+  );
 
   /* -----------------------------
      Data & mutations
@@ -63,9 +66,25 @@ export default function EditStock() {
   const leftoverVolume = currentTotalVolume - currentFullUnits * unitVolume;
 
   /* -----------------------------
+     Parse input safely
+  ------------------------------ */
+  const unitCount = useMemo(() => {
+    const trimmed = unitCountText.trim();
+    if (!trimmed) return 0;
+
+    const n = Number(trimmed);
+    if (!Number.isFinite(n)) return NaN;
+
+    // no decimals allowed here; clamp to int
+    return Math.max(0, Math.trunc(n));
+  }, [unitCountText]);
+
+  /* -----------------------------
      Handle submit
   ------------------------------ */
   const handleAdjustStock = () => {
+    if (!Number.isFinite(unitCount)) return;
+
     if (stockItem || stockId) {
       const newVolume = leftoverVolume + unitCount * unitVolume;
       const targetStockId = stockItem?.stockId || stockId!;
@@ -103,8 +122,14 @@ export default function EditStock() {
   ------------------------------ */
   const isPending =
     updateStockMutation.isPending || createStockMutation.isPending;
+
   const canSubmit =
-    !isPending && !isLoading && productId && barId && unitCount >= 0;
+    !isPending &&
+    !isLoading &&
+    !!productId &&
+    !!barId &&
+    Number.isFinite(unitCount) &&
+    unitCount >= 0;
 
   /* -----------------------------
      Render
@@ -117,32 +142,25 @@ export default function EditStock() {
       {Platform.OS === "android" && (
         <AndroidCustomNavigation onBack={router.back} />
       )}
-      {/* Adjust stock header */}
+
       <Text style={[styles.header, { color: colors.text }]}>Adjust stock</Text>
 
-      {/* Info text */}
       <Text style={[styles.infoText, { color: colors.text }]}>
         You are trying to adjust the quantity of {productName} {productType}.
         Please input the amount of full {productType}s that you see.
       </Text>
 
-      {/* Unit input */}
-      <SearchBar
+      {/* ✅ FormInput instead of SearchBar */}
+      <FormInput
+        value={unitCountText}
+        onChange={(v) => setUnitCountText(String(v))}
+        placeholder="Enter number of units"
         type="number"
-        initialValue={unitCount.toString()}
         min={0}
         decimal={false}
-        placeholder="Enter number of units"
-        onSearch={(value) => {
-          if (value === "") {
-            setUnitCount(0);
-          } else {
-            setUnitCount(typeof value === "number" ? value : Number(value));
-          }
-        }}
+        accessibilityLabel="Number of units"
       />
 
-      {/* Adjust button */}
       <Pressable
         onPress={handleAdjustStock}
         disabled={!canSubmit}
@@ -169,9 +187,6 @@ export default function EditStock() {
   );
 }
 
-/* -----------------------------
-   Styles
------------------------------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

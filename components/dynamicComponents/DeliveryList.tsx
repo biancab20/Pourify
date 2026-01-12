@@ -1,7 +1,7 @@
 import React from "react";
 import { FlatList, StyleSheet, View, TouchableOpacity } from "react-native";
 import { Text } from "@/components/shared/Text";
-import InputBox from "@/components/dynamicComponents/InputBox";
+import InputBox from "@/components/dynamicComponents/SearchBar";
 import ListItem from "@/components/dynamicComponents/ListItem";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,7 +38,7 @@ const DeliveryList = ({
   onSwipeComplete,
   onItemPress,
   emptyState,
-  searchPlaceholder = "Search deliveries...",
+  searchPlaceholder = "Search delivery item...",
   showSearch = true,
   showResultsCount = true,
   removedIds = [],
@@ -408,9 +408,6 @@ const styles = StyleSheet.create({
   checkMultipleText: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  successIcon: {
-    marginBottom: 16,
   },
   successTitle: {
     fontSize: 20,

@@ -30,7 +30,7 @@ export type Delivery = {
 };
 
 /** ---------------- OCR endpoint (NOT OData) ----------------
- * OCR returns an ARRAY of deliveries 
+ * OCR returns an ARRAY of deliveries
  */
 export type DeliveryOcrResponse = Delivery;
 
@@ -68,11 +68,11 @@ export type CreateDeliveryDto = {
   DeliveryDate: string;
   DeliveryNotePictureIds: string[];
   DeliveryPilePictureId: string | null;
-  Products: Array<{
+  Products: {
     ProductId: string;
     Status: DeliveryStatus;
     Volume: number;
-  }>;
+  }[];
   BarId?: string;
   SupplierId?: string;
   Supplier?: DeliverySupplierDto;
