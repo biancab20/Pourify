@@ -60,7 +60,12 @@ export type DeliveryDto = {
 };
 
 /** Delivery status types */
-export type DeliveryStatus = "received" | "damaged" | "missing" | "substituted";
+export type DeliveryStatus =
+  | "received"
+  | "damaged"
+  | "missing"
+  | "substituted"
+  | "quantity_mismatch";
 
 /** For creating deliveries */
 export type CreateDeliveryDto = {
@@ -68,16 +73,21 @@ export type CreateDeliveryDto = {
   DeliveryDate: string;
   DeliveryNotePictureIds: string[];
   DeliveryPilePictureId: string | null;
+
   Products: {
     ProductId: string;
-    Status: DeliveryStatus;
+    Name: string;
     Volume: number;
+    Type: string;
+    TotalVolume: number;
   }[];
-  BarId?: string;
-  SupplierId?: string;
-  Supplier?: DeliverySupplierDto;
-};
 
+  SupplierId: string;
+  Name: string;
+  ContactEmail: string;
+
+  BarId?: string;
+};
 export type CreateDeliveryResponse = DeliveryDto;
 
 /** GET /delivery?$expand=products,supplier */

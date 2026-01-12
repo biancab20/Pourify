@@ -42,6 +42,10 @@ export default function ScanFlowLayout() {
         name="successful-delivery"
         options={{ title: "", headerShown: false }}
       />
+      <Stack.Screen
+        name="quantity-mismatch"
+        options={{ title: "", headerShown: false }}
+      />
     </Stack>
   );
 }

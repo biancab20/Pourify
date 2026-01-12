@@ -5,7 +5,9 @@ import {
   View,
   TouchableOpacity,
   Modal,
+  Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/dynamicComponents/SearchBar";
 import ListItem from "@/components/dynamicComponents/ListItem";
@@ -18,6 +20,8 @@ export type DeliveryItem = {
   cases: number;
   cans: number;
 };
+
+export type DeliveryAction = "received" | "substituted" | "quantity_mismatch";
 
 type DeliveryListProps = {
   title?: string;
@@ -34,6 +38,7 @@ type DeliveryListProps = {
   showSearch?: boolean;
   showResultsCount?: boolean;
   removedIds?: string[];
+  onAction?: (item: DeliveryItem, action: DeliveryAction) => void;
 };
 
 const DeliveryList = ({
@@ -48,6 +53,7 @@ const DeliveryList = ({
   showSearch = true,
   showResultsCount = true,
   removedIds = [],
+  onAction,
 }: DeliveryListProps) => {
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
@@ -59,9 +65,9 @@ const DeliveryList = ({
     new Set()
   );
   const [helpVisible, setHelpVisible] = React.useState(false);
-
+  const router = useRouter();
   const shortHint =
-    "Swipe to mark delivered · Long-press to select multiple · Tap to review";
+    "Swipe to mark delivered · Long-press to select multiple · Tap to report what you received";
 
   const helpText =
     "Swipe the item to the right if it was physically delivered to you.\n\n" +
@@ -108,7 +114,9 @@ const DeliveryList = ({
       deliveries.length > 0 && localRemovedIds.length === deliveries.length
     );
   }, [deliveries.length, localRemovedIds.length]);
-
+  React.useEffect(() => {
+    setLocalRemovedIds(removedIds);
+  }, [removedIds]);
   const handleSearch = (value: string | number) => {
     const query = value.toString();
     setSearchQuery(query);
@@ -118,7 +126,6 @@ const DeliveryList = ({
   const handleSwipeComplete = (id: string) => {
     setLocalRemovedIds((prev) => [...prev, id]);
     onSwipeComplete?.(id);
-    // Remove from selection if selected
     if (selectedItems.has(id)) {
       setSelectedItems((prev) => {
         const newSet = new Set(prev);
@@ -129,6 +136,54 @@ const DeliveryList = ({
   };
 
   const handleItemPress = (item: DeliveryItem) => {
+    Alert.alert(
+      "What happened with this item?",
+      `${item.name}\n\nSelect what you actually received.`,
+      [
+        {
+          text: "Received (as expected)",
+          onPress: () => {
+            onAction?.(item, "received");
+
+            // Optionally reuse existing swipe behavior (removes from list)
+            onSwipeComplete?.(item.id);
+            setLocalRemovedIds((prev) => [...prev, item.id]);
+          },
+        },
+        {
+          text: "I received another product",
+          onPress: () => {
+            onAction?.(item, "substituted");
+            Alert.alert(
+              "Substitution noted",
+              "Later, we’ll let you pick which product you received instead."
+            );
+          },
+        },
+        {
+          text: "Quantity doesn’t match",
+          onPress: () => {
+            onAction?.(item, "quantity_mismatch");
+            router.push({
+              pathname: "/(scan-flow)/quantity-mismatch",
+              params: {
+                id: item.id,
+                name: item.name,
+                cases: String(item.cases),
+                cans: String(item.cans),
+                unitLabel: "Bottles",
+              },
+            });
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+
     onItemPress?.(item);
   };
 

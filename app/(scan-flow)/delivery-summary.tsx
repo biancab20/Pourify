@@ -1,3 +1,4 @@
+// app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
@@ -9,6 +10,7 @@ import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";
 import { useAppTheme } from "@/stores/app-theme-context";
+import type { CreateDeliveryDto, DeliveryOcrResponse } from "@/types/deliveries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -54,10 +56,7 @@ function Section({ title, items, searchQuery }: SectionProps) {
       {filteredItems.map((item) => (
         <ListItem
           key={item.id}
-          delivery={{
-            ...item,
-            name: toTitleCase(item.name),
-          }}
+          delivery={{ ...item, name: toTitleCase(item.name) }}
           readOnly
         />
       ))}
@@ -71,17 +70,28 @@ export default function DeliverySummary() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { getAll } = useDeliveryStatus();
+  // ✅ NEW: statusMap is reactive
+  const { statusMap } = useDeliveryStatus();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
 
+  // Get bars for selection
   const { data: barsData } = useBars();
   const bars = useMemo(() => barsData?.value || [], [barsData]);
 
+  // Get the create delivery mutation
   const createDeliveryMutation = useCreateDelivery();
 
-  // Get latest delivery (OCR or manual)
-  const latestDelivery = queryClient.getQueryData<any>(["deliveries", "latest"]);
+  // Get OCR data
+  const ocrResponse =
+    queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
+    null;
+
+  const delivery = useMemo(() => {
+    if (!ocrResponse) return null;
+    return ocrResponse;
+  }, [ocrResponse]);
 
   // Auto-select first bar if available
   useEffect(() => {
@@ -90,12 +100,16 @@ export default function DeliverySummary() {
     }
   }, [bars, selectedBarId]);
 
+  // Format date from OCR data
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
+
     try {
       if (dateString.includes("/")) return dateString;
+
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
+
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -106,23 +120,31 @@ export default function DeliverySummary() {
     }
   };
 
+  // Define rows for the EditableSectionCard
   const infoRows = useMemo(
     () => [
       {
         id: "supplier",
         title: "Supplier",
-        value: latestDelivery?.supplier?.name || "Unknown",
+        value: delivery?.supplier?.name ?? "No supplier found",
         valueNumberOfLines: 1,
-        onEditPress: () => {},
+        onEditPress: () => {
+          Alert.alert(
+            "Supplier",
+            "Supplier is shown from OCR / checked supplier."
+          );
+        },
         showEdit: false,
         editA11yLabel: "View supplier info",
       },
       {
         id: "date",
         title: "Date",
-        value: formatDate(latestDelivery?.deliveryDate),
+        value: formatDate(delivery?.deliveryDate),
         valueNumberOfLines: 1,
-        onEditPress: () => {},
+        onEditPress: () => {
+          Alert.alert("Edit Date", "Edit date functionality");
+        },
         showEdit: true,
         editA11yLabel: "Edit date",
       },
@@ -130,44 +152,48 @@ export default function DeliverySummary() {
         id: "bar",
         title: "Bar",
         value:
-          bars.find((b) => b.barId === selectedBarId)?.name ||
-          "Select a bar",
+          bars.find((b) => b.barId === selectedBarId)?.name || "Select a bar",
         valueNumberOfLines: 1,
-        onEditPress: () => {},
+        onEditPress: () => {
+          if (bars.length > 0) {
+            Alert.alert("Select Bar", "Choose a bar for this delivery:", [
+              ...bars.map((bar) => ({
+                text: bar.name,
+                onPress: () => setSelectedBarId(bar.barId),
+              })),
+              { text: "Cancel", style: "cancel" },
+            ]);
+          } else {
+            Alert.alert("No Bars", "Please create a bar first");
+          }
+        },
         showEdit: true,
         editA11yLabel: "Select bar",
       },
     ],
-    [latestDelivery, bars, selectedBarId]
+    [delivery, bars, selectedBarId]
   );
 
-  // Merge manual delivery items with status items
+  // ✅ Get all delivery items from statusMap
   const all = useMemo(() => {
-    const statusItems = Object.values(getAll()).map((item) => ({
+    const items = Object.values(statusMap ?? {});
+    return items.map((item) => ({
       ...item,
       name: toTitleCase(item.name),
     }));
+  }, [statusMap]);
 
-    if (latestDelivery?.products?.length) {
-      const manualItems = latestDelivery.products.map((p: any) => ({
-        id: p.id || `manual-${p.product?.productId || Date.now()}`,
-        name: p.product?.name || p.name,
-        status: "received",
-        ...p,
-      }));
-      return [...manualItems, ...statusItems];
-    }
-
-    return statusItems;
-  }, [getAll, latestDelivery]);
-
+  // Categorize items
   const received = all.filter((i) => i.status === "received");
   const damaged = all.filter((i) => i.status === "damaged");
   const missing = all.filter((i) => i.status === "missing");
   const substituted = all.filter((i) => i.status === "substituted");
+  const qtyMismatch = all.filter((i) => i.status === "quantity_mismatch");
 
+  // Count filtered items
   const filteredItemsCount = useMemo(() => {
     if (!searchQuery.trim()) return all.length;
+
     const query = searchQuery.toLowerCase();
     return all.filter(
       (item) =>
@@ -176,11 +202,118 @@ export default function DeliverySummary() {
     ).length;
   }, [all, searchQuery]);
 
+  // Helper function to ensure DeliveryPilePictureId is always a UUID string
+  const getDeliveryPilePictureId = (): string => {
+    const pilePictureId = delivery?.deliveryPilePictureId;
+    if (!pilePictureId) return "00000000-0000-0000-0000-000000000000";
+    if (typeof pilePictureId === "string") return pilePictureId;
+    return "00000000-0000-0000-0000-000000000000";
+  };
+
+  // Prepare delivery data for saving
+  const parseLineId = (lineId: string) => {
+    // "7cecd...-1" -> { productId: "7cecd...", index: 1 }
+    const match = lineId.match(/^(.*)-(\d+)$/);
+    if (!match) return { productId: lineId, index: -1 };
+    return { productId: match[1], index: Number(match[2]) };
+  };
+
+  const round3 = (n: number) => Math.round(n * 1000) / 1000;
+
+  const prepareDeliveryData = () => {
+    if (!delivery) return null;
+
+    const supplierId = delivery?.supplier?.supplierId;
+    if (!supplierId || supplierId === "00000000-0000-0000-0000-000000000000") {
+      Alert.alert(
+        "Supplier missing",
+        "Please go back and confirm the supplier so we can save this delivery."
+      );
+      return null;
+    }
+
+    // Start from OCR products (expected) but we will override TotalVolume using statusMap (received)
+    const baseProducts = delivery.products ?? [];
+
+    // Build a mutable copy
+    const productsCopy = baseProducts.map((p) => ({
+      ProductId: p.productId,
+      Name: p.name ?? `Product ${p.productId}`,
+      Volume: Number(p.volume ?? 0),
+      Type: p.type ?? "",
+      TotalVolume: Number(p.totalVolume ?? 0),
+    }));
+
+    // Apply received changes from statusMap
+    const entries = Object.values(statusMap ?? {});
+
+    entries.forEach((line) => {
+      const { index } = parseLineId(line.id);
+      if (index < 0 || index >= productsCopy.length) return;
+
+      const product = productsCopy[index];
+
+      const packVol =
+        Number.isFinite(Number(product.Volume)) && Number(product.Volume) > 0
+          ? Number(product.Volume)
+          : Number(line.cans ?? 0);
+
+      const receivedUnits =
+        typeof line.receivedUnits === "number" ? line.receivedUnits : undefined;
+
+      if (!receivedUnits || !Number.isFinite(receivedUnits)) return;
+
+      // ✅ this is the actual received total volume in liters
+      const receivedTotal = packVol > 0 ? receivedUnits * packVol : 0;
+
+      product.TotalVolume = round3(receivedTotal);
+
+      // Optional: you can also update Name if you ever rename in UI later
+      // product.Name = line.name ?? product.Name;
+    });
+
+    // Filter invalid
+    const validProducts = productsCopy.filter((p) => p.ProductId);
+
+    const payload: CreateDeliveryDto = {
+      DeliveryNoteId: delivery.deliveryNoteId,
+      DeliveryDate: delivery.deliveryDate,
+      DeliveryNotePictureIds: delivery.deliveryNotePictureIds || [],
+      DeliveryPilePictureId: getDeliveryPilePictureId(),
+      Products: validProducts,
+
+      SupplierId: supplierId,
+      Name: delivery.supplier.name,
+      ContactEmail: delivery.supplier.contactEmail,
+
+      ...(selectedBarId ? { BarId: selectedBarId } : {}),
+    };
+
+    console.log("🟦 EXPECTED (OCR):", delivery);
+    console.log("🟩 RECEIVED (statusMap):", statusMap);
+    console.log("🚀 SENDING payload:", payload);
+
+    return payload;
+  };
+
   const handleSave = async () => {
-    if (!latestDelivery) return;
+    if (!delivery) {
+      Alert.alert("Error", "No delivery data found");
+      return;
+    }
+
+    const deliveryData = prepareDeliveryData();
+    if (!deliveryData) {
+      Alert.alert("Error", "Could not prepare delivery data");
+      return;
+    }
+
     try {
-      await createDeliveryMutation.mutateAsync(latestDelivery);
+      await createDeliveryMutation.mutateAsync(deliveryData);
+
+      // Clear the OCR cache and reset form
       queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
+
       router.push("/(scan-flow)/successful-delivery");
     } catch (error: any) {
       Alert.alert(
@@ -191,7 +324,10 @@ export default function DeliverySummary() {
     }
   };
 
-  const handleSearch = (value: string | number) => setSearchQuery(value.toString());
+  const handleSearch = (value: string | number) => {
+    setSearchQuery(value.toString());
+  };
+
   const showNoResults = searchQuery.trim() && filteredItemsCount === 0;
 
   return (
@@ -226,10 +362,31 @@ export default function DeliverySummary() {
           </View>
         ) : (
           <>
-            <Section title="Received" items={received} searchQuery={searchQuery} />
-            <Section title="Damaged" items={damaged} searchQuery={searchQuery} />
-            <Section title="Missing" items={missing} searchQuery={searchQuery} />
-            <Section title="Substituted" items={substituted} searchQuery={searchQuery} />
+            <Section
+              title="Received"
+              items={received}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Damaged"
+              items={damaged}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Missing"
+              items={missing}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Substituted"
+              items={substituted}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Quantity mismatch"
+              items={qtyMismatch}
+              searchQuery={searchQuery}
+            />
 
             {all.length === 0 && (
               <View style={styles.emptyState}>
@@ -246,7 +403,9 @@ export default function DeliverySummary() {
         <GradientButton
           text={createDeliveryMutation.isPending ? "Saving..." : "Save"}
           onPress={handleSave}
-          disabled={all.length === 0 || createDeliveryMutation.isPending || !latestDelivery}
+          disabled={
+            all.length === 0 || createDeliveryMutation.isPending || !delivery
+          }
         />
       </View>
     </SafeAreaView>

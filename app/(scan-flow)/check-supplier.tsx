@@ -29,6 +29,11 @@ function confirmYesNo(
 function normalizeName(s: string) {
   return s.trim().toLowerCase();
 }
+function findSupplierIdByName(suppliers: any[], name: string): string | null {
+  const n = normalizeName(name);
+  const match = suppliers.find((s) => normalizeName(s.name) === n);
+  return match?.supplierId ?? null;
+}
 
 export default function CheckSupplier() {
   const router = useRouter();
@@ -184,35 +189,65 @@ export default function CheckSupplier() {
     const name = draft.supplier.name.trim();
     if (!name) return;
 
-    // make sure list is loaded
+    // Ensure suppliers list loaded
     if (!suppliersQuery.data && !suppliersQuery.isLoading) {
       await suppliersQuery.refetch();
     }
-
-    const exists = (suppliersQuery.data?.value ?? suppliers).some(
-      (s: any) => normalizeName(s.name) === normalizeName(name)
+    // Try resolve ID from current list
+    let supplierId = findSupplierIdByName(
+      suppliersQuery.data?.value ?? suppliers,
+      name
     );
+    // If not found, ask user to add new supplier
+    if (!supplierId) {
+      const shouldAdd = await confirmYesNo(
+        "Supplier not found",
+        `“${name}” is not in your supplier list. Would you like to add it now?`,
+        "Add",
+        "No"
+      );
 
-    if (exists) return;
+      if (!shouldAdd) return;
 
-    const shouldAdd = await confirmYesNo(
-      "Supplier not found",
-      `“${name}” is not in your supplier list. Would you like to add it now?`,
-      "Add",
-      "No"
+      const email = String(draft?.supplier?.contactEmail ?? "").trim();
+
+      await createSupplier.mutateAsync({ name, email });
+      // refresh list and resolve again
+      const refreshed = await suppliersQuery.refetch();
+      supplierId = findSupplierIdByName(refreshed.data?.value ?? [], name);
+    }
+
+    // If still no supplierId, stop
+    if (!supplierId) {
+      throw new Error(
+        "Could not resolve supplier id after adding. Please try again."
+      );
+    }
+
+    // Remember the resolved supplierId:
+    // - update local draft + cache so next screens can use it
+    setDraft((prev) =>
+      prev
+        ? {
+            ...prev,
+            supplier: {
+              ...prev.supplier,
+              supplierId,
+            },
+          }
+        : prev
     );
-
-    if (!shouldAdd) return;
-
-    const email = String(draft?.supplier?.contactEmail ?? "").trim();
-
-    await createSupplier.mutateAsync({
-      name,
-      email,
+    queryClient.setQueryData(["deliveries", "latest"], (old: any) => {
+      if (!old) return old;
+      return {
+        ...old,
+        supplier: {
+          ...(old.supplier ?? {}),
+          supplierId,
+          name,
+        },
+      };
     });
-
-    // optional: refresh suppliers cache so later checks see it
-    await suppliersQuery.refetch();
   };
 
   const goToNextStep = async () => {
@@ -224,7 +259,6 @@ export default function CheckSupplier() {
     try {
       await ensureSupplierExists();
 
-      queryClient.setQueryData(["deliveries", "latest"], draft);
       router.replace("/delivery-check");
     } catch (e: any) {
       Alert.alert("Could not continue", e?.message ?? "Unknown error");
