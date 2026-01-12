@@ -1,20 +1,20 @@
 // hooks/useDeliveries.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { 
-  DeliveryOcrResponse, 
+import type {
+  DeliveryOcrResponse,
   DeliveryDto,
   CreateDeliveryDto,
   GetDeliveriesResponse,
-  Delivery 
+  Delivery,
 } from "@/types/deliveries";
 import type { ApiError } from "@/services/api.errors";
-import { 
-  processDeliveryNote, 
+import {
+  processDeliveryNote,
   type ProcessDeliveryNoteInput,
   createDelivery,
   getDeliveries,
   getDeliveryById,
-  deleteDelivery 
+  deleteDelivery,
 } from "@/services/deliveries.api";
 
 // Hook to process delivery note via OCR
@@ -26,8 +26,24 @@ export function useProcessDeliveryNote() {
     mutationFn: processDeliveryNote,
     retry: 0,
     onSuccess: (data) => {
-      // Store the OCR result in cache for use in DeliverySummary
-      queryClient.setQueryData(["deliveries", "latest"], data);
+      queryClient.setQueryData(["deliveries", "latest"], (old: any) => {
+        const oldSupplierId = old?.supplier?.supplierId;
+
+        // If we already resolved supplierId to a real one, keep it
+        const shouldKeepOldSupplierId =
+          typeof oldSupplierId === "string" &&
+          oldSupplierId !== "00000000-0000-0000-0000-000000000000";
+
+        return {
+          ...data,
+          supplier: {
+            ...data.supplier,
+            supplierId: shouldKeepOldSupplierId
+              ? oldSupplierId
+              : data.supplier?.supplierId,
+          },
+        };
+      });
     },
   });
 }

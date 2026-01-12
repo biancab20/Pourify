@@ -89,7 +89,8 @@ export default function DeliverySummary() {
   const ocrResponse =
     queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
     null;
-
+console.log("📥 DeliverySummary cache delivery:", ocrResponse);
+console.log("📥 DeliverySummary supplier:", ocrResponse?.supplier);
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
     return ocrResponse;
@@ -128,7 +129,7 @@ export default function DeliverySummary() {
       {
         id: "supplier",
         title: "Supplier",
-        value: "Sligro (Hardcoded)", // Updated to show hardcoded supplier
+        value: delivery?.supplier?.name ?? "No supplier found",
         valueNumberOfLines: 1,
         onEditPress: () => {
           Alert.alert(
@@ -242,7 +243,20 @@ export default function DeliverySummary() {
     // Filter out any invalid products
     const validProducts = products.filter((p) => p && p.ProductId);
 
-    // Create delivery data with HARDCODED SUPPLIER
+    const supplierId = delivery?.supplier?.supplierId;
+console.log("🛠 Preparing delivery data with:", {
+  delivery,
+  supplier: delivery?.supplier,
+});
+console.log("❌ SupplierId invalid:", supplierId);
+    if (!supplierId || supplierId === "00000000-0000-0000-0000-000000000000") {
+      Alert.alert(
+        "Supplier missing",
+        "Please go back and confirm the supplier so we can save this delivery."
+      );
+      return null;
+    }
+    // Create delivery data
     const deliveryData: any = {
       DeliveryNoteId: delivery.deliveryNoteId,
       DeliveryDate: delivery.deliveryDate,
@@ -250,16 +264,16 @@ export default function DeliverySummary() {
       DeliveryPilePictureId: getDeliveryPilePictureId(),
       Products: validProducts,
       // Hardcoded supplier information
-      SupplierId: "118a048f-dcbe-46e3-9e02-e3838f40e628",
-      Name: "Sligro",
-      ContactEmail: "customerservicemidden@sligro.nl",
+      SupplierId: supplierId,
+      Name: delivery.supplier.name,
+      ContactEmail: delivery.supplier.contactEmail,
     };
 
     // Try adding optional fields
     if (selectedBarId) {
       deliveryData.BarId = selectedBarId;
     }
-
+console.log("✅ Final delivery payload:", deliveryData);
     return deliveryData;
   };
 
