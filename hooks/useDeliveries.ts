@@ -44,6 +44,8 @@ export function useProcessDeliveryNote() {
           },
         };
       });
+      queryClient.setQueryData(["deliveries", "removedIds"], []);
+      queryClient.setQueryData(["deliveries", "status"], {});
     },
   });
 }

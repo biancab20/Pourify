@@ -12,6 +12,8 @@ export type DeliveryItem = {
   cases: number;
   cans: number;
   status?: DeliveryStatus;
+  expectedUnits?: number;
+  receivedUnits?: number;
   notes?: string;
   substitutedWith?: string;
 };
@@ -52,7 +54,7 @@ export default function ListItem({
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(true);
-
+  const isSwipingRef = useRef(false);
   const buttonRef = useRef<View>(null);
   const swipeableRef = useRef<Swipeable>(null);
 
@@ -65,7 +67,15 @@ export default function ListItem({
 
   // Calculate units: total volume divided by product volume
   const calculateUnits = () => {
-    // cases is total volume, cans is product volume
+    // ✅ show received units for quantity mismatch
+    if (
+      delivery.status === "quantity_mismatch" &&
+      typeof delivery.receivedUnits === "number"
+    ) {
+      return delivery.receivedUnits;
+    }
+
+    // default expected
     if (delivery.cans === 0) return 0;
     return delivery.cases / delivery.cans;
   };
@@ -99,6 +109,7 @@ export default function ListItem({
   };
 
   const handleItemPress = () => {
+    if (isSwipingRef.current) return; // prevent tap during swipe
     if (isSelectMode && onSelectPress) {
       onSelectPress(delivery);
     } else {
@@ -206,6 +217,12 @@ export default function ListItem({
         leftThreshold={100}
         friction={3}
         enabled={!isSelectMode}
+        onSwipeableWillOpen={() => {
+          isSwipingRef.current = true;
+        }}
+        onSwipeableClose={() => {
+          isSwipingRef.current = false;
+        }}
         onSwipeableOpen={(side) => side === "left" && handleSwipeComplete()}
       >
         {Content}

@@ -7,6 +7,7 @@ import {
   Modal,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Text } from "@/components/shared/Text";
 import InputBox from "@/components/dynamicComponents/SearchBar";
 import ListItem from "@/components/dynamicComponents/ListItem";
@@ -64,7 +65,7 @@ const DeliveryList = ({
     new Set()
   );
   const [helpVisible, setHelpVisible] = React.useState(false);
-
+  const router = useRouter();
   const shortHint =
     "Swipe to mark delivered · Long-press to select multiple · Tap to report what you received";
 
@@ -113,7 +114,9 @@ const DeliveryList = ({
       deliveries.length > 0 && localRemovedIds.length === deliveries.length
     );
   }, [deliveries.length, localRemovedIds.length]);
-
+  React.useEffect(() => {
+    setLocalRemovedIds(removedIds);
+  }, [removedIds]);
   const handleSearch = (value: string | number) => {
     const query = value.toString();
     setSearchQuery(query);
@@ -161,10 +164,16 @@ const DeliveryList = ({
           text: "Quantity doesn’t match",
           onPress: () => {
             onAction?.(item, "quantity_mismatch");
-            Alert.alert(
-              "Quantity mismatch noted",
-              "Later, we’ll ask you what quantity you actually received."
-            );
+            router.push({
+              pathname: "/(scan-flow)/quantity-mismatch",
+              params: {
+                id: item.id,
+                name: item.name,
+                cases: String(item.cases),
+                cans: String(item.cans),
+                unitLabel: "Bottles",
+              },
+            });
           },
         },
         {

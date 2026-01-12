@@ -20,7 +20,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Helper function to convert string to Title Case
 const toTitleCase = (str: string): string => {
   if (!str) return str;
-
   return str
     .toLowerCase()
     .split(" ")
@@ -57,10 +56,7 @@ function Section({ title, items, searchQuery }: SectionProps) {
       {filteredItems.map((item) => (
         <ListItem
           key={item.id}
-          delivery={{
-            ...item,
-            name: toTitleCase(item.name),
-          }}
+          delivery={{ ...item, name: toTitleCase(item.name) }}
           readOnly
         />
       ))}
@@ -74,7 +70,9 @@ export default function DeliverySummary() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { getAll } = useDeliveryStatus();
+  // ✅ NEW: statusMap is reactive
+  const { statusMap } = useDeliveryStatus();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
 
@@ -89,6 +87,7 @@ export default function DeliverySummary() {
   const ocrResponse =
     queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
     null;
+
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
     return ocrResponse;
@@ -131,11 +130,11 @@ export default function DeliverySummary() {
         valueNumberOfLines: 1,
         onEditPress: () => {
           Alert.alert(
-            "Supplier Information",
-            "Supplier is hardcoded to Sligro while backend is being fixed."
+            "Supplier",
+            "Supplier is shown from OCR / checked supplier."
           );
         },
-        showEdit: false, // Disable edit since it's hardcoded
+        showEdit: false,
         editA11yLabel: "View supplier info",
       },
       {
@@ -162,10 +161,7 @@ export default function DeliverySummary() {
                 text: bar.name,
                 onPress: () => setSelectedBarId(bar.barId),
               })),
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
+              { text: "Cancel", style: "cancel" },
             ]);
           } else {
             Alert.alert("No Bars", "Please create a bar first");
@@ -178,20 +174,21 @@ export default function DeliverySummary() {
     [delivery, bars, selectedBarId]
   );
 
-  // Get all delivery items with their status
+  // ✅ Get all delivery items from statusMap
   const all = useMemo(() => {
-    const items = Object.values(getAll());
+    const items = Object.values(statusMap ?? {});
     return items.map((item) => ({
       ...item,
       name: toTitleCase(item.name),
     }));
-  }, [getAll]);
+  }, [statusMap]);
 
   // Categorize items
   const received = all.filter((i) => i.status === "received");
   const damaged = all.filter((i) => i.status === "damaged");
   const missing = all.filter((i) => i.status === "missing");
   const substituted = all.filter((i) => i.status === "substituted");
+  const qtyMismatch = all.filter((i) => i.status === "quantity_mismatch");
 
   // Count filtered items
   const filteredItemsCount = useMemo(() => {
@@ -208,18 +205,8 @@ export default function DeliverySummary() {
   // Helper function to ensure DeliveryPilePictureId is always a UUID string
   const getDeliveryPilePictureId = (): string => {
     const pilePictureId = delivery?.deliveryPilePictureId;
-
-    // If it's null or undefined, return the zero UUID
-    if (!pilePictureId) {
-      return "00000000-0000-0000-0000-000000000000";
-    }
-
-    // If it's already a string, return it
-    if (typeof pilePictureId === "string") {
-      return pilePictureId;
-    }
-
-    // Otherwise, return the zero UUID as fallback
+    if (!pilePictureId) return "00000000-0000-0000-0000-000000000000";
+    if (typeof pilePictureId === "string") return pilePictureId;
     return "00000000-0000-0000-0000-000000000000";
   };
 
@@ -227,22 +214,7 @@ export default function DeliverySummary() {
   const prepareDeliveryData = () => {
     if (!delivery) return null;
 
-    // Create products in the correct format based on your DB schema
-    const products = delivery.products.map((product: DeliveryProduct) => {
-      return {
-        ProductId: product.productId,
-        Name: product.name || `Product ${product.productId}`,
-        Volume: product.volume || 0,
-        Type: product.type,
-        TotalVolume: product.totalVolume || 0,
-      };
-    });
-
-    // Filter out any invalid products
-    const validProducts = products.filter((p) => p && p.ProductId);
-
     const supplierId = delivery?.supplier?.supplierId;
-
     if (!supplierId || supplierId === "00000000-0000-0000-0000-000000000000") {
       Alert.alert(
         "Supplier missing",
@@ -250,27 +222,42 @@ export default function DeliverySummary() {
       );
       return null;
     }
-    // Create delivery data
+
+    // NOTE: right now you're still saving "expected" products.
+    // Later you’ll build Products from statusMap to represent what was received.
+    const products = delivery.products.map((product: DeliveryProduct) => ({
+      ProductId: product.productId,
+      Name: product.name || `Product ${product.productId}`,
+      Volume: product.volume || 0,
+      Type: product.type,
+      TotalVolume: product.totalVolume || 0,
+    }));
+
+    const validProducts = products.filter((p) => p && p.ProductId);
+
     const deliveryData: any = {
       DeliveryNoteId: delivery.deliveryNoteId,
       DeliveryDate: delivery.deliveryDate,
       DeliveryNotePictureIds: delivery.deliveryNotePictureIds || [],
       DeliveryPilePictureId: getDeliveryPilePictureId(),
       Products: validProducts,
-      // Hardcoded supplier information
+
       SupplierId: supplierId,
       Name: delivery.supplier.name,
       ContactEmail: delivery.supplier.contactEmail,
     };
 
-    // Try adding optional fields
-    if (selectedBarId) {
-      deliveryData.BarId = selectedBarId;
-    }
+    if (selectedBarId) deliveryData.BarId = selectedBarId;
+
+    // Debug: expected vs received
+    const expected = queryClient.getQueryData(["deliveries", "latest"]);
+    const receivedStore = queryClient.getQueryData(["deliveries", "status"]);
+    console.log("🟦 EXPECTED (OCR):", expected);
+    console.log("🟩 RECEIVED (store):", receivedStore);
+
     return deliveryData;
   };
 
-  // Handle actual save - REMOVED THE ALERT
   const handleSave = async () => {
     if (!delivery) {
       Alert.alert("Error", "No delivery data found");
@@ -289,7 +276,6 @@ export default function DeliverySummary() {
       // Clear the OCR cache and reset form
       queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
 
-      // Navigate to success screen
       router.push("/(scan-flow)/successful-delivery");
     } catch (error: any) {
       Alert.alert(
@@ -317,7 +303,6 @@ export default function DeliverySummary() {
           Delivery Summary
         </Text>
 
-        {/* Supplier, Date, and Bar Info Card */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
             rows={infoRows}
@@ -325,19 +310,12 @@ export default function DeliverySummary() {
           />
         </View>
 
-        {/* Search Bar */}
         <InputBox
           placeholder="Search items..."
           initialValue=""
           onSearch={handleSearch}
         />
 
-        {/* Search results count */}
-        {searchQuery && (
-          <Text style={[styles.resultsText, { color: colors.text }]}></Text>
-        )}
-
-        {/* No results state */}
         {showNoResults ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: colors.text }]}>
@@ -366,6 +344,11 @@ export default function DeliverySummary() {
               items={substituted}
               searchQuery={searchQuery}
             />
+            <Section
+              title="Quantity mismatch"
+              items={qtyMismatch}
+              searchQuery={searchQuery}
+            />
 
             {all.length === 0 && (
               <View style={styles.emptyState}>
@@ -392,48 +375,14 @@ export default function DeliverySummary() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginVertical: 16,
-  },
-  infoContainer: {
-    marginBottom: 16,
-  },
-  editableCardStyle: {
-    borderRadius: 12,
-  },
-  resultsText: {
-    marginTop: 12,
-    marginBottom: 16,
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  buttonWrapper: {
-    padding: 16,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-  },
+  container: { flex: 1, paddingHorizontal: 16 },
+  scrollContent: { paddingBottom: 20 },
+  title: { fontSize: 32, fontWeight: "700", marginVertical: 16 },
+  infoContainer: { marginBottom: 16 },
+  editableCardStyle: { borderRadius: 12 },
+  section: { marginBottom: 32 },
+  sectionTitle: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  buttonWrapper: { padding: 16 },
+  emptyState: { padding: 40, alignItems: "center" },
+  emptyText: { fontSize: 16, fontWeight: "500", textAlign: "center" },
 });

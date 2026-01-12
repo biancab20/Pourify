@@ -6,6 +6,8 @@ export type DeliveryProductStatus = {
   cases: number;
   cans: number;
   status: DeliveryStatus;
+  expectedUnits: number;
+  receivedUnits: number;
   notes?: string;
 };
 
