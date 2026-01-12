@@ -89,8 +89,6 @@ export default function DeliverySummary() {
   const ocrResponse =
     queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
     null;
-console.log("📥 DeliverySummary cache delivery:", ocrResponse);
-console.log("📥 DeliverySummary supplier:", ocrResponse?.supplier);
   const delivery = useMemo(() => {
     if (!ocrResponse) return null;
     return ocrResponse;
@@ -244,11 +242,7 @@ console.log("📥 DeliverySummary supplier:", ocrResponse?.supplier);
     const validProducts = products.filter((p) => p && p.ProductId);
 
     const supplierId = delivery?.supplier?.supplierId;
-console.log("🛠 Preparing delivery data with:", {
-  delivery,
-  supplier: delivery?.supplier,
-});
-console.log("❌ SupplierId invalid:", supplierId);
+
     if (!supplierId || supplierId === "00000000-0000-0000-0000-000000000000") {
       Alert.alert(
         "Supplier missing",
@@ -273,7 +267,6 @@ console.log("❌ SupplierId invalid:", supplierId);
     if (selectedBarId) {
       deliveryData.BarId = selectedBarId;
     }
-console.log("✅ Final delivery payload:", deliveryData);
     return deliveryData;
   };
 

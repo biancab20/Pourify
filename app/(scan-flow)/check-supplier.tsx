@@ -193,17 +193,11 @@ export default function CheckSupplier() {
     if (!suppliersQuery.data && !suppliersQuery.isLoading) {
       await suppliersQuery.refetch();
     }
-    console.log(
-      "🧾 Suppliers from API:",
-      suppliersQuery.data?.value ?? suppliers
-    );
-    console.log("🧾 OCR supplier name:", name);
     // Try resolve ID from current list
     let supplierId = findSupplierIdByName(
       suppliersQuery.data?.value ?? suppliers,
       name
     );
-console.log("🔍 Resolved supplierId BEFORE create:", supplierId);
     // If not found, ask user to add new supplier
     if (!supplierId) {
       const shouldAdd = await confirmYesNo(
@@ -218,15 +212,9 @@ console.log("🔍 Resolved supplierId BEFORE create:", supplierId);
       const email = String(draft?.supplier?.contactEmail ?? "").trim();
 
       await createSupplier.mutateAsync({ name, email });
-console.log("➕ Supplier created, refetching suppliers...");
       // refresh list and resolve again
       const refreshed = await suppliersQuery.refetch();
       supplierId = findSupplierIdByName(refreshed.data?.value ?? [], name);
-      console.log("🧾 Suppliers AFTER create:", refreshed.data?.value ?? []);
-console.log(
-  "🔍 Resolved supplierId AFTER create:",
-  findSupplierIdByName(refreshed.data?.value ?? [], name)
-);
     }
 
     // If still no supplierId, stop
@@ -249,10 +237,6 @@ console.log(
           }
         : prev
     );
-console.log("💾 Saving supplierId into cache:", {
-  supplierId,
-  name,
-});
     queryClient.setQueryData(["deliveries", "latest"], (old: any) => {
       if (!old) return old;
       return {
@@ -264,10 +248,6 @@ console.log("💾 Saving supplierId into cache:", {
         },
       };
     });
-    console.log(
-  "🧠 Cached delivery AFTER supplier resolve:",
-  queryClient.getQueryData(["deliveries", "latest"])
-);
   };
 
   const goToNextStep = async () => {
