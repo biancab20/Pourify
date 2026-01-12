@@ -5,16 +5,18 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  FlatList,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import FormInput from "@/components/dynamicComponents/FormInput";
+import SearchBar from "@/components/dynamicComponents/SearchBar";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text as CustomText } from "@/components/shared/Text";
 import { Icon } from "@/components/icons/Icon";
-import ConfigSectionCard from "@/components/dynamicComponents/ConfigSectionCard";
-import { ConfigRow } from "@/components/dynamicComponents/ConfigRow";
+import InfoBox from "@/components/dynamicComponents/InfoBox";
+import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 import { useAppTheme } from "@/stores/app-theme-context";
 
 import { useProducts } from "@/hooks/useProducts";
@@ -39,7 +41,7 @@ type Supplier = {
 type ManualProduct = {
   id: string;
   product: Product;
-  bottles: number;
+  units: number;
   totalVolume: number;
 };
 
@@ -70,7 +72,7 @@ export default function ManualDeliveryScreen() {
   }, [supplierQuery, suppliersData]);
 
   /* ---------------------------------- */
-  /* Products                            */
+  /* Products                           */
   /* ---------------------------------- */
   const { data: productsData } = useProducts();
 
@@ -78,7 +80,7 @@ export default function ManualDeliveryScreen() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(
     null
   );
-  const [bottles, setBottles] = useState<string>("");
+  const [units, setUnits] = useState<string>("");
 
   const productSuggestions = useMemo(() => {
     const list: Product[] = productsData?.value ?? [];
@@ -102,9 +104,9 @@ export default function ManualDeliveryScreen() {
 
   const validateProduct = () => {
     if (!selectedProduct) return "Please select a product from the list.";
-    const qty = Number(bottles);
+    const qty = Number(units);
     if (!Number.isInteger(qty) || qty <= 0)
-      return "Please enter a valid number of bottles.";
+      return "Please enter a valid number of units.";
     return null;
   };
 
@@ -115,22 +117,49 @@ export default function ManualDeliveryScreen() {
     const error = validateProduct();
     if (error) return Alert.alert("Missing info", error);
 
-    const qty = Number(bottles);
+    const qty = Number(units);
     const totalVolume = selectedProduct!.volume * qty;
 
-    setItems((prev) => [
-      {
-        id: `local-${Date.now()}`,
-        product: selectedProduct!,
-        bottles: qty,
-        totalVolume,
-      },
-      ...prev,
-    ]);
+    setItems((prev) => {
+      // Check if product already exists in the list
+      const existingItemIndex = prev.findIndex(
+        item => item.product.productId === selectedProduct!.productId
+      );
+
+      if (existingItemIndex !== -1) {
+        // Update existing item with combined units
+        const newItems = [...prev];
+        const existingItem = newItems[existingItemIndex];
+        newItems[existingItemIndex] = {
+          ...existingItem,
+          units: existingItem.units + qty,
+          totalVolume: existingItem.totalVolume + totalVolume,
+        };
+        return newItems;
+      } else {
+        // Add new item
+        return [
+          {
+            id: `local-${Date.now()}`,
+            product: selectedProduct!,
+            units: qty,
+            totalVolume,
+          },
+          ...prev,
+        ];
+      }
+    });
 
     setProductQuery("");
-    setBottles("");
+    setUnits("");
     setSelectedProduct(null);
+  };
+
+  /* ---------------------------------- */
+  /* Remove product                     */
+  /* ---------------------------------- */
+  const onRemoveProduct = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
   };
 
   /* ---------------------------------- */
@@ -162,7 +191,7 @@ export default function ManualDeliveryScreen() {
 
     const payload = items.map((i) => ({
       productId: i.product.productId,
-      bottles: i.bottles,
+      units: i.units,
       totalVolume: i.totalVolume,
     }));
 
@@ -178,53 +207,85 @@ export default function ManualDeliveryScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      edges={["top", "bottom"]}
+      edges={Platform.OS === "android" ? ["bottom", "top"] : ["bottom"]}
     >
+      {/* Android Navigation Bar */}
+      {Platform.OS === "android" && (
+        <AndroidCustomNavigation 
+          onBack={router.back} 
+          paddingHorizontal={10} 
+        />
+      )}
+
       <ScrollView contentContainerStyle={styles.content}>
-        <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
-          Manual Delivery
-        </CustomText>
-
-        <CustomText style={[styles.subtitle, { color: theme.colors.text }]}>
-          Select a supplier and add products with bottle counts.
-        </CustomText>
-
-        {/* ---------------- Supplier ---------------- */}
-        <View style={styles.formCard}>
-          <CustomText style={[styles.label, { color: theme.colors.text }]}>
-            Supplier
+        <View style={styles.header}>
+          <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
+            Manual Delivery
           </CustomText>
+          
+        </View>
+
+        {/* ---------------- Supplier Section ---------------- */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Supplier
+            </CustomText>
+            <CustomText style={[styles.sectionDescription, { color: theme.colors.text }]}>
+              Choose which supplier made this delivery from your suppliers list
+            </CustomText>
+          </View>
 
           {selectedSupplier ? (
-            <Pressable
-              style={[styles.selectPill, { backgroundColor: theme.colors.background }]}
-              onPress={() => setSelectedSupplier(null)}
-            >
-              <CustomText>{selectedSupplier.name}</CustomText>
-              <Icon name="exit" size={18} color={theme.colors.icon} />
-            </Pressable>
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+              <View style={styles.supplierRow}>
+                <CustomText 
+                  style={[styles.supplierName, { color: theme.colors.text }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {selectedSupplier.name}
+                </CustomText>
+                <Pressable
+                  onPress={() => {
+                    setSelectedSupplier(null);
+                    setSupplierQuery("");
+                  }}
+                  style={styles.removeButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove supplier"
+                >
+                  <Icon name="delete" size={20} />
+                </Pressable>
+              </View>
+            </View>
           ) : (
             <>
-              <FormInput
-                placeholder="Type supplier name…"
+              <SearchBar
+                placeholder="Search for supplier…"
                 value={supplierQuery}
-                onChange={(v: string | number) =>
-                  setSupplierQuery(String(v))
-                }
+                onChangeText={setSupplierQuery}
+                accessibilityLabel="Search for supplier"
               />
 
               {supplierSuggestions.length > 0 && (
-                <View style={[styles.suggestions, { backgroundColor: theme.colors.background }]}>
+                <View style={[styles.suggestions, { 
+                  backgroundColor: theme.colors.cardBackground,
+                  borderWidth: 1,
+                  borderColor: theme.colors.background,
+                }]}>
                   {supplierSuggestions.slice(0, 5).map((s) => (
                     <Pressable
                       key={s.supplierId}
                       style={styles.suggestionRow}
                       onPress={() => {
-                        setSupplierQuery(s.name);
                         setSelectedSupplier(s);
+                        setSupplierQuery(s.name);
                       }}
                     >
-                      <CustomText>{s.name}</CustomText>
+                      <CustomText style={{ color: theme.colors.text }}>
+                        {s.name}
+                      </CustomText>
                     </Pressable>
                   ))}
                 </View>
@@ -233,88 +294,154 @@ export default function ManualDeliveryScreen() {
           )}
         </View>
 
-        {/* ---------------- Product ---------------- */}
-        <View style={styles.formCard}>
-          <CustomText style={[styles.label, { color: theme.colors.text }]}>
-            Product
-          </CustomText>
-          <FormInput
-            placeholder="Type product name…"
-            value={productQuery}
-            onChange={(v: string | number) => {
-              setProductQuery(String(v));
-              setSelectedProduct(null);
-            }}
-          />
-
-          {productSuggestions.length > 0 && !selectedProduct && (
-            <View style={[styles.suggestions, { backgroundColor: theme.colors.background }]}>
-              {productSuggestions.slice(0, 5).map((p) => (
-                <Pressable
-                  key={p.productId}
-                  style={styles.suggestionRow}
-                  onPress={() => {
-                    setProductQuery(p.name);
-                    setSelectedProduct(p);
-                  }}
-                >
-                  <CustomText>{p.name}</CustomText>
-                  <CustomText style={{ opacity: 0.6 }}>{p.volume} L</CustomText>
-                </Pressable>
-              ))}
-            </View>
-          )}
-
-          <View style={styles.field}>
-            <CustomText style={[styles.label, { color: theme.colors.text }]}>
-              Bottles
+        {/* ---------------- Products Section ---------------- */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Products
             </CustomText>
-            <FormInput
-              value={bottles}
-              onChange={(v: string | number) => setBottles(String(v))}
-              placeholder="e.g. 6"
-              type="number"
-              min={1}
-            />
+            <CustomText style={[styles.sectionDescription, { color: theme.colors.text }]}>
+              Add products and their delivered quantities
+            </CustomText>
           </View>
 
-          {selectedProduct && bottles && (
-            <CustomText style={{ opacity: 0.7 }}>
-              Total volume: {Number(bottles) * selectedProduct.volume} L
-            </CustomText>
-          )}
+          <View style={styles.formCard}>
+            <View style={styles.inputGroup}>
+              <CustomText style={[styles.inputLabel, { color: theme.colors.text }]}>
+                Product Name
+              </CustomText>
+              <SearchBar
+                placeholder="Search product…"
+                value={productQuery}
+                onChangeText={(value) => {
+                  setProductQuery(value);
+                  setSelectedProduct(null);
+                }}
+                accessibilityLabel="Search for product"
+              />
 
-          <GradientButton
-            text="Add Product"
-            onPress={onAddProduct}
-            gradientName="bananaDaiquiri"
-            style={{ marginTop: 8 }}
-          />
+              {productSuggestions.length > 0 && !selectedProduct && (
+                <View style={[styles.suggestions, { 
+                  backgroundColor: theme.colors.cardBackground,
+                  borderWidth: 1,
+                  borderColor: theme.colors.background,
+                }]}>
+                  {productSuggestions.slice(0, 5).map((p) => (
+                    <Pressable
+                      key={p.productId}
+                      style={styles.suggestionRow}
+                      onPress={() => {
+                        setProductQuery(p.name);
+                        setSelectedProduct(p);
+                      }}
+                    >
+                      <View style={styles.productSuggestion}>
+                        <CustomText style={{ color: theme.colors.text }}>
+                          {p.name}
+                        </CustomText>
+                        <CustomText style={{ color: theme.colors.text, opacity: 0.6 }}>
+                          {p.volume}L
+                        </CustomText>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <CustomText style={[styles.inputLabel, { color: theme.colors.text }]}>
+                Units Delivered
+              </CustomText>
+              <SearchBar
+                placeholder="Enter quantity…"
+                value={units}
+                onChangeText={setUnits}
+                accessibilityLabel="Enter number of units"
+              />
+            </View>
+
+            <GradientButton
+              text="Add to List"
+              onPress={onAddProduct}
+              gradientName="bananaDaiquiri"
+              style={{ marginTop: 16 }}
+            />
+          </View>
         </View>
 
-        {/* ---------------- Product List ---------------- */}
-        <ConfigSectionCard<ManualProduct>
-          title={`Added products (${items.length})`}
-          items={items}
-          emptyText="No products added yet"
-          keyExtractor={(i) => i.id}
-          renderItem={({ item }) => (
-            <ConfigRow
-              title={item.product.name}
-              leftIconName="cube-outline"
-              rightLabel={`${item.bottles} × ${item.product.volume} L = ${item.totalVolume} L`}
-            />
-          )}
-          addLabel="Add product"
-          onAdd={onAddProduct}
-        />
+        {/* ---------------- Products List ---------------- */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+              Delivery Summary
+            </CustomText>
+          </View>
 
-        <GradientButton
-          text="Save"
-          onPress={onSave}
-          gradientName="paloma"
-          style={{ marginTop: 18 }}
-        />
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+            {items.length === 0 ? (
+              <View style={styles.emptyState}>
+                <CustomText style={[styles.emptyText, { color: theme.colors.text }]}>
+                  No products added yet
+                </CustomText>
+                <CustomText style={[styles.emptySubtext, { color: theme.colors.text }]}>
+                  Add products above to create your delivery
+                </CustomText>
+              </View>
+            ) : (
+              <FlatList
+                data={items}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.productRow}>
+                    <View style={styles.productInfo}>
+                      <CustomText 
+                        style={[styles.productName, { color: theme.colors.text }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {item.product.name}
+                      </CustomText>
+                    </View>
+                    <View style={styles.productRightSection}>
+                      <InfoBox
+                        title={item.units}
+                        subtitle="units"
+                        style={styles.infoBox}
+                      />
+                      <Pressable
+                        onPress={() => onRemoveProduct(item.id)}
+                        style={styles.removeButton}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${item.product.name}`}
+                      >
+                        <Icon name="delete" size={20}/>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={[
+                      styles.separator,
+                      { backgroundColor: theme.colors.background },
+                    ]}
+                  />
+                )}
+              />
+            )}
+          </View>
+        </View>
+
+        {/* ---------------- Actions ---------------- */}
+        <View style={styles.actions}>
+          <GradientButton
+            text="Save Delivery"
+            onPress={onSave}
+            gradientName="paloma"
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -325,33 +452,142 @@ export default function ManualDeliveryScreen() {
 /* ---------------------------------- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 24 },
+  content: { 
+    paddingHorizontal: 16, 
+    paddingBottom: 32,
+    paddingTop: Platform.OS === "ios" ? 16 : 8,
+  },
 
-  title: { fontSize: 40, fontWeight: "700", marginTop: 8 },
-  subtitle: { marginTop: 12, fontSize: 16, marginBottom: 16 },
+  header: {
+    marginBottom: 24,
+  },
+  title: { 
+    fontSize: 32, 
+    fontWeight: "700", 
+    marginBottom: 8,
+  },
 
-  formCard: { gap: 14, paddingBottom: 20 },
-  field: { gap: 8 },
-  label: { fontSize: 13 },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.7,
+  },
 
-  selectPill: {
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+  formCard: {
+    gap: 16,
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  card: {
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+
+  supplierRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  supplierName: {
+    fontSize: 16,
+    flex: 1,
+    marginRight: 12,
+    fontWeight: "500",
   },
 
   suggestions: {
     borderRadius: 12,
-    marginTop: 6,
+    marginTop: 8,
     overflow: "hidden",
   },
   suggestionRow: {
     padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  productSuggestion: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+
+  emptyState: {
+    paddingVertical: 32,
+    alignItems: "center",
+    gap: 12,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    opacity: 0.6,
+  },
+
+  productRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  productInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  productName: {
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  productRightSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  infoBox: {
+    margin: 0,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    minWidth: 60,
+    maxWidth: 80,
+  },
+  removeButton: {
+    padding: 4,
+  },
+
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 16,
+  },
+
+  actions: {
+    paddingTop: 8,
+    paddingBottom: 16,
   },
 });

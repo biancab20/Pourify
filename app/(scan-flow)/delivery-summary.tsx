@@ -1,4 +1,3 @@
-// app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
@@ -10,7 +9,6 @@ import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";
 import { useAppTheme } from "@/stores/app-theme-context";
-import type { DeliveryOcrResponse, DeliveryProduct } from "@/types/deliveries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -20,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Helper function to convert string to Title Case
 const toTitleCase = (str: string): string => {
   if (!str) return str;
-
   return str
     .toLowerCase()
     .split(" ")
@@ -78,22 +75,13 @@ export default function DeliverySummary() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
 
-  // Get bars for selection
   const { data: barsData } = useBars();
   const bars = useMemo(() => barsData?.value || [], [barsData]);
 
-  // Get the create delivery mutation
   const createDeliveryMutation = useCreateDelivery();
 
-  // Get OCR data
-  const ocrResponse =
-    queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
-    null;
-
-  const delivery = useMemo(() => {
-    if (!ocrResponse) return null;
-    return ocrResponse;
-  }, [ocrResponse]);
+  // Get latest delivery (OCR or manual)
+  const latestDelivery = queryClient.getQueryData<any>(["deliveries", "latest"]);
 
   // Auto-select first bar if available
   useEffect(() => {
@@ -102,16 +90,12 @@ export default function DeliverySummary() {
     }
   }, [bars, selectedBarId]);
 
-  // Format date from OCR data
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No date found";
-
     try {
       if (dateString.includes("/")) return dateString;
-
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -122,31 +106,23 @@ export default function DeliverySummary() {
     }
   };
 
-  // Define rows for the EditableSectionCard
   const infoRows = useMemo(
     () => [
       {
         id: "supplier",
         title: "Supplier",
-        value: "Sligro (Hardcoded)", // Updated to show hardcoded supplier
+        value: latestDelivery?.supplier?.name || "Unknown",
         valueNumberOfLines: 1,
-        onEditPress: () => {
-          Alert.alert(
-            "Supplier Information",
-            "Supplier is hardcoded to Sligro while backend is being fixed."
-          );
-        },
-        showEdit: false, // Disable edit since it's hardcoded
+        onEditPress: () => {},
+        showEdit: false,
         editA11yLabel: "View supplier info",
       },
       {
         id: "date",
         title: "Date",
-        value: formatDate(delivery?.deliveryDate),
+        value: formatDate(latestDelivery?.deliveryDate),
         valueNumberOfLines: 1,
-        onEditPress: () => {
-          Alert.alert("Edit Date", "Edit date functionality");
-        },
+        onEditPress: () => {},
         showEdit: true,
         editA11yLabel: "Edit date",
       },
@@ -154,50 +130,44 @@ export default function DeliverySummary() {
         id: "bar",
         title: "Bar",
         value:
-          bars.find((b) => b.barId === selectedBarId)?.name || "Select a bar",
+          bars.find((b) => b.barId === selectedBarId)?.name ||
+          "Select a bar",
         valueNumberOfLines: 1,
-        onEditPress: () => {
-          if (bars.length > 0) {
-            Alert.alert("Select Bar", "Choose a bar for this delivery:", [
-              ...bars.map((bar) => ({
-                text: bar.name,
-                onPress: () => setSelectedBarId(bar.barId),
-              })),
-              {
-                text: "Cancel",
-                style: "cancel",
-              },
-            ]);
-          } else {
-            Alert.alert("No Bars", "Please create a bar first");
-          }
-        },
+        onEditPress: () => {},
         showEdit: true,
         editA11yLabel: "Select bar",
       },
     ],
-    [delivery, bars, selectedBarId]
+    [latestDelivery, bars, selectedBarId]
   );
 
-  // Get all delivery items with their status
+  // Merge manual delivery items with status items
   const all = useMemo(() => {
-    const items = Object.values(getAll());
-    return items.map((item) => ({
+    const statusItems = Object.values(getAll()).map((item) => ({
       ...item,
       name: toTitleCase(item.name),
     }));
-  }, [getAll]);
 
-  // Categorize items
+    if (latestDelivery?.products?.length) {
+      const manualItems = latestDelivery.products.map((p: any) => ({
+        id: p.id || `manual-${p.product?.productId || Date.now()}`,
+        name: p.product?.name || p.name,
+        status: "received",
+        ...p,
+      }));
+      return [...manualItems, ...statusItems];
+    }
+
+    return statusItems;
+  }, [getAll, latestDelivery]);
+
   const received = all.filter((i) => i.status === "received");
   const damaged = all.filter((i) => i.status === "damaged");
   const missing = all.filter((i) => i.status === "missing");
   const substituted = all.filter((i) => i.status === "substituted");
 
-  // Count filtered items
   const filteredItemsCount = useMemo(() => {
     if (!searchQuery.trim()) return all.length;
-
     const query = searchQuery.toLowerCase();
     return all.filter(
       (item) =>
@@ -206,83 +176,11 @@ export default function DeliverySummary() {
     ).length;
   }, [all, searchQuery]);
 
-  // Helper function to ensure DeliveryPilePictureId is always a UUID string
-  const getDeliveryPilePictureId = (): string => {
-    const pilePictureId = delivery?.deliveryPilePictureId;
-
-    // If it's null or undefined, return the zero UUID
-    if (!pilePictureId) {
-      return "00000000-0000-0000-0000-000000000000";
-    }
-
-    // If it's already a string, return it
-    if (typeof pilePictureId === "string") {
-      return pilePictureId;
-    }
-
-    // Otherwise, return the zero UUID as fallback
-    return "00000000-0000-0000-0000-000000000000";
-  };
-
-  // Prepare delivery data for saving
-  const prepareDeliveryData = () => {
-    if (!delivery) return null;
-
-    // Create products in the correct format based on your DB schema
-    const products = delivery.products.map((product: DeliveryProduct) => {
-      return {
-        ProductId: product.productId,
-        Name: product.name || `Product ${product.productId}`,
-        Volume: product.volume || 0,
-        Type: product.type,
-        TotalVolume: product.totalVolume || 0,
-      };
-    });
-
-    // Filter out any invalid products
-    const validProducts = products.filter((p) => p && p.ProductId);
-
-    // Create delivery data with HARDCODED SUPPLIER
-    const deliveryData: any = {
-      DeliveryNoteId: delivery.deliveryNoteId,
-      DeliveryDate: delivery.deliveryDate,
-      DeliveryNotePictureIds: delivery.deliveryNotePictureIds || [],
-      DeliveryPilePictureId: getDeliveryPilePictureId(),
-      Products: validProducts,
-      // Hardcoded supplier information
-      SupplierId: "118a048f-dcbe-46e3-9e02-e3838f40e628",
-      Name: "Sligro",
-      ContactEmail: "customerservicemidden@sligro.nl",
-    };
-
-    // Try adding optional fields
-    if (selectedBarId) {
-      deliveryData.BarId = selectedBarId;
-    }
-
-    return deliveryData;
-  };
-
-  // Handle actual save - REMOVED THE ALERT
   const handleSave = async () => {
-    if (!delivery) {
-      Alert.alert("Error", "No delivery data found");
-      return;
-    }
-
-    const deliveryData = prepareDeliveryData();
-    if (!deliveryData) {
-      Alert.alert("Error", "Could not prepare delivery data");
-      return;
-    }
-
+    if (!latestDelivery) return;
     try {
-      await createDeliveryMutation.mutateAsync(deliveryData);
-
-      // Clear the OCR cache and reset form
+      await createDeliveryMutation.mutateAsync(latestDelivery);
       queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
-
-      // Navigate to success screen
       router.push("/(scan-flow)/successful-delivery");
     } catch (error: any) {
       Alert.alert(
@@ -293,10 +191,7 @@ export default function DeliverySummary() {
     }
   };
 
-  const handleSearch = (value: string | number) => {
-    setSearchQuery(value.toString());
-  };
-
+  const handleSearch = (value: string | number) => setSearchQuery(value.toString());
   const showNoResults = searchQuery.trim() && filteredItemsCount === 0;
 
   return (
@@ -310,7 +205,6 @@ export default function DeliverySummary() {
           Delivery Summary
         </Text>
 
-        {/* Supplier, Date, and Bar Info Card */}
         <View style={styles.infoContainer}>
           <EditableSectionCard
             rows={infoRows}
@@ -318,19 +212,12 @@ export default function DeliverySummary() {
           />
         </View>
 
-        {/* Search Bar */}
         <InputBox
           placeholder="Search items..."
           initialValue=""
           onSearch={handleSearch}
         />
 
-        {/* Search results count */}
-        {searchQuery && (
-          <Text style={[styles.resultsText, { color: colors.text }]}></Text>
-        )}
-
-        {/* No results state */}
         {showNoResults ? (
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: colors.text }]}>
@@ -339,26 +226,10 @@ export default function DeliverySummary() {
           </View>
         ) : (
           <>
-            <Section
-              title="Received"
-              items={received}
-              searchQuery={searchQuery}
-            />
-            <Section
-              title="Damaged"
-              items={damaged}
-              searchQuery={searchQuery}
-            />
-            <Section
-              title="Missing"
-              items={missing}
-              searchQuery={searchQuery}
-            />
-            <Section
-              title="Substituted"
-              items={substituted}
-              searchQuery={searchQuery}
-            />
+            <Section title="Received" items={received} searchQuery={searchQuery} />
+            <Section title="Damaged" items={damaged} searchQuery={searchQuery} />
+            <Section title="Missing" items={missing} searchQuery={searchQuery} />
+            <Section title="Substituted" items={substituted} searchQuery={searchQuery} />
 
             {all.length === 0 && (
               <View style={styles.emptyState}>
@@ -375,9 +246,7 @@ export default function DeliverySummary() {
         <GradientButton
           text={createDeliveryMutation.isPending ? "Saving..." : "Save"}
           onPress={handleSave}
-          disabled={
-            all.length === 0 || createDeliveryMutation.isPending || !delivery
-          }
+          disabled={all.length === 0 || createDeliveryMutation.isPending || !latestDelivery}
         />
       </View>
     </SafeAreaView>
@@ -385,48 +254,14 @@ export default function DeliverySummary() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    marginVertical: 16,
-  },
-  infoContainer: {
-    marginBottom: 16,
-  },
-  editableCardStyle: {
-    borderRadius: 12,
-  },
-  resultsText: {
-    marginTop: 12,
-    marginBottom: 16,
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-  buttonWrapper: {
-    padding: 16,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-  },
+  container: { flex: 1, paddingHorizontal: 16 },
+  scrollContent: { paddingBottom: 20 },
+  title: { fontSize: 32, fontWeight: "700", marginVertical: 16 },
+  infoContainer: { marginBottom: 16 },
+  editableCardStyle: { borderRadius: 12 },
+  section: { marginBottom: 32 },
+  sectionTitle: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  buttonWrapper: { padding: 16 },
+  emptyState: { padding: 40, alignItems: "center" },
+  emptyText: { fontSize: 16, fontWeight: "500", textAlign: "center" },
 });
