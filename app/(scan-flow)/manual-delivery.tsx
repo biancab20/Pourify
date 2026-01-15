@@ -1,17 +1,8 @@
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Alert,
-  FlatList,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Pressable, Alert, FlatList, Platform, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
-
 import SearchBar from "@/components/dynamicComponents/SearchBar";
 import GradientButton from "@/components/shared/GradientButton";
 import { Text as CustomText } from "@/components/shared/Text";
@@ -19,15 +10,11 @@ import { Icon } from "@/components/icons/Icon";
 import InfoBox from "@/components/dynamicComponents/InfoBox";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 import { useAppTheme } from "@/stores/app-theme-context";
-
 import { useProducts } from "@/hooks/useProducts";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
-
 import type { DeliveryOcrResponse } from "@/types/deliveries";
 
-/* ---------------------------------- */
-/* Types                              */
-/* ---------------------------------- */
+
 type Product = { productId: string; name: string; volume: number; type: string };
 type Supplier = { supplierId: string; name: string; email?: string };
 
@@ -38,9 +25,6 @@ type ManualProduct = {
   totalVolume: number;
 };
 
-/* ---------------------------------- */
-/* Helpers                            */
-/* ---------------------------------- */
 const toTitleCase = (str: string): string => {
   if (!str) return str;
   return str
@@ -58,9 +42,6 @@ function makeGuid(): string {
   });
 }
 
-/* ---------------------------------- */
-/* Screen                             */
-/* ---------------------------------- */
 export default function ManualDeliveryScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -69,7 +50,6 @@ export default function ManualDeliveryScreen() {
   /* Suppliers */
   const { data: suppliersData } = useSuppliers();
   const createSupplier = useCreateSupplier();
-
   const [supplierQuery, setSupplierQuery] = useState<string>("");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
     null
@@ -84,7 +64,6 @@ export default function ManualDeliveryScreen() {
 
   /* Products */
   const { data: productsData } = useProducts();
-
   const [productQuery, setProductQuery] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [units, setUnits] = useState<string>("");
@@ -98,9 +77,7 @@ export default function ManualDeliveryScreen() {
 
   const [items, setItems] = useState<ManualProduct[]>([]);
 
-  /* ---------------------------------- */
-  /* Add product                        */
-  /* ---------------------------------- */
+  /* Add product */
   const onAddProduct = () => {
     if (!selectedProduct)
       return Alert.alert("Missing info", "Please select a product from the list.");
@@ -144,16 +121,12 @@ export default function ManualDeliveryScreen() {
     setSelectedProduct(null);
   };
 
-  /* ---------------------------------- */
-  /* Remove product                     */
-  /* ---------------------------------- */
+  /* Remove product */
   const onRemoveProduct = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  /* ---------------------------------- */
   /* Save -> cache to delivery summary  */
-  /* ---------------------------------- */
   const onSave = async () => {
     if (!selectedSupplier && !supplierQuery.trim()) {
       return Alert.alert("Missing info", "Please select or type a supplier name.");
@@ -208,12 +181,6 @@ export default function ManualDeliveryScreen() {
       deliveryPilePictureId: null,
     };
 
-    /**
-     * ✅ MUST match your ListItem fields:
-     * - delivery.cans = product volume (L per unit) -> shows in title as X.XXX L
-     * - delivery.cases = total volume (L total)
-     * - units shown = cases / cans
-     */
     const statusMap: Record<
       string,
       {
@@ -251,9 +218,7 @@ export default function ManualDeliveryScreen() {
     router.push("/(scan-flow)/delivery-summary");
   };
 
-  /* ---------------------------------- */
-  /* Render                             */
-  /* ---------------------------------- */
+  /* Render */
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}

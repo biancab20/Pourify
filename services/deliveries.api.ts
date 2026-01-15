@@ -92,10 +92,6 @@ export async function processDeliveryNote(
 export async function createDelivery(
   data: CreateDeliveryDto
 ): Promise<DeliveryDto> {
-  console.log("🚀 SENDING DELIVERY TO API:");
-  console.log("URL:", API.deliveries.create);
-  console.log("DATA:", JSON.stringify(data, null, 2));
-  
   const res = await authedFetch(API.deliveries.create, {
     method: "POST",
     headers: {
@@ -106,22 +102,14 @@ export async function createDelivery(
   });
 
   const text = await res.text();
-  console.log("📦 API RESPONSE:");
-  console.log("Status:", res.status);
-  console.log("Headers:", Object.fromEntries(res.headers.entries()));
-  console.log("Body:", text);
-  
+
   if (!res.ok) {
-    console.error("❌ API ERROR:", text);
     throw toApiError(res, text);
   }
 
   try {
-    const result = JSON.parse(text);
-    console.log("✅ DELIVERY CREATED SUCCESSFULLY:", result);
-    return result;
-  } catch (error) {
-    console.error("❌ JSON PARSE ERROR:", error);
+    return JSON.parse(text);
+  } catch {
     throw {
       message: "Failed to parse JSON response",
       status: res.status,
