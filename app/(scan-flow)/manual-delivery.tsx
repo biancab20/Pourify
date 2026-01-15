@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
 import SearchBar from "@/components/dynamicComponents/SearchBar";
 import GradientButton from "@/components/shared/GradientButton";
@@ -22,21 +23,13 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { useProducts } from "@/hooks/useProducts";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
 
+import type { DeliveryOcrResponse } from "@/types/deliveries";
+
 /* ---------------------------------- */
 /* Types                              */
 /* ---------------------------------- */
-type Product = {
-  productId: string;
-  name: string;
-  volume: number;
-  type: string;
-};
-
-type Supplier = {
-  supplierId: string;
-  name: string;
-  email?: string;
-};
+type Product = { productId: string; name: string; volume: number; type: string };
+type Supplier = { supplierId: string; name: string; email?: string };
 
 type ManualProduct = {
   id: string;
@@ -46,15 +39,34 @@ type ManualProduct = {
 };
 
 /* ---------------------------------- */
+/* Helpers                            */
+/* ---------------------------------- */
+const toTitleCase = (str: string): string => {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
+function makeGuid(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/* ---------------------------------- */
 /* Screen                             */
 /* ---------------------------------- */
 export default function ManualDeliveryScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { theme } = useAppTheme();
 
-  /* ---------------------------------- */
-  /* Suppliers                          */
-  /* ---------------------------------- */
+  /* Suppliers */
   const { data: suppliersData } = useSuppliers();
   const createSupplier = useCreateSupplier();
 
@@ -65,69 +77,47 @@ export default function ManualDeliveryScreen() {
 
   const supplierSuggestions = useMemo(() => {
     const list: Supplier[] = suppliersData?.value ?? [];
-    if (!supplierQuery) return [];
-    return list.filter((s) =>
-      s.name.toLowerCase().includes(supplierQuery.toLowerCase())
-    );
-  }, [supplierQuery, suppliersData]);
+    if (!supplierQuery.trim() || selectedSupplier) return [];
+    const q = supplierQuery.toLowerCase();
+    return list.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 5);
+  }, [supplierQuery, suppliersData, selectedSupplier]);
 
-  /* ---------------------------------- */
-  /* Products                           */
-  /* ---------------------------------- */
+  /* Products */
   const { data: productsData } = useProducts();
 
   const [productQuery, setProductQuery] = useState<string>("");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(
-    null
-  );
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [units, setUnits] = useState<string>("");
 
   const productSuggestions = useMemo(() => {
     const list: Product[] = productsData?.value ?? [];
-    if (!productQuery) return [];
-    return list.filter((p) =>
-      p.name.toLowerCase().includes(productQuery.toLowerCase())
-    );
-  }, [productQuery, productsData]);
+    if (!productQuery.trim() || selectedProduct) return [];
+    const q = productQuery.toLowerCase();
+    return list.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 5);
+  }, [productQuery, productsData, selectedProduct]);
 
   const [items, setItems] = useState<ManualProduct[]>([]);
-
-  /* ---------------------------------- */
-  /* Validation                         */
-  /* ---------------------------------- */
-  const validateSupplier = () => {
-    if (!selectedSupplier && !supplierQuery.trim()) {
-      return "Please select or type a supplier name.";
-    }
-    return null;
-  };
-
-  const validateProduct = () => {
-    if (!selectedProduct) return "Please select a product from the list.";
-    const qty = Number(units);
-    if (!Number.isInteger(qty) || qty <= 0)
-      return "Please enter a valid number of units.";
-    return null;
-  };
 
   /* ---------------------------------- */
   /* Add product                        */
   /* ---------------------------------- */
   const onAddProduct = () => {
-    const error = validateProduct();
-    if (error) return Alert.alert("Missing info", error);
+    if (!selectedProduct)
+      return Alert.alert("Missing info", "Please select a product from the list.");
 
     const qty = Number(units);
-    const totalVolume = selectedProduct!.volume * qty;
+    if (!Number.isInteger(qty) || qty <= 0)
+      return Alert.alert("Missing info", "Please enter a valid number of units.");
+
+    const packVol = Number(selectedProduct.volume ?? 0);
+    const totalVolume = packVol * qty;
 
     setItems((prev) => {
-      // Check if product already exists in the list
       const existingItemIndex = prev.findIndex(
-        item => item.product.productId === selectedProduct!.productId
+        (item) => item.product.productId === selectedProduct.productId
       );
 
       if (existingItemIndex !== -1) {
-        // Update existing item with combined units
         const newItems = [...prev];
         const existingItem = newItems[existingItemIndex];
         newItems[existingItemIndex] = {
@@ -136,18 +126,17 @@ export default function ManualDeliveryScreen() {
           totalVolume: existingItem.totalVolume + totalVolume,
         };
         return newItems;
-      } else {
-        // Add new item
-        return [
-          {
-            id: `local-${Date.now()}`,
-            product: selectedProduct!,
-            units: qty,
-            totalVolume,
-          },
-          ...prev,
-        ];
       }
+
+      return [
+        {
+          id: `local-${Date.now()}`,
+          product: selectedProduct,
+          units: qty,
+          totalVolume,
+        },
+        ...prev,
+      ];
     });
 
     setProductQuery("");
@@ -159,26 +148,31 @@ export default function ManualDeliveryScreen() {
   /* Remove product                     */
   /* ---------------------------------- */
   const onRemoveProduct = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   /* ---------------------------------- */
-  /* Save                               */
+  /* Save -> cache to delivery summary  */
   /* ---------------------------------- */
   const onSave = async () => {
-    const supplierError = validateSupplier();
-    if (supplierError) return Alert.alert("Missing info", supplierError);
-    if (items.length === 0)
+    if (!selectedSupplier && !supplierQuery.trim()) {
+      return Alert.alert("Missing info", "Please select or type a supplier name.");
+    }
+
+    if (items.length === 0) {
       return Alert.alert("Missing info", "Please add at least one product.");
+    }
 
     let supplierToSave = selectedSupplier;
 
+    // Create supplier if typed manually
     if (!supplierToSave) {
       try {
         const result = await createSupplier.mutateAsync({
-          name: supplierQuery,
-          email: "n/a@example.com", // TEMP: Provide required email
+          name: supplierQuery.trim(),
+          email: "n/a@example.com", // required by API (temp)
         });
+
         supplierToSave = {
           supplierId: result.supplierId,
           name: result.name,
@@ -189,16 +183,72 @@ export default function ManualDeliveryScreen() {
       }
     }
 
-    const payload = items.map((i) => ({
+    const deliveryNoteId = makeGuid();
+    const deliveryDate = new Date().toISOString();
+
+    // This is what delivery-summary.tsx expects in ["deliveries","latest"]
+    const products = items.map((i) => ({
       productId: i.product.productId,
-      units: i.units,
-      totalVolume: i.totalVolume,
+      name: toTitleCase(i.product.name),
+      volume: Number(i.product.volume ?? 0), // liters per unit
+      type: i.product.type ?? "",
+      totalVolume: Number(i.totalVolume ?? 0), // liters total (units * volume)
     }));
 
-    console.log("Supplier:", supplierToSave);
-    console.log("Products:", payload);
+    const manualDelivery: DeliveryOcrResponse = {
+      deliveryNoteId,
+      deliveryDate,
+      supplier: {
+        supplierId: supplierToSave!.supplierId,
+        name: toTitleCase(supplierToSave!.name),
+        contactEmail: supplierToSave!.email ?? "n/a@example.com",
+      },
+      products,
+      deliveryNotePictureIds: [],
+      deliveryPilePictureId: null,
+    };
 
-    router.back();
+    /**
+     * ✅ MUST match your ListItem fields:
+     * - delivery.cans = product volume (L per unit) -> shows in title as X.XXX L
+     * - delivery.cases = total volume (L total)
+     * - units shown = cases / cans
+     */
+    const statusMap: Record<
+      string,
+      {
+        id: string;
+        name: string;
+        status: "received";
+        cases: number; // total volume
+        cans: number; // product volume
+        expectedUnits?: number;
+        receivedUnits?: number;
+      }
+    > = {};
+
+    items.forEach((i, index) => {
+      const lineId = `${i.product.productId}-${index}`;
+      const productVolume = Number(i.product.volume ?? 0);
+      const total = Number(i.totalVolume ?? 0);
+      const unitsNumber = Number(i.units ?? 0);
+
+      statusMap[lineId] = {
+        id: lineId,
+        name: toTitleCase(i.product.name),
+        status: "received",
+        cases: total,
+        cans: productVolume,
+        expectedUnits: unitsNumber,
+        receivedUnits: unitsNumber,
+      };
+    });
+
+    queryClient.setQueryData(["deliveries", "latest"], manualDelivery);
+    queryClient.setQueryData(["deliveries", "removedIds"], []);
+    queryClient.setQueryData(["deliveries", "status"], statusMap);
+
+    router.push("/(scan-flow)/delivery-summary");
   };
 
   /* ---------------------------------- */
@@ -209,20 +259,19 @@ export default function ManualDeliveryScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       edges={Platform.OS === "android" ? ["bottom", "top"] : ["bottom"]}
     >
-      {/* Android Navigation Bar */}
       {Platform.OS === "android" && (
-        <AndroidCustomNavigation 
-          onBack={router.back} 
-          paddingHorizontal={10} 
-        />
+        <AndroidCustomNavigation onBack={router.back} paddingHorizontal={10} />
       )}
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <CustomText variant="gradient" gradientName="paloma" style={styles.title}>
+          <CustomText
+            variant="gradient"
+            gradientName="paloma"
+            style={styles.title}
+          >
             Manual Delivery
           </CustomText>
-          
         </View>
 
         {/* ---------------- Supplier Section ---------------- */}
@@ -231,7 +280,9 @@ export default function ManualDeliveryScreen() {
             <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
               Supplier
             </CustomText>
-            <CustomText style={[styles.sectionDescription, { color: theme.colors.text }]}>
+            <CustomText
+              style={[styles.sectionDescription, { color: theme.colors.text }]}
+            >
               Choose which supplier made this delivery from your suppliers list
             </CustomText>
           </View>
@@ -239,7 +290,7 @@ export default function ManualDeliveryScreen() {
           {selectedSupplier ? (
             <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
               <View style={styles.supplierRow}>
-                <CustomText 
+                <CustomText
                   style={[styles.supplierName, { color: theme.colors.text }]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
@@ -269,12 +320,17 @@ export default function ManualDeliveryScreen() {
               />
 
               {supplierSuggestions.length > 0 && (
-                <View style={[styles.suggestions, { 
-                  backgroundColor: theme.colors.cardBackground,
-                  borderWidth: 1,
-                  borderColor: theme.colors.background,
-                }]}>
-                  {supplierSuggestions.slice(0, 5).map((s) => (
+                <View
+                  style={[
+                    styles.suggestions,
+                    {
+                      backgroundColor: theme.colors.cardBackground,
+                      borderWidth: 1,
+                      borderColor: theme.colors.background,
+                    },
+                  ]}
+                >
+                  {supplierSuggestions.map((s) => (
                     <Pressable
                       key={s.supplierId}
                       style={styles.suggestionRow}
@@ -300,7 +356,9 @@ export default function ManualDeliveryScreen() {
             <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
               Products
             </CustomText>
-            <CustomText style={[styles.sectionDescription, { color: theme.colors.text }]}>
+            <CustomText
+              style={[styles.sectionDescription, { color: theme.colors.text }]}
+            >
               Add products and their delivered quantities
             </CustomText>
           </View>
@@ -321,12 +379,17 @@ export default function ManualDeliveryScreen() {
               />
 
               {productSuggestions.length > 0 && !selectedProduct && (
-                <View style={[styles.suggestions, { 
-                  backgroundColor: theme.colors.cardBackground,
-                  borderWidth: 1,
-                  borderColor: theme.colors.background,
-                }]}>
-                  {productSuggestions.slice(0, 5).map((p) => (
+                <View
+                  style={[
+                    styles.suggestions,
+                    {
+                      backgroundColor: theme.colors.cardBackground,
+                      borderWidth: 1,
+                      borderColor: theme.colors.background,
+                    },
+                  ]}
+                >
+                  {productSuggestions.map((p) => (
                     <Pressable
                       key={p.productId}
                       style={styles.suggestionRow}
@@ -340,7 +403,7 @@ export default function ManualDeliveryScreen() {
                           {p.name}
                         </CustomText>
                         <CustomText style={{ color: theme.colors.text, opacity: 0.6 }}>
-                          {p.volume}L
+                          {Number(p.volume ?? 0).toFixed(3)}L
                         </CustomText>
                       </View>
                     </Pressable>
@@ -392,34 +455,6 @@ export default function ManualDeliveryScreen() {
               <FlatList
                 data={items}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.productRow}>
-                    <View style={styles.productInfo}>
-                      <CustomText 
-                        style={[styles.productName, { color: theme.colors.text }]}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        {item.product.name}
-                      </CustomText>
-                    </View>
-                    <View style={styles.productRightSection}>
-                      <InfoBox
-                        title={item.units}
-                        subtitle="units"
-                        style={styles.infoBox}
-                      />
-                      <Pressable
-                        onPress={() => onRemoveProduct(item.id)}
-                        style={styles.removeButton}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Remove ${item.product.name}`}
-                      >
-                        <Icon name="delete" size={20}/>
-                      </Pressable>
-                    </View>
-                  </View>
-                )}
                 scrollEnabled={false}
                 ItemSeparatorComponent={() => (
                   <View
@@ -429,6 +464,35 @@ export default function ManualDeliveryScreen() {
                     ]}
                   />
                 )}
+                renderItem={({ item }) => (
+                  <View style={styles.productRow}>
+                    <View style={styles.productInfo}>
+                      <CustomText
+                        style={[styles.productName, { color: theme.colors.text }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {item.product.name}
+                      </CustomText>
+                    </View>
+
+                    <View style={styles.productRightSection}>
+                      <InfoBox
+                        title={String(item.units)}
+                        subtitle="units"
+                        style={styles.infoBox}
+                      />
+                      <Pressable
+                        onPress={() => onRemoveProduct(item.id)}
+                        style={styles.removeButton}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${item.product.name}`}
+                      >
+                        <Icon name="delete" size={20} />
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
               />
             )}
           </View>
@@ -436,11 +500,7 @@ export default function ManualDeliveryScreen() {
 
         {/* ---------------- Actions ---------------- */}
         <View style={styles.actions}>
-          <GradientButton
-            text="Save Delivery"
-            onPress={onSave}
-            gradientName="paloma"
-          />
+          <GradientButton text="Save Delivery" onPress={onSave} gradientName="paloma" />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -452,54 +512,29 @@ export default function ManualDeliveryScreen() {
 /* ---------------------------------- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { 
-    paddingHorizontal: 16, 
+  content: {
+    paddingHorizontal: 16,
     paddingBottom: 32,
     paddingTop: Platform.OS === "ios" ? 16 : 8,
   },
 
-  header: {
-    marginBottom: 24,
-  },
-  title: { 
-    fontSize: 32, 
-    fontWeight: "700", 
-    marginBottom: 8,
-  },
+  header: { marginBottom: 24 },
+  title: { fontSize: 32, fontWeight: "700", marginBottom: 8 },
 
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    opacity: 0.7,
-  },
+  section: { marginBottom: 24 },
+  sectionHeader: { marginBottom: 12 },
+  sectionTitle: { fontSize: 20, fontWeight: "600", marginBottom: 4 },
+  sectionDescription: { fontSize: 14, lineHeight: 20, opacity: 0.7 },
 
-  formCard: {
-    gap: 16,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  formCard: { gap: 16 },
+  inputGroup: { gap: 6 },
+  inputLabel: { fontSize: 14, fontWeight: "500" },
 
   card: {
     borderRadius: 16,
     overflow: "hidden",
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -512,22 +547,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
-  supplierName: {
-    fontSize: 16,
-    flex: 1,
-    marginRight: 12,
-    fontWeight: "500",
-  },
+  supplierName: { fontSize: 16, flex: 1, marginRight: 12, fontWeight: "500" },
 
-  suggestions: {
-    borderRadius: 12,
-    marginTop: 8,
-    overflow: "hidden",
-  },
+  suggestions: { borderRadius: 12, marginTop: 8, overflow: "hidden" },
   suggestionRow: {
     padding: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: "rgba(0,0,0,0.08)",
   },
   productSuggestion: {
     flexDirection: "row",
@@ -535,19 +561,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  emptyState: {
-    paddingVertical: 32,
-    alignItems: "center",
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  emptySubtext: {
-    fontSize: 14,
-    opacity: 0.6,
-  },
+  emptyState: { paddingVertical: 32, alignItems: "center", gap: 12 },
+  emptyText: { fontSize: 16, fontWeight: "500" },
+  emptySubtext: { fontSize: 14, opacity: 0.6 },
 
   productRow: {
     flexDirection: "row",
@@ -556,38 +572,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  productInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  productName: {
-    fontSize: 15,
-    fontWeight: "500",
-    marginBottom: 2,
-  },
-  productRightSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  infoBox: {
-    margin: 0,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    minWidth: 60,
-    maxWidth: 80,
-  },
-  removeButton: {
-    padding: 4,
-  },
+  productInfo: { flex: 1, marginRight: 12 },
+  productName: { fontSize: 15, fontWeight: "500", marginBottom: 2 },
 
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
-  },
+  productRightSection: { flexDirection: "row", alignItems: "center", gap: 12 },
+  infoBox: { margin: 0, paddingVertical: 6, paddingHorizontal: 10, minWidth: 60, maxWidth: 80 },
+  removeButton: { padding: 4 },
 
-  actions: {
-    paddingTop: 8,
-    paddingBottom: 16,
-  },
+  separator: { height: StyleSheet.hairlineWidth, marginHorizontal: 16 },
+
+  actions: { paddingTop: 8, paddingBottom: 16 },
 });
