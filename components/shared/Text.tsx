@@ -6,7 +6,7 @@ type Variant = "normal" | "gradient";
 
 interface Props extends TextProps {
   variant?: Variant;
-  gradientName?: "paloma" | "bananaDaiquiri"; 
+  gradientName?: "paloma" | "bananaDaiquiri";
 }
 
 export function Text({
@@ -32,15 +32,9 @@ export function Text({
   return (
     <RNText
       {...rest}
-      style={[
-        { fontFamily: "Roobert", color: colors.text },
-        style,
-      ]}
+      style={[{ fontFamily: "Roobert", color: colors.text }, style]}
     >
       {children}
     </RNText>
   );
-
-
-
 }

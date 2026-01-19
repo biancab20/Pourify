@@ -1,15 +1,9 @@
 import React from "react";
-import {
-  Text as RNText,
-  StyleSheet,
-  TextStyle,
-  StyleProp,
-} from "react-native";
+import { Text as RNText, StyleSheet, TextStyle, StyleProp } from "react-native";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppTheme } from "@/stores/app-theme-context";
-
-export type GradientName = "paloma" | "bananaDaiquiri";
+import { GradientName } from "./GradientButton";
 
 export interface GradientTextProps {
   children: React.ReactNode;

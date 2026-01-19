@@ -17,7 +17,7 @@ type Params = {
   name?: string;
   expectedUnits?: string;
   cases?: string; // totalVolume
-  cans?: string; // per-unit volume (e.g. 0.2)
+  cans?: string; // per-unit volume
   unitLabel?: string;
 };
 
@@ -54,7 +54,7 @@ export default function QuantityMismatchScreen() {
   }, [id, statusMap]);
 
   const [receivedUnits, setReceivedUnitsLocal] = useState<number>(
-    stored?.receivedUnits ?? expectedUnitsParam
+    stored?.receivedUnits ?? expectedUnitsParam,
   );
 
   // Ensure entry exists WITH real cases/cans
@@ -64,12 +64,11 @@ export default function QuantityMismatchScreen() {
     if (!stored) {
       setStatus(
         { id, name, cases: casesParam, cans: cansParam } as any,
-        "quantity_mismatch" as DeliveryStatus
+        "quantity_mismatch" as DeliveryStatus,
       );
     }
   }, [id, name, stored, setStatus, casesParam, cansParam]);
 
-  // Keep local in sync
   useEffect(() => {
     if (typeof stored?.receivedUnits === "number") {
       setReceivedUnitsLocal(stored.receivedUnits);
@@ -105,10 +104,10 @@ export default function QuantityMismatchScreen() {
     // 1) store received units
     setReceivedUnits(id, receivedUnits);
 
-    // 2) keep the REAL cans/cases (don’t overwrite with 0)
+    // 2) keep the REAL cans/cases
     setStatus(
       { id, name, cases: casesParam, cans: cansParam } as any,
-      "quantity_mismatch"
+      "quantity_mismatch",
     );
 
     // 3) remove from list

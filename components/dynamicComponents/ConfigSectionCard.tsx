@@ -15,22 +15,15 @@ interface ConfigSectionCardProps<T> {
   title: string;
   items: T[];
   emptyText: string;
-
   addLabel: string;
   onAdd: () => void;
-
   keyExtractor: (item: T, index: number) => string;
   renderItem: ListRenderItem<T>;
-
-  /** ✅ new: loading + error */
   isLoading?: boolean;
   loadingText?: string;
-
   errorMessage?: string | null;
   onRetry?: () => void;
   isRetrying?: boolean;
-
-  /** optional: disable add while loading/error */
   disableAddWhenLoading?: boolean;
 }
 
@@ -66,8 +59,10 @@ export default function ConfigSectionCard<T>({
         {title}
       </Text>
 
-      <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-        {/* ✅ Error state */}
+      <View
+        style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}
+      >
+        {/* Error state */}
         {hasError ? (
           <View style={styles.stateContainer}>
             <Text style={[styles.stateText, { color: theme.colors.text }]}>
@@ -84,7 +79,9 @@ export default function ConfigSectionCard<T>({
                 {isRetrying ? (
                   <ActivityIndicator color={theme.colors.icon} />
                 ) : (
-                  <Text style={[styles.retryText, { color: theme.colors.text }]}>
+                  <Text
+                    style={[styles.retryText, { color: theme.colors.text }]}
+                  >
                     Retry
                   </Text>
                 )}
@@ -92,7 +89,7 @@ export default function ConfigSectionCard<T>({
             ) : null}
           </View>
         ) : isLoading ? (
-          /* ✅ Loading state */
+          /* Loading state */
           <View style={styles.stateContainer}>
             <ActivityIndicator color={theme.colors.icon} />
             <Text style={[styles.stateText, { color: theme.colors.text }]}>
@@ -100,14 +97,14 @@ export default function ConfigSectionCard<T>({
             </Text>
           </View>
         ) : isEmpty ? (
-          /* ✅ Empty state */
+          /* Empty state */
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: theme.colors.text }]}>
               {emptyText}
             </Text>
           </View>
         ) : (
-          /* ✅ Data state */
+          /* Data state */
           <FlatList
             data={items}
             keyExtractor={keyExtractor}
@@ -125,7 +122,10 @@ export default function ConfigSectionCard<T>({
         )}
 
         <View
-          style={[styles.separator, { backgroundColor: theme.colors.background }]}
+          style={[
+            styles.separator,
+            { backgroundColor: theme.colors.background },
+          ]}
         />
 
         <Pressable

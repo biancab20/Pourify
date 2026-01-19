@@ -12,7 +12,7 @@ interface ChartData {
   sold: number;
 }
 
-export interface CircularChartProps {
+interface CircularChartProps {
   data: ChartData;
   strokeWidth?: number;
   mode: Mode;
@@ -31,7 +31,7 @@ export default function CircularChart({
   const chartContainerWidth = screenWidth - horizontalMargin * 2;
   const chartSize = Math.min(chartContainerWidth - 50, 300);
 
-  const safeOrdered = ordered || 1; // avoid division by 0
+  const safeOrdered = ordered || 1;
   const soldPercentage = (sold / safeOrdered) * 100;
   const pouredPercentage = (poured / safeOrdered) * 100;
 
@@ -116,16 +116,9 @@ export default function CircularChart({
         </Svg>
 
         <View style={[styles.centerText, { top: chartSize / 2 - 30 }]}>
-          <Text style={styles.detailText}>
-            Sold this {mode.toLowerCase()}
-          </Text>
+          <Text style={styles.detailText}>Sold this {mode.toLowerCase()}</Text>
 
-          <Text
-            style={[
-              styles.percentageText,
-              { color: theme.colors.text },
-            ]}
-          >
+          <Text style={[styles.percentageText, { color: theme.colors.text }]}>
             {Math.round(soldPercentage)}%
           </Text>
 

@@ -10,9 +10,6 @@ import type {
 import type { ApiError } from "@/services/api.errors";
 import { getStocks, updateStock, transferStock, getStockById, createStock } from "@/services/stock.api";
 
-/**
- * GET stock items (OData list)
- */
 export function useStocks(params?: Record<string, string | number>) {
   return useQuery<GetStocksResponse, ApiError>({
     queryKey: ["stock", "list", params],
@@ -20,9 +17,6 @@ export function useStocks(params?: Record<string, string | number>) {
   });
 }
 
-/**
- * GET single stock item (uses dedicated endpoint)
- */
 export function useStock(stockId: string) {
   return useQuery<StockItem, ApiError>({
     queryKey: ["stock", "detail", stockId],
@@ -31,9 +25,6 @@ export function useStock(stockId: string) {
   });
 }
 
-/**
- * UPDATE stock item
- */
 export function useUpdateStock() {
   const queryClient = useQueryClient();
 
@@ -47,7 +38,6 @@ export function useUpdateStock() {
   });
 }
 
-// In your useStock file, add this hook:
 export function useCreateStock() {
   const queryClient = useQueryClient();
 
@@ -64,9 +54,6 @@ export function useCreateStock() {
   });
 }
 
-/**
- * TRANSFER stock
- */
 export function useTransferStock() {
   const queryClient = useQueryClient();
 

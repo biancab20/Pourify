@@ -1,4 +1,3 @@
-// services/deliveries.api.ts
 import { API } from "@/services/api.config";
 import type { ApiError } from "@/services/api.errors";
 import { authedFetch } from "@/utils/authed-fetch";

@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -14,7 +21,7 @@ export default function LoginScreen() {
   const signIn = useAuthStore((s) => s.signIn);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState(""); // this is username, not email
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -34,16 +41,16 @@ export default function LoginScreen() {
       if (theme.isDark) return focused ? "#FFFFFF" : "#565656";
       return focused ? "#000000" : "#8B8B8B";
     },
-    [theme.isDark]
+    [theme.isDark],
   );
 
   const usernameBorderColor = useMemo(
     () => getBorderColor(isEmailFocused),
-    [getBorderColor, isEmailFocused]
+    [getBorderColor, isEmailFocused],
   );
   const passwordBorderColor = useMemo(
     () => getBorderColor(isPasswordFocused),
-    [getBorderColor, isPasswordFocused]
+    [getBorderColor, isPasswordFocused],
   );
 
   const handleLogin = useCallback(async () => {
@@ -64,21 +71,39 @@ export default function LoginScreen() {
   }, [username, password, signIn]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.wrapper}>
         <View style={styles.logoContainer}>
-          <Image source={require("../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
-          <Text style={[styles.subtitle, { color: theme.colors.text }]}>Every. Drop. Counts.</Text>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.subtitle, { color: theme.colors.text }]}>
+            Every. Drop. Counts.
+          </Text>
         </View>
 
-        <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.label, { color: theme.colors.cardText }]}>Username</Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.cardBackground },
+          ]}
+        >
+          <Text style={[styles.label, { color: theme.colors.cardText }]}>
+            Username
+          </Text>
           <TextInput
-            placeholder="perro"
+            placeholder="Username"
             placeholderTextColor={placeholderColor}
             style={[
               styles.input,
-              { color: theme.colors.cardText, borderColor: usernameBorderColor },
+              {
+                color: theme.colors.cardText,
+                borderColor: usernameBorderColor,
+              },
             ]}
             autoCapitalize="none"
             value={username}
@@ -87,11 +112,18 @@ export default function LoginScreen() {
             onBlur={() => setIsEmailFocused(false)}
           />
 
-          <Text style={[styles.label, { color: theme.colors.cardText }]}>Password</Text>
+          <Text style={[styles.label, { color: theme.colors.cardText }]}>
+            Password
+          </Text>
 
-          <View style={[styles.passwordWrapper, { borderColor: passwordBorderColor }]}>
+          <View
+            style={[
+              styles.passwordWrapper,
+              { borderColor: passwordBorderColor },
+            ]}
+          >
             <TextInput
-              placeholder="gato"
+              placeholder="Password"
               placeholderTextColor={placeholderColor}
               secureTextEntry={!showPassword}
               style={[styles.passwordInput, { color: theme.colors.cardText }]}
@@ -105,7 +137,9 @@ export default function LoginScreen() {
               onPress={() => setShowPassword((prev) => !prev)}
               style={styles.eyeButton}
               accessibilityRole="button"
-              accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
             >
               <Ionicons
                 name={showPassword ? "eye" : "eye-off"}
@@ -115,7 +149,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <GradientButton onPress={handleLogin} text={loading ? "Logging in..." : "Login"} disabled={loading} />
+          <GradientButton
+            onPress={handleLogin}
+            text={loading ? "Logging in..." : "Login"}
+            disabled={loading}
+          />
         </View>
       </View>
     </SafeAreaView>

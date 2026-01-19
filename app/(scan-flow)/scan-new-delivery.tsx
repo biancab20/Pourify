@@ -169,16 +169,14 @@ export default function ScanNewDelivery() {
       console.error("File OCR Error:", e);
       Alert.alert(
         "Upload failed",
-        e?.body ? `${e.message}\n\n${e.body}` : e?.message ?? String(e)
+        e?.body ? `${e.message}\n\n${e.body}` : (e?.message ?? String(e)),
       );
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // ===============================
   // Restore state from params
-  // ===============================
   useEffect(() => {
     if (!params.existingPhotos) return;
     try {
@@ -368,8 +366,8 @@ export default function ScanNewDelivery() {
             {isDenied
               ? "Camera permission is denied. Turn it on in Settings or choose another method."
               : isUndetermined
-              ? "Requesting camera permission..."
-              : "Waiting for camera permission..."}
+                ? "Requesting camera permission..."
+                : "Waiting for camera permission..."}
           </Text>
 
           {isDenied && (

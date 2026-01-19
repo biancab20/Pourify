@@ -7,7 +7,7 @@ interface InfoBoxProps {
   title: string | number;
   subtitle: string;
   style?: object;
-};
+}
 
 export default function InfoBox({ title, subtitle, style }: InfoBoxProps) {
   const { theme } = useAppTheme();

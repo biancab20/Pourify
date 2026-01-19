@@ -10,7 +10,7 @@ dayjs.extend(isoWeek);
 type Mode = "Day" | "Week" | "Month" | "Year";
 
 export default function DatePicker() {
-  const { theme } = useAppTheme(); 
+  const { theme } = useAppTheme();
   const [mode, setMode] = useState<Mode>("Week");
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
 
@@ -57,10 +57,7 @@ export default function DatePicker() {
               style={[
                 styles.modeButton,
                 {
-                  color:
-                    mode === item
-                      ? theme.palette.pink 
-                      : theme.colors.text,
+                  color: mode === item ? theme.palette.pink : theme.colors.text,
                 },
                 mode === item && {
                   backgroundColor: theme.palette.pink,
@@ -92,7 +89,6 @@ export default function DatePicker() {
           <Text style={[styles.arrow, { color: theme.colors.text }]}>→</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 }
@@ -129,5 +125,4 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
- 
 });

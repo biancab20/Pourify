@@ -1,5 +1,3 @@
-// app/(main-screens)/edit-stock.tsx
-
 import { Text } from "@/components/shared/Text";
 import FormInput from "@/components/dynamicComponents/FormInput";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -17,57 +15,33 @@ export default function EditStock() {
   const { colors } = theme;
   const router = useRouter();
   const params = useLocalSearchParams();
-
-  /* -----------------------------
-     Params from previous screen
-  ------------------------------ */
   const productId = params.productId as string;
   const barId = params.barId as string;
-  const productVolume = Number(params.productVolume); // litres per unit (keg/bottle)
+  const productVolume = Number(params.productVolume); 
   const productName = params.productName as string;
   const productType = params.productType as string;
   const initialBottleCount = Number(params.currentStock ?? 0);
   const stockId = params.stockId as string;
-
-  /* -----------------------------
-     Local state
-  ------------------------------ */
-  // ✅ Keep it as a string while typing (works best with FormInput number behavior)
   const [unitCountText, setUnitCountText] = useState<string>(
-    String(Math.max(0, initialBottleCount))
+    String(Math.max(0, initialBottleCount)),
   );
-
-  /* -----------------------------
-     Data & mutations
-  ------------------------------ */
   const { data: stocksData, isLoading } = useStocks();
   const updateStockMutation = useUpdateStock();
   const createStockMutation = useCreateStock();
-
-  /* -----------------------------
-     Find the correct stock item
-  ------------------------------ */
   const stockItem = useMemo(() => {
     if (stockId) {
       return stocksData?.value.find((stock) => stock.stockId === stockId);
     }
 
     return stocksData?.value.find(
-      (stock) => stock.productId === productId && stock.storagePlaceId === barId
+      (stock) =>
+        stock.productId === productId && stock.storagePlaceId === barId,
     );
   }, [stocksData, productId, barId, stockId]);
-
-  /* -----------------------------
-     Calculate leftovers
-  ------------------------------ */
   const unitVolume = productVolume;
   const currentTotalVolume = stockItem?.volume ?? 0;
   const currentFullUnits = Math.floor(currentTotalVolume / unitVolume);
   const leftoverVolume = currentTotalVolume - currentFullUnits * unitVolume;
-
-  /* -----------------------------
-     Parse input safely
-  ------------------------------ */
   const unitCount = useMemo(() => {
     const trimmed = unitCountText.trim();
     if (!trimmed) return 0;
@@ -75,13 +49,9 @@ export default function EditStock() {
     const n = Number(trimmed);
     if (!Number.isFinite(n)) return NaN;
 
-    // no decimals allowed here; clamp to int
     return Math.max(0, Math.trunc(n));
   }, [unitCountText]);
 
-  /* -----------------------------
-     Handle submit
-  ------------------------------ */
   const handleAdjustStock = () => {
     if (!Number.isFinite(unitCount)) return;
 
@@ -108,18 +78,12 @@ export default function EditStock() {
     }
   };
 
-  /* -----------------------------
-     Navigate back on success
-  ------------------------------ */
   useEffect(() => {
     if (updateStockMutation.isSuccess || createStockMutation.isSuccess) {
       router.back();
     }
   }, [updateStockMutation.isSuccess, createStockMutation.isSuccess, router]);
 
-  /* -----------------------------
-     Button state
-  ------------------------------ */
   const isPending =
     updateStockMutation.isPending || createStockMutation.isPending;
 
@@ -131,9 +95,6 @@ export default function EditStock() {
     Number.isFinite(unitCount) &&
     unitCount >= 0;
 
-  /* -----------------------------
-     Render
-  ------------------------------ */
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -150,7 +111,6 @@ export default function EditStock() {
         Please input the amount of full {productType}s that you see.
       </Text>
 
-      {/* ✅ FormInput instead of SearchBar */}
       <FormInput
         value={unitCountText}
         onChange={(v) => setUnitCountText(String(v))}

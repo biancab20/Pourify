@@ -10,7 +10,6 @@ const safeUnits = (cases: number, cans: number) => (cans > 0 ? cases / cans : 0)
 export function useDeliveryStatus() {
   const qc = useQueryClient();
 
-  // ✅ reactive subscription
   const statusQuery = useQuery<DeliveryStatusState>({
     queryKey: KEY,
     queryFn: async () => qc.getQueryData<DeliveryStatusState>(KEY) ?? {},

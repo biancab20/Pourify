@@ -8,10 +8,6 @@ export interface IconProps {
   color?: string;
 }
 
-/**
- * Replace all non-"none" fill values with the provided color.
- * Keeps "fill=\"none\"" intact.
- */
 function applyColor(xml: string, color?: string): string {
   if (!color) return xml;
   return xml.replace(/fill="(?!none)[^"]*"/g, `fill="${color}"`);

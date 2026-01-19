@@ -21,7 +21,7 @@ export type DeliveryItem = {
   cans: number;
 };
 
-export type DeliveryAction = "received" | "substituted" | "quantity_mismatch";
+type DeliveryAction = "received" | "substituted" | "quantity_mismatch";
 
 type DeliveryListProps = {
   title?: string;
@@ -41,7 +41,7 @@ type DeliveryListProps = {
   onAction?: (item: DeliveryItem, action: DeliveryAction) => void;
 };
 
-const DeliveryList = ({
+export default function DeliveryList({
   title = "Check delivery list",
   deliveries = [],
   loading = false,
@@ -54,7 +54,7 @@ const DeliveryList = ({
   showResultsCount = true,
   removedIds = [],
   onAction,
-}: DeliveryListProps) => {
+}: DeliveryListProps) {
   const { theme } = useAppTheme();
   const { colors, palette } = theme;
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -62,7 +62,7 @@ const DeliveryList = ({
     React.useState<string[]>(removedIds);
   const [isSelectMode, setIsSelectMode] = React.useState(false);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [helpVisible, setHelpVisible] = React.useState(false);
   const router = useRouter();
@@ -95,7 +95,7 @@ const DeliveryList = ({
   // Filter out removed items
   const activeDeliveries = React.useMemo(() => {
     return formattedDeliveries.filter(
-      (item) => !localRemovedIds.includes(item.id)
+      (item) => !localRemovedIds.includes(item.id),
     );
   }, [formattedDeliveries, localRemovedIds]);
 
@@ -104,7 +104,7 @@ const DeliveryList = ({
     if (!searchQuery.trim()) return activeDeliveries;
     const query = searchQuery.toLowerCase();
     return activeDeliveries.filter((item) =>
-      item.name.toLowerCase().includes(query)
+      item.name.toLowerCase().includes(query),
     );
   }, [activeDeliveries, searchQuery]);
 
@@ -156,7 +156,7 @@ const DeliveryList = ({
             onAction?.(item, "substituted");
             Alert.alert(
               "Substitution noted",
-              "Later, we’ll let you pick which product you received instead."
+              "Later, we’ll let you pick which product you received instead.",
             );
           },
         },
@@ -181,7 +181,7 @@ const DeliveryList = ({
           style: "cancel",
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
 
     onItemPress?.(item);
@@ -468,7 +468,7 @@ const DeliveryList = ({
       </Modal>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   headerButton: {
-    width: 100, // Fixed width for alignment
+    width: 100,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -619,5 +619,3 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
-
-export default DeliveryList;

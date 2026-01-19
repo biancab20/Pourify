@@ -67,7 +67,7 @@ export default function ListItem({
 
   // Calculate units: total volume divided by product volume
   const calculateUnits = () => {
-    // ✅ show received units for quantity mismatch
+    // show received units for quantity mismatch
     if (
       delivery.status === "quantity_mismatch" &&
       typeof delivery.receivedUnits === "number"

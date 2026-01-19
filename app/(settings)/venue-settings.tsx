@@ -22,7 +22,7 @@ import {
 } from "@/utils/settings-fields";
 import { getStoredString } from "@/utils/storage";
 
-/** ✅ Local-only bars (old naming mistake) */
+/** Local-only bars */
 type StaticBar = {
   barId: string;
   name: string;
@@ -42,7 +42,7 @@ export default function VenueSettings() {
 
   const [receiverEmail, setReceiverEmailState] = useState<string | null>(null);
 
-  // ✅ Reload receiverEmail whenever this screen is focused
+  // Reload receiverEmail whenever this screen is focused
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -59,13 +59,13 @@ export default function VenueSettings() {
       return () => {
         active = false;
       };
-    }, [])
+    }, []),
   );
 
-  // ✅ local list (empty)
+  //  local list (empty)
   const [staticBars, setStaticBars] = useState<StaticBar[]>([]);
 
-  // ✅ API bars (real stock locations)
+  //  API bars (real stock locations)
   const {
     data: apiBarsData,
     isLoading: isApiBarsLoading,
@@ -76,7 +76,7 @@ export default function VenueSettings() {
 
   const apiBars = useMemo(() => apiBarsData?.value ?? [], [apiBarsData?.value]);
 
-  // ✅ Products API
+  //  Products API
   const {
     data: productsData,
     isLoading: isProductsLoading,
@@ -87,10 +87,10 @@ export default function VenueSettings() {
 
   const products = useMemo(
     () => productsData?.value ?? [],
-    [productsData?.value]
+    [productsData?.value],
   );
 
-  // ✅ Suppliers API
+  //  Suppliers API
   const {
     data: suppliersData,
     isLoading: isSuppliersLoading,
@@ -101,7 +101,7 @@ export default function VenueSettings() {
 
   const suppliers = useMemo(
     () => suppliersData?.value ?? [],
-    [suppliersData?.value]
+    [suppliersData?.value],
   );
 
   const addStaticBar = () => {
@@ -158,32 +158,29 @@ export default function VenueSettings() {
   };
 
   const onEditReceiverEmail = () => {
-  const settingsField = getSettingsField("receiverEmail");
+    const settingsField = getSettingsField("receiverEmail");
 
-  if (!settingsField) {
-    Alert.alert("Unsupported setting", "Receiver email is not configured.");
-    return;
-  }
+    if (!settingsField) {
+      Alert.alert("Unsupported setting", "Receiver email is not configured.");
+      return;
+    }
 
-  openEditField(router, {
-    title: settingsField.title ?? "Receiver email",
-    description:
-      "When a new delivery comes in, if something is wrong, we’ll send an email explaining which items were not as expected. Who should we notify?",
-    label: settingsField.label ?? "Receiver email",
-    fieldType: settingsField.fieldType ?? "email",
-    placeholder: settingsField.placeholder ?? "e.g. manager@hachibar.nl",
-    initialValue: receiverEmail ?? "",
-    options: settingsField.options, // usually undefined for email
-    onSave: async (newValue) => {
-      // ✅ persist using your settings system
-      await saveSettingsFieldValue(settingsField, newValue);
-
-      // ✅ refresh local UI (optional: read back to ensure normalization)
-      const updated = await loadSettingsFieldValue(settingsField);
-      setReceiverEmailState(updated);
-    },
-  });
-};
+    openEditField(router, {
+      title: settingsField.title ?? "Receiver email",
+      description:
+        "When a new delivery comes in, if something is wrong, we’ll send an email explaining which items were not as expected. Who should we notify?",
+      label: settingsField.label ?? "Receiver email",
+      fieldType: settingsField.fieldType ?? "email",
+      placeholder: settingsField.placeholder ?? "e.g. manager@hachibar.nl",
+      initialValue: receiverEmail ?? "",
+      options: settingsField.options,
+      onSave: async (newValue) => {
+        await saveSettingsFieldValue(settingsField, newValue);
+        const updated = await loadSettingsFieldValue(settingsField);
+        setReceiverEmailState(updated);
+      },
+    });
+  };
 
   return (
     <SafeAreaView
@@ -236,7 +233,7 @@ export default function VenueSettings() {
           errorMessage={
             apiBarsError
               ? `Could not load stock locations: ${getErrorMessage(
-                  apiBarsError
+                  apiBarsError,
                 )}`
               : null
           }

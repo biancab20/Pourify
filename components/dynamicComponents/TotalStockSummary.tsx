@@ -1,4 +1,3 @@
-// components/dynamicComponents/TotalStockSummary.tsx
 import { Text } from "@/components/shared/Text";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import { useAppTheme } from "@/stores/app-theme-context";

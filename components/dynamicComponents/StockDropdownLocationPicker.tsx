@@ -1,4 +1,3 @@
-// StockDropdownNavigation.tsx
 import { Bar } from "@/types/locations";
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import {
@@ -16,8 +15,8 @@ import { BlurView } from "expo-blur";
 
 interface StockDropdownNavigationProps {
   bars: Bar[];
-  selectedBar: { id: string | null; name: string }; // Changed from number | null to string | null
-  onBarSelect: (bar: { id: string | null; name: string }) => void; // Updated here too
+  selectedBar: { id: string | null; name: string };
+  onBarSelect: (bar: { id: string | null; name: string }) => void;
 }
 
 type Anchor = { x: number; y: number; width: number; height: number };
@@ -39,7 +38,7 @@ export default function StockDropdownLocationPicker({
       { id: null, name: "General Stock" },
       ...bars.map((bar) => ({ id: bar.barId, name: bar.name })), // bar.barId is string
     ],
-    [bars]
+    [bars],
   );
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -80,9 +79,8 @@ export default function StockDropdownLocationPicker({
   const closeDropdown = () => setShowDropdown(false);
 
   const handleSelect = (bar: { id: string | null; name: string }) => {
-    // Updated type here
-    onBarSelect(bar); // update selectedBar in parent
-    closeDropdown(); // close dropdown
+    onBarSelect(bar);
+    closeDropdown();
   };
 
   const menuLeft = anchor?.x ?? 0;

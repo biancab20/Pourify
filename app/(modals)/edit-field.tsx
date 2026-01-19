@@ -44,7 +44,7 @@ export default function GlobalEditFieldRoute() {
   const options = useMemo(
     () =>
       fieldType === "select" ? safeParseOptions(params.optionsJson) : undefined,
-    [fieldType, params.optionsJson]
+    [fieldType, params.optionsJson],
   );
 
   const getCallback = useEditFieldCallbackStore((s) => s.getCallback);
@@ -58,17 +58,13 @@ export default function GlobalEditFieldRoute() {
 
       // default: close
       const close =
-        typeof result === "boolean" ? result : result?.close ?? true;
+        typeof result === "boolean" ? result : (result?.close ?? true);
 
-      // optional: update displayed value if caller returns nextValue
       if (
         result &&
         typeof result === "object" &&
         typeof result.nextValue === "string"
-      ) {
-        // you can optionally support this by pushing a param update,
-        // OR simpler: ignore and let the caller reopen if needed
-      }
+      )
 
       if (close) {
         clearCallback(editId);
@@ -76,7 +72,6 @@ export default function GlobalEditFieldRoute() {
       }
     } catch (e: any) {
       Alert.alert("Save failed", e?.message ?? "Unknown error");
-      // keep screen open
     }
   };
 

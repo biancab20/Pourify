@@ -1,15 +1,14 @@
-// components/dynamicComponents/SearchBar.tsx
 import React, { useMemo, useState } from "react";
 import { View, TextInput, StyleSheet, Pressable } from "react-native";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { Icon } from "../icons/Icon";
 
 interface SearchBarProps {
-  value?: string; // ✅ optional controlled
-  onChangeText?: (value: string) => void; // ✅ for controlled usage
-  onSearch?: (value: string) => void; // ✅ if you still want "search callback" semantics
+  value?: string;
+  onChangeText?: (value: string) => void;
+  onSearch?: (value: string) => void;
   placeholder?: string;
-  initialValue?: string; // ✅ for uncontrolled usage
+  initialValue?: string;
   autoFocus?: boolean;
   disabled?: boolean;
   accessibilityLabel?: string;
@@ -45,7 +44,7 @@ export default function SearchBar({
   const setText = (next: string) => {
     if (!isControlled) setInner(next);
     onChangeText?.(next);
-    onSearch?.(next); // ✅ keep compatibility with existing usage
+    onSearch?.(next);
   };
 
   const handleClear = () => setText("");
@@ -81,7 +80,7 @@ export default function SearchBar({
         autoCorrect={false}
         autoCapitalize="none"
         returnKeyType="search"
-        clearButtonMode="never" // iOS native clear off (we use our own)
+        clearButtonMode="never"
       />
 
       {text.length > 0 && !disabled && (

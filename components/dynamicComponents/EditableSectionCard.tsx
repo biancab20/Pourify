@@ -153,76 +153,60 @@ export default function EditableSectionCard({
   );
 }
 
-/** =====================
- *  Styles
- *  ===================== */
-
 const styles = StyleSheet.create({
   wrapper: {
     marginBottom: 18,
   },
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 10,
     paddingHorizontal: 2,
   },
-
   card: {
     borderRadius: 22,
     overflow: "hidden",
     paddingBottom: 20,
   },
-
   row: {
     flexDirection: "row",
     paddingTop: 20,
     paddingLeft: 18,
     paddingRight: 8,
   },
-
   left: {
     flex: 1,
     gap: 12,
   },
-
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
-
   leftIconWrap: {
     width: 26,
     alignItems: "center",
     justifyContent: "center",
   },
-
   title: {
     fontSize: 18,
     fontWeight: "700",
   },
-
   valueRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
   },
-
   value: {
     flex: 1,
     fontSize: 16,
     fontWeight: "400",
     lineHeight: 20,
   },
-
   divider: {
     height: StyleSheet.hairlineWidth,
   },
-
-  // ✅ Accessibility: 48x48 dp minimum
   editHitBox: {
     width: 48,
     height: 48,

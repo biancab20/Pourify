@@ -18,11 +18,20 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
   const progressStrokeDasharray = `${(pouredPercentage / 100) * circumference} ${circumference}`;
 
   return (
-    <View style={[styles.circleWrapper, { width: size, height: size }]} accessible={false}>
+    <View
+      style={[styles.circleWrapper, { width: size, height: size }]}
+      accessible={false}
+    >
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
           {/* Progress gradient */}
-          <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <LinearGradient
+            id="progressGradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
             <Stop offset="0%" stopColor="#FF77E0" />
             <Stop offset="100%" stopColor="#F54D41" />
           </LinearGradient>
@@ -52,15 +61,25 @@ export default function PieChartStatic({ size }: PieChartStaticProps) {
       </Svg>
 
       <View style={styles.centerContent}>
-        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
+        <Text
+          style={[styles.labelText, { marginBottom: -7, color: colors.text }]}
+        >
           Poured % of Goal
         </Text>
-        <Text style={[styles.largeNumber, { color: colors.text }]}>{pouredPercentage}%</Text>
+        <Text style={[styles.largeNumber, { color: colors.text }]}>
+          {pouredPercentage}%
+        </Text>
 
-        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
+        <Text
+          style={[styles.labelText, { marginBottom: -7, color: colors.text }]}
+        >
           Actual vs POS
         </Text>
-        <Text style={[styles.largeNumber, { marginBottom: -7, color: colors.text }]}>-40%</Text>
+        <Text
+          style={[styles.largeNumber, { marginBottom: -7, color: colors.text }]}
+        >
+          -40%
+        </Text>
 
         <Text style={[styles.largeNumber, { color: colors.text }]}>-40mL</Text>
       </View>

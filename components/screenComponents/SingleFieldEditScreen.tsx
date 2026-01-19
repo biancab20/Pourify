@@ -38,7 +38,6 @@ type BaseProps = {
 
 type EntityModeProps = BaseProps & {
   mode: "entity";
-  /** Source of truth */
   initialValue: string;
   isLoading: boolean;
   isRefetching?: boolean;
@@ -72,7 +71,7 @@ export default function SingleFieldEditScreen(props: Props) {
   const isSaving = props.mode === "entity" ? !!props.isSaving : localSaving;
 
   const options = useMemo(() => {
-    return props.fieldType === "select" ? props.options ?? [] : [];
+    return props.fieldType === "select" ? (props.options ?? []) : [];
   }, [props.fieldType, props.options]);
 
   const runValidation = () => {
@@ -200,8 +199,8 @@ export default function SingleFieldEditScreen(props: Props) {
                     props.fieldType === "email"
                       ? "email"
                       : props.fieldType === "number"
-                      ? "number"
-                      : "text"
+                        ? "number"
+                        : "text"
                   }
                   min={props.fieldType === "number" ? 0 : undefined}
                   decimal={props.fieldType === "number" ? true : undefined}
@@ -221,7 +220,7 @@ export default function SingleFieldEditScreen(props: Props) {
             </View>
 
             <GradientButton
-              text={isSaving ? "Saving..." : props.saveLabel ?? "Save"}
+              text={isSaving ? "Saving..." : (props.saveLabel ?? "Save")}
               onPress={handleSave}
               gradientName="paloma"
               disabled={isSaving}
@@ -243,10 +242,7 @@ export default function SingleFieldEditScreen(props: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 24 },
-
-  // add a little spacing so the header doesn't touch the title
   title: { fontSize: 40, fontWeight: "700", marginBottom: 14 },
-
   formCard: { gap: 10, paddingBottom: 10 },
   label: { fontSize: 13 },
   description: {

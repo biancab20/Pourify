@@ -20,7 +20,6 @@ import { useAppTheme } from "@/stores/app-theme-context";
 import { StockItem } from "@/types/stock";
 import AndroidCustomNavigation from "@/components/navigation/AndroidCustomNavigation";
 
-//make product name title case, e.g. Beer keg -> Beer Keg
 const formatProductName = (name: string) => {
   if (!name) return "";
   return name
@@ -54,7 +53,7 @@ export default function AllProducts() {
   const bars = useMemo(() => barsData?.value ?? [], [barsData?.value]);
   const products = useMemo(
     () => productsData?.value ?? [],
-    [productsData?.value]
+    [productsData?.value],
   );
   const stocks = useMemo(() => stocksData?.value ?? [], [stocksData?.value]);
 
@@ -77,18 +76,18 @@ export default function AllProducts() {
     return products
       .map((product) => {
         let productStocks = stocks.filter(
-          (stock: StockItem) => stock.productId === product.productId
+          (stock: StockItem) => stock.productId === product.productId,
         );
 
         if (selectedBar.id) {
           productStocks = productStocks.filter(
-            (stock) => stock.storagePlaceId === selectedBar.id
+            (stock) => stock.storagePlaceId === selectedBar.id,
           );
         }
 
         const totalVolume = productStocks.reduce(
           (sum, stock) => sum + stock.volume,
-          0
+          0,
         );
 
         const bottleCount =
@@ -111,7 +110,7 @@ export default function AllProducts() {
               .toLowerCase()
               .includes(searchQuery.toLowerCase()) ||
             stock.productType.toLowerCase().includes(searchQuery.toLowerCase())
-          : true
+          : true,
       )
       .sort((a, b) => {
         if (a.isOutOfStock !== b.isOutOfStock) {

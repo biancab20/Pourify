@@ -1,4 +1,3 @@
-// components/dynamicComponents/StockPieChart.tsx
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Svg, { Circle, G, Defs, LinearGradient, Stop } from "react-native-svg";
@@ -12,29 +11,39 @@ interface StockPieChartProps {
   barName?: string;
 }
 
-export default function StockPieChart({ 
-  size, 
-  currentStock, 
+export default function StockPieChart({
+  size,
+  currentStock,
   totalStock,
-  barName 
+  barName,
 }: StockPieChartProps) {
   const { theme } = useAppTheme();
   const { colors } = theme;
-  
+
   // Calculate percentage of total stock in this bar
-  const percentage = totalStock > 0 ? Math.round((currentStock / totalStock) * 100) : 0;
-  
+  const percentage =
+    totalStock > 0 ? Math.round((currentStock / totalStock) * 100) : 0;
+
   const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progressStrokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
 
   return (
-    <View style={[styles.circleWrapper, { width: size, height: size }]} accessible={false}>
+    <View
+      style={[styles.circleWrapper, { width: size, height: size }]}
+      accessible={false}
+    >
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <Defs>
           {/* Progress gradient - using the same gradient colors */}
-          <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <LinearGradient
+            id="progressGradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
             <Stop offset="0%" stopColor="#FF77E0" />
             <Stop offset="100%" stopColor="#F54D41" />
           </LinearGradient>
@@ -64,15 +73,23 @@ export default function StockPieChart({
       </Svg>
 
       <View style={styles.centerContent}>
-        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
+        <Text
+          style={[styles.labelText, { marginBottom: -7, color: colors.text }]}
+        >
           In {barName || "All Bars"}
         </Text>
-        <Text style={[styles.largeNumber, { color: colors.text }]}>{currentStock.toFixed(1)}L</Text>
+        <Text style={[styles.largeNumber, { color: colors.text }]}>
+          {currentStock.toFixed(1)}L
+        </Text>
 
-        <Text style={[styles.labelText, { marginBottom: -7, color: colors.text }]}>
+        <Text
+          style={[styles.labelText, { marginBottom: -7, color: colors.text }]}
+        >
           Total
         </Text>
-        <Text style={[styles.largeNumber, { marginBottom: -7, color: colors.text }]}>
+        <Text
+          style={[styles.largeNumber, { marginBottom: -7, color: colors.text }]}
+        >
           {totalStock.toFixed(1)}L
         </Text>
       </View>

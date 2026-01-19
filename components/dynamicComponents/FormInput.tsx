@@ -29,23 +29,16 @@ const GAP_BELOW_BUTTON = 6;
 interface FormInputProps {
   value: string;
   onChange: (value: string | number) => void;
-
   placeholder?: string;
-
-  type?: FormInputType; // ✅ now supports "select"
-  options?: SelectOption[]; // ✅ for select
-
+  type?: FormInputType;
+  options?: SelectOption[];
   min?: number;
   max?: number;
   decimal?: boolean;
   maxDecimalDigits?: number;
-
-  /** optional extras */
   disabled?: boolean;
   autoFocus?: boolean;
   accessibilityLabel?: string;
-
-  /** allows passing extra RN TextInput props safely */
   inputProps?: Omit<
     TextInputProps,
     "value" | "onChangeText" | "editable" | "placeholder"
@@ -58,12 +51,10 @@ export default function FormInput({
   placeholder = "",
   type = "text",
   options,
-
   min,
   max,
   decimal = false,
   maxDecimalDigits = 2,
-
   disabled = false,
   autoFocus = false,
   accessibilityLabel,
@@ -229,8 +220,8 @@ export default function FormInput({
     (type === "number"
       ? "Number input"
       : type === "select"
-      ? "Select input"
-      : "Input field");
+        ? "Select input"
+        : "Input field");
 
   return (
     <>
@@ -399,7 +390,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     maxHeight: 52,
   },
-
   input: {
     flex: 1,
     fontSize: 18,
@@ -408,14 +398,12 @@ const styles = StyleSheet.create({
     textAlignVertical: "center",
     includeFontPadding: false,
   },
-
   clearButton: {
     width: 48,
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
-
   // Select
   selectButton: {
     height: 52,
@@ -431,7 +419,6 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   chevron: { marginLeft: 8 },
-
   // Dropdown menu
   menuWrapper: {
     borderRadius: 18,
@@ -449,7 +436,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   menuContent: { padding: MENU_PADDING },
-
   itemRow: {
     height: ITEM_HEIGHT,
     borderRadius: 14,

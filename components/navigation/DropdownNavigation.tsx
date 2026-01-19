@@ -27,10 +27,8 @@ type DropdownNavigationProps = {
   title: string;
   onClose: () => void;
   items: DropdownItem[];
-
-  /** Optional tweaks */
-  paddingHorizontal?: number; // should match screen container padding
-  headerBottomGap?: number; // gap between header and dropdown
+  paddingHorizontal?: number;
+  headerBottomGap?: number; 
 };
 
 const ITEM_HEIGHT = 44;

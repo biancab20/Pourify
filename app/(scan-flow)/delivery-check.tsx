@@ -4,7 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import DeliveryList, { DeliveryItem } from "@/components/screenComponents/DeliveryList";
+import DeliveryList, {
+  DeliveryItem,
+} from "@/components/screenComponents/DeliveryList";
 import Button from "@/components/shared/GradientButton";
 import { useAppTheme } from "@/stores/app-theme-context";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
@@ -40,9 +42,10 @@ export default function DeliveryCheck() {
       }));
   }, [delivery]);
 
-  // ✅ unlock summary when every delivery has ANY status set
   const allItemsCompleted = useMemo(() => {
-    return deliveries.length > 0 && deliveries.every((d) => Boolean(statusMap[d.id]));
+    return (
+      deliveries.length > 0 && deliveries.every((d) => Boolean(statusMap[d.id]))
+    );
   }, [deliveries, statusMap]);
 
   const handleSwipeComplete = (id: string) => {
@@ -55,14 +58,18 @@ export default function DeliveryCheck() {
 
   if (!delivery) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
         <DeliveryList deliveries={[]} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <DeliveryList
         deliveries={deliveries}
         removedIds={removedIds}

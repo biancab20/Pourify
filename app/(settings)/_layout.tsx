@@ -16,20 +16,13 @@ export default function SettingsLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="venue-settings" options={{ headerTitle: "", headerShown: false }} />
       <Stack.Screen
-        name="[entity]/add"
-        options={{ headerTitle: "" }}
+        name="venue-settings"
+        options={{ headerTitle: "", headerShown: false }}
       />
-      <Stack.Screen
-        name="[entity]/edit"
-        options={{ headerTitle: "" }}
-      />
-      <Stack.Screen
-        name="[entity]/edit-field"
-        options={{ headerTitle: "" }}
-      />
+      <Stack.Screen name="[entity]/add" options={{ headerTitle: "" }} />
+      <Stack.Screen name="[entity]/edit" options={{ headerTitle: "" }} />
+      <Stack.Screen name="[entity]/edit-field" options={{ headerTitle: "" }} />
     </Stack>
-    
   );
 }

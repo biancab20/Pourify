@@ -13,10 +13,7 @@ export default function SuccessfulDeliveryScreen() {
   const { palette } = theme;
   const successImage = require("@/assets/images/image-success-stock.png");
   const goHome = () => {
-    // ✅ closes the current modal stack if possible
     router.dismissAll();
-
-    // ✅ ensures you land on homepage (not stacked on top of something)
     router.replace("/(main-screens)/homepage");
   };
   return (

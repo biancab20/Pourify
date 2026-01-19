@@ -1,14 +1,18 @@
-// app/(scan-flow)/delivery-summary.tsx
 import GradientButton from "@/components/shared/GradientButton";
 import { Text } from "@/components/shared/Text";
 import EditableSectionCard from "@/components/dynamicComponents/EditableSectionCard";
 import InputBox from "@/components/dynamicComponents/SearchBar";
-import ListItem, { DeliveryItem } from "@/components/dynamicComponents/ListItem";
+import ListItem, {
+  DeliveryItem,
+} from "@/components/dynamicComponents/ListItem";
 import { useCreateDelivery } from "@/hooks/useDeliveries";
 import { useDeliveryStatus } from "@/hooks/useDeliveryStatus";
 import { useBars } from "@/hooks/useLocations";
 import { useAppTheme } from "@/stores/app-theme-context";
-import type { CreateDeliveryDto, DeliveryOcrResponse } from "@/types/deliveries";
+import type {
+  CreateDeliveryDto,
+  DeliveryOcrResponse,
+} from "@/types/deliveries";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -67,21 +71,12 @@ export default function DeliverySummary() {
   const { colors } = theme;
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  // statusMap is reactive
   const { statusMap } = useDeliveryStatus();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBarId, setSelectedBarId] = useState<string | null>(null);
-
-  // Get bars for selection
   const { data: barsData } = useBars();
   const bars = useMemo(() => barsData?.value || [], [barsData]);
-
-  // Get the create delivery mutation
   const createDeliveryMutation = useCreateDelivery();
-
-  // Get OCR/manual cached data
   const ocrResponse =
     queryClient.getQueryData<DeliveryOcrResponse>(["deliveries", "latest"]) ??
     null;
@@ -129,7 +124,7 @@ export default function DeliverySummary() {
         onEditPress: () => {
           Alert.alert(
             "Supplier",
-            "Supplier is shown from OCR / checked supplier."
+            "Supplier is shown from OCR / checked supplier.",
           );
         },
         showEdit: false,
@@ -169,7 +164,7 @@ export default function DeliverySummary() {
         editA11yLabel: "Select bar",
       },
     ],
-    [delivery, bars, selectedBarId]
+    [delivery, bars, selectedBarId],
   );
 
   // Get all delivery items from statusMap
@@ -196,7 +191,7 @@ export default function DeliverySummary() {
     return all.filter(
       (item) =>
         item.name.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query)
+        item.id.toLowerCase().includes(query),
     ).length;
   }, [all, searchQuery]);
 
@@ -210,7 +205,6 @@ export default function DeliverySummary() {
 
   // Prepare delivery data for saving
   const parseLineId = (lineId: string) => {
-    // "7cecd...-1" -> { productId: "7cecd...", index: 1 }
     const match = lineId.match(/^(.*)-(\d+)$/);
     if (!match) return { productId: lineId, index: -1 };
     return { productId: match[1], index: Number(match[2]) };
@@ -225,12 +219,10 @@ export default function DeliverySummary() {
     if (!supplierId || supplierId === "00000000-0000-0000-0000-000000000000") {
       Alert.alert(
         "Supplier missing",
-        "Please go back and confirm the supplier so we can save this delivery."
+        "Please go back and confirm the supplier so we can save this delivery.",
       );
       return null;
     }
-
-    // Start from OCR/manual products but we override TotalVolume using statusMap (received)
     const baseProducts = delivery.products ?? [];
 
     // Build a mutable copy (API expects PascalCase)
@@ -311,7 +303,7 @@ export default function DeliverySummary() {
       Alert.alert(
         "Error",
         `Failed to save delivery:\n\n${error.message || "Unknown error"}`,
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
     }
   };
@@ -334,7 +326,10 @@ export default function DeliverySummary() {
         </Text>
 
         <View style={styles.infoContainer}>
-          <EditableSectionCard rows={infoRows} style={styles.editableCardStyle} />
+          <EditableSectionCard
+            rows={infoRows}
+            style={styles.editableCardStyle}
+          />
         </View>
 
         <InputBox
@@ -351,9 +346,21 @@ export default function DeliverySummary() {
           </View>
         ) : (
           <>
-            <Section title="Received" items={received} searchQuery={searchQuery} />
-            <Section title="Damaged" items={damaged} searchQuery={searchQuery} />
-            <Section title="Missing" items={missing} searchQuery={searchQuery} />
+            <Section
+              title="Received"
+              items={received}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Damaged"
+              items={damaged}
+              searchQuery={searchQuery}
+            />
+            <Section
+              title="Missing"
+              items={missing}
+              searchQuery={searchQuery}
+            />
             <Section
               title="Substituted"
               items={substituted}
@@ -380,7 +387,9 @@ export default function DeliverySummary() {
         <GradientButton
           text={createDeliveryMutation.isPending ? "Saving..." : "Save"}
           onPress={handleSave}
-          disabled={all.length === 0 || createDeliveryMutation.isPending || !delivery}
+          disabled={
+            all.length === 0 || createDeliveryMutation.isPending || !delivery
+          }
         />
       </View>
     </SafeAreaView>

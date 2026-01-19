@@ -1,4 +1,3 @@
-// types/deliveries.ts
 import type { ODataList } from "@/types/odata";
 
 export type Photo = { id: string; uri: string };
@@ -30,7 +29,6 @@ export type Delivery = {
 };
 
 /** ---------------- OCR endpoint (NOT OData) ----------------
- * OCR returns an ARRAY of deliveries
  */
 export type DeliveryOcrResponse = Delivery;
 

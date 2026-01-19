@@ -1,5 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { View, StyleSheet, ScrollView, Pressable, Alert, FlatList, Platform, } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+  FlatList,
+  Platform,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,8 +22,12 @@ import { useProducts } from "@/hooks/useProducts";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
 import type { DeliveryOcrResponse } from "@/types/deliveries";
 
-
-type Product = { productId: string; name: string; volume: number; type: string };
+type Product = {
+  productId: string;
+  name: string;
+  volume: number;
+  type: string;
+};
 type Supplier = { supplierId: string; name: string; email?: string };
 
 type ManualProduct = {
@@ -52,7 +64,7 @@ export default function ManualDeliveryScreen() {
   const createSupplier = useCreateSupplier();
   const [supplierQuery, setSupplierQuery] = useState<string>("");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
-    null
+    null,
   );
 
   const supplierSuggestions = useMemo(() => {
@@ -80,18 +92,24 @@ export default function ManualDeliveryScreen() {
   /* Add product */
   const onAddProduct = () => {
     if (!selectedProduct)
-      return Alert.alert("Missing info", "Please select a product from the list.");
+      return Alert.alert(
+        "Missing info",
+        "Please select a product from the list.",
+      );
 
     const qty = Number(units);
     if (!Number.isInteger(qty) || qty <= 0)
-      return Alert.alert("Missing info", "Please enter a valid number of units.");
+      return Alert.alert(
+        "Missing info",
+        "Please enter a valid number of units.",
+      );
 
     const packVol = Number(selectedProduct.volume ?? 0);
     const totalVolume = packVol * qty;
 
     setItems((prev) => {
       const existingItemIndex = prev.findIndex(
-        (item) => item.product.productId === selectedProduct.productId
+        (item) => item.product.productId === selectedProduct.productId,
       );
 
       if (existingItemIndex !== -1) {
@@ -129,7 +147,10 @@ export default function ManualDeliveryScreen() {
   /* Save -> cache to delivery summary  */
   const onSave = async () => {
     if (!selectedSupplier && !supplierQuery.trim()) {
-      return Alert.alert("Missing info", "Please select or type a supplier name.");
+      return Alert.alert(
+        "Missing info",
+        "Please select or type a supplier name.",
+      );
     }
 
     if (items.length === 0) {
@@ -143,7 +164,7 @@ export default function ManualDeliveryScreen() {
       try {
         const result = await createSupplier.mutateAsync({
           name: supplierQuery.trim(),
-          email: "n/a@example.com", // required by API (temp)
+          email: "n/a@example.com",
         });
 
         supplierToSave = {
@@ -159,13 +180,12 @@ export default function ManualDeliveryScreen() {
     const deliveryNoteId = makeGuid();
     const deliveryDate = new Date().toISOString();
 
-    // This is what delivery-summary.tsx expects in ["deliveries","latest"]
     const products = items.map((i) => ({
       productId: i.product.productId,
       name: toTitleCase(i.product.name),
-      volume: Number(i.product.volume ?? 0), // liters per unit
+      volume: Number(i.product.volume ?? 0),
       type: i.product.type ?? "",
-      totalVolume: Number(i.totalVolume ?? 0), // liters total (units * volume)
+      totalVolume: Number(i.totalVolume ?? 0),
     }));
 
     const manualDelivery: DeliveryOcrResponse = {
@@ -218,7 +238,6 @@ export default function ManualDeliveryScreen() {
     router.push("/(scan-flow)/delivery-summary");
   };
 
-  /* Render */
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -242,7 +261,9 @@ export default function ManualDeliveryScreen() {
         {/* ---------------- Supplier Section ---------------- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            <CustomText
+              style={[styles.sectionTitle, { color: theme.colors.text }]}
+            >
               Supplier
             </CustomText>
             <CustomText
@@ -253,7 +274,12 @@ export default function ManualDeliveryScreen() {
           </View>
 
           {selectedSupplier ? (
-            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: theme.colors.cardBackground },
+              ]}
+            >
               <View style={styles.supplierRow}>
                 <CustomText
                   style={[styles.supplierName, { color: theme.colors.text }]}
@@ -318,7 +344,9 @@ export default function ManualDeliveryScreen() {
         {/* ---------------- Products Section ---------------- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            <CustomText
+              style={[styles.sectionTitle, { color: theme.colors.text }]}
+            >
               Products
             </CustomText>
             <CustomText
@@ -330,7 +358,9 @@ export default function ManualDeliveryScreen() {
 
           <View style={styles.formCard}>
             <View style={styles.inputGroup}>
-              <CustomText style={[styles.inputLabel, { color: theme.colors.text }]}>
+              <CustomText
+                style={[styles.inputLabel, { color: theme.colors.text }]}
+              >
                 Product Name
               </CustomText>
               <SearchBar
@@ -367,7 +397,9 @@ export default function ManualDeliveryScreen() {
                         <CustomText style={{ color: theme.colors.text }}>
                           {p.name}
                         </CustomText>
-                        <CustomText style={{ color: theme.colors.text, opacity: 0.6 }}>
+                        <CustomText
+                          style={{ color: theme.colors.text, opacity: 0.6 }}
+                        >
                           {Number(p.volume ?? 0).toFixed(3)}L
                         </CustomText>
                       </View>
@@ -378,7 +410,9 @@ export default function ManualDeliveryScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <CustomText style={[styles.inputLabel, { color: theme.colors.text }]}>
+              <CustomText
+                style={[styles.inputLabel, { color: theme.colors.text }]}
+              >
                 Units Delivered
               </CustomText>
               <SearchBar
@@ -401,18 +435,29 @@ export default function ManualDeliveryScreen() {
         {/* ---------------- Products List ---------------- */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <CustomText style={[styles.sectionTitle, { color: theme.colors.text }]}>
+            <CustomText
+              style={[styles.sectionTitle, { color: theme.colors.text }]}
+            >
               Delivery Summary
             </CustomText>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.colors.cardBackground },
+            ]}
+          >
             {items.length === 0 ? (
               <View style={styles.emptyState}>
-                <CustomText style={[styles.emptyText, { color: theme.colors.text }]}>
+                <CustomText
+                  style={[styles.emptyText, { color: theme.colors.text }]}
+                >
                   No products added yet
                 </CustomText>
-                <CustomText style={[styles.emptySubtext, { color: theme.colors.text }]}>
+                <CustomText
+                  style={[styles.emptySubtext, { color: theme.colors.text }]}
+                >
                   Add products above to create your delivery
                 </CustomText>
               </View>
@@ -433,7 +478,10 @@ export default function ManualDeliveryScreen() {
                   <View style={styles.productRow}>
                     <View style={styles.productInfo}>
                       <CustomText
-                        style={[styles.productName, { color: theme.colors.text }]}
+                        style={[
+                          styles.productName,
+                          { color: theme.colors.text },
+                        ]}
                         numberOfLines={1}
                         ellipsizeMode="tail"
                       >
@@ -465,16 +513,17 @@ export default function ManualDeliveryScreen() {
 
         {/* ---------------- Actions ---------------- */}
         <View style={styles.actions}>
-          <GradientButton text="Save Delivery" onPress={onSave} gradientName="paloma" />
+          <GradientButton
+            text="Save Delivery"
+            onPress={onSave}
+            gradientName="paloma"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-/* ---------------------------------- */
-/* Styles                             */
-/* ---------------------------------- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: {
@@ -482,19 +531,15 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     paddingTop: Platform.OS === "ios" ? 16 : 8,
   },
-
   header: { marginBottom: 24 },
   title: { fontSize: 32, fontWeight: "700", marginBottom: 8 },
-
   section: { marginBottom: 24 },
   sectionHeader: { marginBottom: 12 },
   sectionTitle: { fontSize: 20, fontWeight: "600", marginBottom: 4 },
   sectionDescription: { fontSize: 14, lineHeight: 20, opacity: 0.7 },
-
   formCard: { gap: 16 },
   inputGroup: { gap: 6 },
   inputLabel: { fontSize: 14, fontWeight: "500" },
-
   card: {
     borderRadius: 16,
     overflow: "hidden",
@@ -504,7 +549,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-
   supplierRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -513,7 +557,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   supplierName: { fontSize: 16, flex: 1, marginRight: 12, fontWeight: "500" },
-
   suggestions: { borderRadius: 12, marginTop: 8, overflow: "hidden" },
   suggestionRow: {
     padding: 12,
@@ -525,11 +568,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-
   emptyState: { paddingVertical: 32, alignItems: "center", gap: 12 },
   emptyText: { fontSize: 16, fontWeight: "500" },
   emptySubtext: { fontSize: 14, opacity: 0.6 },
-
   productRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -539,12 +580,15 @@ const styles = StyleSheet.create({
   },
   productInfo: { flex: 1, marginRight: 12 },
   productName: { fontSize: 15, fontWeight: "500", marginBottom: 2 },
-
   productRightSection: { flexDirection: "row", alignItems: "center", gap: 12 },
-  infoBox: { margin: 0, paddingVertical: 6, paddingHorizontal: 10, minWidth: 60, maxWidth: 80 },
+  infoBox: {
+    margin: 0,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    minWidth: 60,
+    maxWidth: 80,
+  },
   removeButton: { padding: 4 },
-
   separator: { height: StyleSheet.hairlineWidth, marginHorizontal: 16 },
-
   actions: { paddingTop: 8, paddingBottom: 16 },
 });

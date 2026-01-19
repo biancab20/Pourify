@@ -67,7 +67,7 @@ type LocalProduct = {
 function useEntityConfig(
   entity: EntityKey,
   venueName: string,
-  theme: any
+  theme: any,
 ): EntityScreenConfig<any> {
   if (entity === "locations") {
     return {
@@ -256,7 +256,7 @@ export default function AddEntityScreen() {
   const resetForm = () => {
     const next: Record<string, string> = { ...values };
     for (const f of config.fields) {
-      next[f.key] = f.type === "select" ? f.options?.[0]?.value ?? "" : "";
+      next[f.key] = f.type === "select" ? (f.options?.[0]?.value ?? "") : "";
     }
     setValues(next);
   };
@@ -268,7 +268,7 @@ export default function AddEntityScreen() {
       [
         { text: "Cancel", style: "cancel" },
         { text: "Discard", style: "destructive", onPress: onDiscard },
-      ]
+      ],
     );
   };
 
@@ -392,8 +392,8 @@ export default function AddEntityScreen() {
                       f.key === "email"
                         ? "email"
                         : f.key === "volume"
-                        ? "number"
-                        : "text"
+                          ? "number"
+                          : "text"
                     }
                     min={f.key === "volume" ? 0 : undefined}
                     decimal={f.key === "volume" ? true : undefined}
@@ -406,7 +406,7 @@ export default function AddEntityScreen() {
             const opts = f.options ?? [];
             const currentIndex = Math.max(
               0,
-              opts.findIndex((o) => o.value === values[f.key])
+              opts.findIndex((o) => o.value === values[f.key]),
             );
             const currentLabel = opts[currentIndex]?.label ?? "Select";
 

@@ -16,8 +16,13 @@ interface DatePickerProps {
   setCurrentDate: (date: Dayjs) => void;
 }
 
-export default function DatePicker({ mode, setMode, currentDate, setCurrentDate }: DatePickerProps) {
-  const { theme } = useAppTheme(); 
+export default function DatePicker({
+  mode,
+  setMode,
+  currentDate,
+  setCurrentDate,
+}: DatePickerProps) {
+  const { theme } = useAppTheme();
 
   const changePeriod = (direction: -1 | 1) => {
     const units: Record<Mode, dayjs.ManipulateType> = {
@@ -63,10 +68,7 @@ export default function DatePicker({ mode, setMode, currentDate, setCurrentDate 
               style={[
                 styles.modeButton,
                 {
-                  color:
-                    mode === item
-                      ? theme.palette.pink 
-                      : theme.colors.text,
+                  color: mode === item ? theme.palette.pink : theme.colors.text,
                 },
                 mode === item && {
                   backgroundColor: theme.palette.pink,

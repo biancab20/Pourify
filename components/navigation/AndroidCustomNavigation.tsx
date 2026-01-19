@@ -6,7 +6,7 @@ import { useAppTheme } from "@/stores/app-theme-context";
 
 type AndroidBackHeaderProps = {
   onBack: () => void;
-  label?: string; // default "Back"
+  label?: string; 
   paddingHorizontal?: number;
 };
 

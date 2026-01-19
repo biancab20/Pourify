@@ -1,4 +1,3 @@
-// components/dynamicComponents/BarStockCard.tsx
 import { Text } from "@/components/shared/Text";
 import { useAppTheme } from "@/stores/app-theme-context";
 import React from "react";
@@ -11,7 +10,7 @@ interface BarStockCardProps {
   totalVolume: number;
   bottleCount: number;
   productVolume: number;
-  totalStockAcrossAllBars: number; // Total stock across all bars for comparison
+  totalStockAcrossAllBars: number;
 }
 
 export default function BarStockCard({

@@ -16,7 +16,7 @@ function confirmYesNo(
   title: string,
   message: string,
   yesText = "Yes",
-  noText = "No"
+  noText = "No",
 ) {
   return new Promise<boolean>((resolve) => {
     Alert.alert(title, message, [
@@ -51,21 +51,18 @@ export default function CheckSupplier() {
     }
   }, [params.ocrData]);
 
-  // ✅ Create a local draft you can edit
   const [draft, setDraft] = useState<DeliveryOcrResponse | null>(parsedOcrData);
 
   useEffect(() => {
     setDraft(parsedOcrData);
   }, [parsedOcrData]);
 
-  // ✅ Suppliers list for validation
   const suppliersQuery = useSuppliers();
   const suppliers = useMemo(
     () => suppliersQuery.data?.value ?? [],
-    [suppliersQuery.data]
+    [suppliersQuery.data],
   );
 
-  // ✅ Mutations (only needed for the “add supplier” flow)
   const createSupplier = useCreateSupplier();
 
   const formatDate = (dateString?: string) => {
@@ -104,7 +101,7 @@ export default function CheckSupplier() {
         }
 
         const exists = suppliers.some(
-          (s: any) => normalizeName(s.name) === normalizeName(name)
+          (s: any) => normalizeName(s.name) === normalizeName(name),
         );
 
         setDraft((prev) =>
@@ -116,7 +113,7 @@ export default function CheckSupplier() {
                   name,
                 },
               }
-            : prev
+            : prev,
         );
 
         if (exists) return;
@@ -125,7 +122,7 @@ export default function CheckSupplier() {
           "Supplier not found",
           `“${name}” is not in your supplier list. Would you like to add it now?`,
           "Add",
-          "No"
+          "No",
         );
 
         if (!shouldAdd) return;
@@ -180,7 +177,7 @@ export default function CheckSupplier() {
         editA11yLabel: "Edit date",
       },
     ],
-    [draft, onEditSupplier, onEditDate]
+    [draft, onEditSupplier, onEditDate],
   );
 
   const ensureSupplierExists = async (): Promise<void> => {
@@ -196,7 +193,7 @@ export default function CheckSupplier() {
     // Try resolve ID from current list
     let supplierId = findSupplierIdByName(
       suppliersQuery.data?.value ?? suppliers,
-      name
+      name,
     );
     // If not found, ask user to add new supplier
     if (!supplierId) {
@@ -204,7 +201,7 @@ export default function CheckSupplier() {
         "Supplier not found",
         `“${name}” is not in your supplier list. Would you like to add it now?`,
         "Add",
-        "No"
+        "No",
       );
 
       if (!shouldAdd) return;
@@ -220,7 +217,7 @@ export default function CheckSupplier() {
     // If still no supplierId, stop
     if (!supplierId) {
       throw new Error(
-        "Could not resolve supplier id after adding. Please try again."
+        "Could not resolve supplier id after adding. Please try again.",
       );
     }
 
@@ -235,7 +232,7 @@ export default function CheckSupplier() {
               supplierId,
             },
           }
-        : prev
+        : prev,
     );
     queryClient.setQueryData(["deliveries", "latest"], (old: any) => {
       if (!old) return old;

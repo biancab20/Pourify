@@ -64,8 +64,7 @@ export default function Button({
     }
   };
 
-  const innerBackground =
-    backgroundColor ?? theme.colors.cardBackground;
+  const innerBackground = backgroundColor ?? theme.colors.cardBackground;
 
   return (
     <Pressable

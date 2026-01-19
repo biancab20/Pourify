@@ -7,7 +7,10 @@ interface WideCardStaticProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export default function WideCardStatic({ children, style }: WideCardStaticProps) {
+export default function WideCardStatic({
+  children,
+  style,
+}: WideCardStaticProps) {
   const { theme } = useAppTheme();
 
   return (
@@ -16,8 +19,6 @@ export default function WideCardStatic({ children, style }: WideCardStaticProps)
         styles.wideCardBackground,
         {
           backgroundColor: theme.colors.cardBackground,
-          // `color` does not apply to View — removed (correct)
-          //if the component dosn't render properly, before it was used: color: theme.colors.text
         },
         style,
       ]}

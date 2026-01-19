@@ -18,12 +18,12 @@ type ColorTokens = {
 };
 
 type GradientDefinition = {
-  colors: [string, string]; // exactly 2 colors
+  colors: [string, string]; 
   start: { x: number; y: number };
   end: { x: number; y: number };
 };
 
-// 👇 brand palette (your raw colors)
+// brand palette 
 export type BrandPalette = {
   beige: string;
   red: string;
@@ -38,7 +38,6 @@ export type BrandPalette = {
   white: string;
   black: string;
 
-  // NEW: gradient
   paloma: GradientDefinition;
   bananaDaiquiri: GradientDefinition;
 };
@@ -77,7 +76,6 @@ const PALETTE: BrandPalette = {
   white: "#FFFFFF",
   black: "#000000",
 
-  // NEW: gradient
   paloma: {
     colors: ["#FF77E0", "#F54D41"],
     start: { x: 0, y: 0.5 },
@@ -86,14 +84,9 @@ const PALETTE: BrandPalette = {
   bananaDaiquiri: {
     colors: ["#D9E734", "#00C264"],
     start: { x: 0, y: 1 },
-    end: { x: 1, y: 0.5 }, // vertical gradient (top → bottom)
+    end: { x: 1, y: 0.5 }, 
   },
 };
-
-// You can still define generic status colors or reuse from palette
-// const SUCCESS = PALETTE.green;
-// const DANGER = PALETTE.red;
-// const WARNING = PALETTE.yellow;
 
 // ------- LIGHT & DARK TOKEN MAPPING -------
 

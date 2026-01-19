@@ -74,7 +74,6 @@ export default function HomeScreen() {
               <Icon name="settings" size={35} color={colors.icon} />
             </Pressable>
             <Pressable
-              // onPress={() => router.push("/(scan-flow)/successful-delivery")}
               accessibilityRole="button"
               accessibilityLabel="More actions"
               accessible={false}
@@ -219,67 +218,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 20,
   },
-
   sectionContainer: {
     marginTop: 24,
   },
-
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-
   dateText: {
     fontSize: 16,
     fontWeight: "600",
   },
-
   iconButtons: {
     flexDirection: "row",
     gap: 10,
   },
-
   title: {
     fontSize: 42,
     fontWeight: "700",
     marginTop: 20,
     marginBottom: 16,
   },
-
   wideCard: {
     flexDirection: "row",
     borderRadius: 20,
     alignItems: "center",
     marginBottom: 24,
   },
-
   statsContainer: {
     flex: 1,
     justifyContent: "center",
     marginLeft: 20,
   },
-
   statItem: {
     marginBottom: 12,
   },
-
   statLabel: {
     fontSize: 18,
     fontWeight: "700",
   },
-
   statValue: {
     fontSize: 20,
     fontWeight: "700",
   },
-
   sectionTitle: {
     fontSize: 24,
     fontWeight: "700",
     marginBottom: 15,
   },
-
   popularDrinkTitle: {
     textAlign: "center",
     fontSize: 18,
@@ -287,7 +274,6 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
   },
-
   cardsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -295,19 +281,16 @@ const styles = StyleSheet.create({
     marginTop: 0,
     gap: 10,
   },
-
   infoBox: {
     marginBottom: 8,
     fontSize: 10,
     textAlign: "center",
     fontWeight: "500",
   },
-
   divider: {
     height: StyleSheet.hairlineWidth,
     marginVertical: 13,
   },
-
   row: {
     flexDirection: "row",
     marginTop: 0,

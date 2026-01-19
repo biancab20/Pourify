@@ -1,4 +1,3 @@
-// app/(main-screens)/product-stock.tsx
 import { Text } from "@/components/shared/Text";
 import WideCardStatic from "@/components/staticComponents/WideCardStatic";
 import { useAppTheme } from "@/stores/app-theme-context";
@@ -71,13 +70,13 @@ export default function ProductDetails() {
 
     // Initialize all bars
     bars.forEach((bar) =>
-      stockMap.set(bar.barId, { totalVolume: 0, bottleCount: 0 })
+      stockMap.set(bar.barId, { totalVolume: 0, bottleCount: 0 }),
     );
 
     // Fill in stock
     stocks.forEach((stock: StockItem) => {
       if (stock.productId === productId) {
-        // Stock bar ID (assuming storagePlaceId maps to bar)
+        // Stock bar ID
         const barId = stock.storagePlaceId;
         const existing = stockMap.get(barId) || {
           totalVolume: 0,

@@ -49,7 +49,7 @@ export default function EditEntityScreen() {
   const entity = (params.entity ?? "products") as EntityKey;
   const id = params.id ?? "";
 
-  // ✅ Detail queries (only run when needed)
+  // Detail queries
   const supplierQuery = useSupplier(entity === "suppliers" ? id : "");
   const productQuery = useProduct(entity === "products" ? id : "");
   const barQuery = useBar(entity === "locations" ? id : "");
@@ -58,8 +58,8 @@ export default function EditEntityScreen() {
     entity === "suppliers"
       ? supplierQuery
       : entity === "products"
-      ? productQuery
-      : barQuery;
+        ? productQuery
+        : barQuery;
 
   const item = activeQuery.data ?? null;
   const isLoading = activeQuery.isLoading;
@@ -82,8 +82,8 @@ export default function EditEntityScreen() {
     entity === "suppliers"
       ? "supplier"
       : entity === "products"
-      ? "product"
-      : "stock location";
+        ? "product"
+        : "stock location";
 
   const onConfirmDelete = async () => {
     if (!id) return;
@@ -118,7 +118,7 @@ export default function EditEntityScreen() {
           onPress: onConfirmDelete,
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -130,8 +130,8 @@ export default function EditEntityScreen() {
       (entity === "suppliers"
         ? "Supplier"
         : entity === "products"
-        ? "Product"
-        : "Location")
+          ? "Product"
+          : "Location")
     );
   }, [entity, item]);
 
@@ -164,8 +164,6 @@ export default function EditEntityScreen() {
                   barId: id,
                   data: { name: newValue.trim() },
                 });
-                // optionally refetch detail query if you want instant refresh:
-                // await activeQuery.refetch();
               },
             }),
           editA11yLabel: "Edit location name",
@@ -192,12 +190,11 @@ export default function EditEntityScreen() {
               placeholder: "e.g. Big Drinks BV",
               initialValue: currentName,
               onSave: async (newName) => {
-                // ✅ send BOTH fields so backend doesn't wipe the other one
                 await updateSupplier.mutateAsync({
                   supplierId: id,
                   data: {
                     name: newName.trim(),
-                    email: currentEmail, // keep
+                    email: currentEmail,
                   },
                 });
               },
@@ -221,7 +218,7 @@ export default function EditEntityScreen() {
                 await updateSupplier.mutateAsync({
                   supplierId: id,
                   data: {
-                    name: currentName, // keep
+                    name: currentName,
                     email: newEmail.trim(),
                   },
                 });
@@ -232,7 +229,7 @@ export default function EditEntityScreen() {
       ];
     }
 
-    // PRODUCTS
+    // Products
     const currentName = item.name ?? "";
     const currentVolume =
       (item as any).volume === null || (item as any).volume === undefined
@@ -384,12 +381,12 @@ export default function EditEntityScreen() {
         ) : !id ? (
           renderCenteredState(
             "Missing id",
-            "No entity id was provided in the route params."
+            "No entity id was provided in the route params.",
           )
         ) : !item ? (
           renderCenteredState(
             "Not found",
-            `We couldn't find this ${entity.slice(0, -1)}.`
+            `We couldn't find this ${entity.slice(0, -1)}.`,
           )
         ) : (
           <View style={{ gap: 14 }}>

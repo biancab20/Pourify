@@ -19,13 +19,18 @@ export default function GraphChartStatic() {
   const grayLineOpacity = 0.4;
   const yLabels = [0, 100, 200];
   const yPositions = yLabels.map(
-    (label, index) => chartHeight - 40 - (index * (chartHeight - 60)) / (yLabels.length - 1)
+    (label, index) =>
+      chartHeight - 40 - (index * (chartHeight - 60)) / (yLabels.length - 1),
   );
 
   return (
     <View>
-
-      <View style={[styles.chartContainer, { backgroundColor: theme.colors.cardBackground }]}>
+      <View
+        style={[
+          styles.chartContainer,
+          { backgroundColor: theme.colors.cardBackground },
+        ]}
+      >
         <Svg height={chartHeight} width={chartWidth}>
           <Line
             x1="30"
@@ -107,22 +112,34 @@ export default function GraphChartStatic() {
       <WideCardStatic style={styles.card}>
         <View style={styles.row}>
           <View style={styles.column}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Total Poured</Text>
-            <Text style={[styles.value, { color: theme.colors.text }]}>0.01</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Total Poured
+            </Text>
+            <Text style={[styles.value, { color: theme.colors.text }]}>
+              0.01
+            </Text>
           </View>
           <View style={styles.column}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Total POS</Text>
-            <Text style={[styles.value, { color: theme.colors.text }]}>1.27</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Total POS
+            </Text>
+            <Text style={[styles.value, { color: theme.colors.text }]}>
+              1.27
+            </Text>
           </View>
         </View>
 
         <View style={styles.row}>
           <View style={styles.column}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>POS vs Total</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              POS vs Total
+            </Text>
             <Text style={[styles.value, { color: theme.colors.text }]}>-</Text>
           </View>
           <View style={styles.column}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Number of Pours</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Number of Pours
+            </Text>
             <Text style={[styles.value, { color: theme.colors.text }]}>-</Text>
           </View>
         </View>
