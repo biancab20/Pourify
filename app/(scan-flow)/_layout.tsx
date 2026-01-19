@@ -35,10 +35,6 @@ export default function ScanFlowLayout() {
         options={{ title: "", headerShown: false }}
       />
       <Stack.Screen
-        name="add-delivery-item"
-        options={{ title: "", headerShown: false }}
-      />
-      <Stack.Screen
         name="successful-delivery"
         options={{ title: "", headerShown: false }}
       />
