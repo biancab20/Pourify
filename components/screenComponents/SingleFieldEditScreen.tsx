@@ -105,6 +105,7 @@ export default function SingleFieldEditScreen(props: Props) {
     try {
       if (props.mode === "static") setLocalSaving(true);
       await props.onSave(value);
+      props.onClose?.();
     } catch (e: any) {
       Alert.alert("Save failed", e?.message ?? "Unknown error");
     } finally {
