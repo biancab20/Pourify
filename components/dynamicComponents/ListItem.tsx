@@ -80,11 +80,12 @@ export default function ListItem({
     return delivery.cases / delivery.cans;
   };
 
-  // Format product volume to show 3 decimal places with L
-  const formatProductVolume = () => {
-    // Just format to 3 decimal places and add L
-    return delivery.cans.toFixed(3) + "L";
-  };
+ const formatProductVolume = () => {
+  const v = delivery.cans;
+  // treat values extremely close to an integer as integers (avoids 49.999999 => "49.999L")
+  const isWhole = Number.isInteger(v) || Math.abs(v - Math.round(v)) < 1e-9;
+  return isWhole ? `${Math.round(v)}L` : `${v.toFixed(3)}L`;
+};
 
   const handleMenuPress = () => {
     if (buttonRef.current) {
