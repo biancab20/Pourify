@@ -66,6 +66,8 @@ export function useCreateDelivery() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliveries", "list"] });
       queryClient.removeQueries({ queryKey: ["deliveries", "latest"] });
+      queryClient.invalidateQueries({ queryKey: ["stock", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["products", "list"] });
     },
   });
 }
